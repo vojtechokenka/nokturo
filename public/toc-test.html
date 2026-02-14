@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TOC Click Test</title>
+  <style>
+    body { font-family: sans-serif; display: flex; gap: 2rem; max-width: 800px; margin: 0 auto; padding: 2rem; }
+    aside { width: 200px; background: #f0f0f0; padding: 1rem; border-radius: 8px; }
+    main { flex: 1; }
+    section { min-height: 300px; padding: 2rem; margin-bottom: 2rem; }
+    #section-description { background: #e8f4e8; }
+    #section-materials { background: #e8e8f4; }
+    .toc-item { cursor: pointer; padding: 0.5rem; border-radius: 4px; }
+    .toc-item:hover { background: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body>
+  <aside>
+    <nav>
+      <ul style="list-style:none;padding:0;">
+        <li class="toc-item" data-id="section-description">Popis</li>
+        <li class="toc-item" data-id="section-materials">Materiály</li>
+      </ul>
+    </nav>
+  </aside>
+  <main>
+    <section id="section-description">
+      <h2>Popis</h2>
+      <p>Klikni na "Popis" v TOC vlevo – měl by scroll sem.</p>
+    </section>
+    <section id="section-materials">
+      <h2>Materiály</h2>
+      <p>Klikni na "Materiály" v TOC – měl by scroll sem.</p>
+    </section>
+  </main>
+  <script>
+    document.querySelectorAll('.toc-item').forEach(el => {
+      el.addEventListener('pointerdown', e => {
+        e.preventDefault();
+        const id = el.dataset.id;
+        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>

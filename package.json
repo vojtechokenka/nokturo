@@ -1,0 +1,71 @@
+{
+  "name": "nokturo",
+  "version": "2.0.0",
+  "description": "Nokturo PLM/ERP – Product Lifecycle Management for high-end fashion",
+  "main": "electron/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vojtechokenka/nokturo.git"
+  },
+  "scripts": {
+    "install-and-run": "npm install && npm run electron:dev",
+    "dev": "vite --port 5173",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "npx kill-port 5173 && concurrently \"vite --port 5173\" \"wait-on http://127.0.0.1:5173 -t 10000 && electron .\"",
+    "electron:build": "node scripts/build.js",
+    "electron:build:publish": "node scripts/publish-build.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.3",
+    "country-flag-emoji-polyfill": "^0.1.8",
+    "electron-updater": "^6.7.3",
+    "i18next": "^23.14.0",
+    "i18next-browser-languagedetector": "^8.0.0",
+    "lucide-react": "^0.441.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-i18next": "^15.0.1",
+    "react-router-dom": "^6.26.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.5",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.0.1",
+    "electron": "^33.4.11",
+    "electron-builder": "^25.0.5",
+    "png-to-ico": "^3.0.1",
+    "postcss": "^8.4.45",
+    "sharp": "^0.34.5",
+    "supabase": "^2.76.8",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.3",
+    "wait-on": "^8.0.0"
+  },
+  "build": {
+    "appId": "com.nokturo.app",
+    "productName": "Nokturo",
+    "icon": "public/icon.png",
+    "win": {
+      "icon": "build/icon.ico"
+    },
+    "forceCodeSigning": false,
+    "directories": {
+      "output": "dist-electron"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "publish": {
+      "provider": "github",
+"owner": "vojtechokenka",
+    "repo": "nokturo"
+    }
+  }
+}
