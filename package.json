@@ -11,7 +11,9 @@
     "install-and-run": "npm install && npm run electron:dev",
     "dev": "vite --port 5173",
     "build": "vite build",
+    "build:web": "vite build --mode production --base=/app/ --outDir dist/app --emptyOutDir",
     "preview": "vite preview",
+    "preview:web": "vite preview --base /app/",
     "electron:dev": "npx kill-port 5173 && concurrently \"vite --port 5173\" \"wait-on http://127.0.0.1:5173 -t 10000 && electron .\"",
     "electron:build": "node scripts/build.js",
     "electron:build:publish": "node scripts/publish-build.js"

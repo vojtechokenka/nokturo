@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { Mail, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { INPUT_CLASS } from '../../lib/inputStyles';
+import { isElectron } from '../../utils/platform';
 
 export default function ForgotPassword() {
   const { t } = useTranslation();
@@ -22,7 +23,13 @@ export default function ForgotPassword() {
     try {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email,
-        { redirectTo: import.meta.env.VITE_REDIRECT_URL || (window.location.origin + '/#/auth/callback') }
+        {
+          redirectTo:
+            import.meta.env.VITE_REDIRECT_URL ||
+            (isElectron()
+              ? window.location.origin + '/#/auth/callback'
+              : window.location.origin + '/app/auth/callback'),
+        }
       );
 
       if (resetError) {

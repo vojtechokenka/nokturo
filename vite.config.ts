@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
 
-// Načti .env pro build
+// Načti .env pro build (na Vercelu .env neexistuje — env je v process.env)
 const envFile = path.resolve(__dirname, '.env');
 const env = fs.existsSync(envFile)
   ? Object.fromEntries(
@@ -16,19 +16,20 @@ const env = fs.existsSync(envFile)
     )
   : {};
 
+// Načti verzi z package.json (CJS require funguje v Vite config)
+const packageVersion = require('./package.json').version;
+
 export default defineConfig({
   plugins: [react()],
   define: {
-    __APP_VERSION__: JSON.stringify(require('./package.json').version),
+    __APP_VERSION__: JSON.stringify(packageVersion),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-    // Explicitně definuj env pro build (fallback na process.env)
+    // Explicitně definuj env pro build (fallback na process.env pro Vercel)
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
-      env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || 'https://lzgophszvombxpfkiioc.supabase.co'
+      env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
     ),
     'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(
-      env.VITE_SUPABASE_ANON_KEY ||
-        process.env.VITE_SUPABASE_ANON_KEY ||
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx6Z29waHN6dm9tYnhwZmtpaW9jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0ODE3NTksImV4cCI6MjA4NjA1Nzc1OX0.1I3uZB-X3pC9ptxslpgkJMYnu8USQLi8yY3bg82E8rw'
+      env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
     ),
   },
   resolve: {
@@ -36,6 +37,7 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // base je './' pro Electron (default), přepíše se přes CLI: --base /app/ pro web build
   base: './',
   server: {
     port: 5173,
@@ -45,5 +47,6 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
+    sourcemap: false,
   },
 });

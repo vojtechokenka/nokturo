@@ -1,6 +1,7 @@
-import { createHashRouter, Navigate } from 'react-router-dom';
+import { createHashRouter, createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
 import { AppGuard } from './components/AppGuard';
+import { isElectron } from './utils/platform';
 
 // Auth
 import LoginPage from './pages/auth/LoginPage';
@@ -39,60 +40,67 @@ import AccountingPage from './pages/business/AccountingPage';
 import ChatPage from './pages/communication/ChatPage';
 import CommentsPage from './pages/communication/CommentsPage';
 
-export const router = createHashRouter(
-  [
-    {
-      path: '/',
-      element: <AppGuard />,
-      children: [
-        // Public routes
-        { path: 'login', element: <LoginPage /> },
-        { path: 'forgot-password', element: <ForgotPassword /> },
-        { path: 'reset-password', element: <ResetPassword /> },
-        { path: 'auth/callback', element: <AuthCallback /> },
-
-        // Protected routes (auth guard lives inside AppLayout)
-        {
-          path: '/',
-          element: <AppLayout />,
+const routes = [
+  {
+    path: '/',
+    element: <AppGuard />,
     children: [
-      // Default redirect
-      { index: true, element: <Navigate to="/brand/strategy" replace /> },
+      // Public routes
+      { path: 'login', element: <LoginPage /> },
+      { path: 'forgot-password', element: <ForgotPassword /> },
+      { path: 'reset-password', element: <ResetPassword /> },
+      { path: 'auth/callback', element: <AuthCallback /> },
 
-      // Brand
-      { path: 'brand/strategy', element: <StrategyPage /> },
-      { path: 'brand/identity', element: <IdentityPage /> },
+      // Protected routes (auth guard lives inside AppLayout)
+      {
+        path: '/',
+        element: <AppLayout />,
+        children: [
+          // Default redirect
+          { index: true, element: <Navigate to="/brand/strategy" replace /> },
 
-      // Prototyping
-      { path: 'prototyping/moodboard', element: <MoodboardPage /> },
-      { path: 'prototyping/ideas', element: <IdeasPage /> },
+          // Brand
+          { path: 'brand/strategy', element: <StrategyPage /> },
+          { path: 'brand/identity', element: <IdentityPage /> },
 
-      // Production
-      { path: 'production/materials', element: <MaterialsPage /> },
-      { path: 'production/components', element: <ComponentsPage /> },
-      { path: 'production/labels', element: <LabelsPage /> },
-      { path: 'production/products', element: <ProductsPage /> },
-      { path: 'production/products/:id', element: <ProductDetailPage /> },
-      { path: 'production/sampling', element: <SamplingPage /> },
-      { path: 'production/sampling/:productId', element: <SamplingDetailPage /> },
+          // Prototyping
+          { path: 'prototyping/moodboard', element: <MoodboardPage /> },
+          { path: 'prototyping/ideas', element: <IdeasPage /> },
 
-      // Business
-      { path: 'business/costing', element: <CostingPage /> },
-      { path: 'business/suppliers', element: <SuppliersPage /> },
-      { path: 'business/accounting', element: <AccountingPage /> },
+          // Production
+          { path: 'production/materials', element: <MaterialsPage /> },
+          { path: 'production/components', element: <ComponentsPage /> },
+          { path: 'production/labels', element: <LabelsPage /> },
+          { path: 'production/products', element: <ProductsPage /> },
+          { path: 'production/products/:id', element: <ProductDetailPage /> },
+          { path: 'production/sampling', element: <SamplingPage /> },
+          { path: 'production/sampling/:productId', element: <SamplingDetailPage /> },
 
-      // Communication
-      { path: 'communication/chat', element: <ChatPage /> },
-      { path: 'communication/comments', element: <CommentsPage /> },
+          // Business
+          { path: 'business/costing', element: <CostingPage /> },
+          { path: 'business/suppliers', element: <SuppliersPage /> },
+          { path: 'business/accounting', element: <AccountingPage /> },
 
-      // Settings
-      { path: 'settings/account', element: <AccountPage /> },
-      { path: 'settings/security', element: <SecurityPage /> },
-      { path: 'settings/users', element: <UsersPage /> },
+          // Communication
+          { path: 'communication/chat', element: <ChatPage /> },
+          { path: 'communication/comments', element: <CommentsPage /> },
+
+          // Settings
+          { path: 'settings/account', element: <AccountPage /> },
+          { path: 'settings/security', element: <SecurityPage /> },
+          { path: 'settings/users', element: <UsersPage /> },
+        ],
+      },
     ],
   },
-      ],
-    },
-  ],
-  { future: { v7_startTransition: true } }
-);
+];
+
+const routerOpts = { future: { v7_startTransition: true } };
+
+/**
+ * Electron → HashRouter  (file:// protocol, URLs like /#/brand/strategy)
+ * Web      → BrowserRouter with /app basename (URLs like /app/brand/strategy)
+ */
+export const router = isElectron()
+  ? createHashRouter(routes, routerOpts)
+  : createBrowserRouter(routes, { ...routerOpts, basename: '/app' });

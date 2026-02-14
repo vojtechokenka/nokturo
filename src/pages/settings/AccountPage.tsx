@@ -10,6 +10,7 @@ import { supabase } from '../../lib/supabase';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { resizeAvatarImage } from '../../lib/resizeImage';
 import { INPUT_CLASS } from '../../lib/inputStyles';
+import { isElectron } from '../../utils/platform';
 
 export default function AccountPage() {
   const { t } = useTranslation();
@@ -463,8 +464,17 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* App version & update */}
-        <AppUpdateSection />
+        {/* App version & update (Electron only) */}
+        {isElectron() ? (
+          <AppUpdateSection />
+        ) : (
+          <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700">
+            <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
+              Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'}</span>
+              <span className="ml-2 text-nokturo-400 dark:text-nokturo-500">— web</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Toast */}
