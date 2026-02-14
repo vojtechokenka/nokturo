@@ -21,14 +21,14 @@ import {
 } from 'lucide-react';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
-  gray: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200',
-  orange: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-  blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-  green: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
-  purple: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
-  pink: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
-  red: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
-  yellow: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300',
+  gray: 'bg-nokturo-500 text-white',
+  orange: 'bg-amber-600 text-white',
+  blue: 'bg-blue-600 text-white',
+  green: 'bg-emerald-600 text-white',
+  purple: 'bg-violet-600 text-white',
+  pink: 'bg-pink-600 text-white',
+  red: 'bg-red-600 text-white',
+  yellow: 'bg-amber-500 text-nokturo-900',
 };
 
 export default function LabelsPage() {

@@ -8,11 +8,11 @@ import type { RichTextBlock } from './RichTextBlockEditor';
 
 // ── Status badge colours ──────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
-  concept: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
-  pattern: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
-  prototype: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-  production: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
-  archived: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-700 dark:text-nokturo-200',
+  concept: 'bg-blue-600 text-white',
+  pattern: 'bg-violet-600 text-white',
+  prototype: 'bg-amber-600 text-white',
+  production: 'bg-emerald-600 text-white',
+  archived: 'bg-nokturo-500 text-white',
 };
 
 // ── Props ─────────────────────────────────────────────────────

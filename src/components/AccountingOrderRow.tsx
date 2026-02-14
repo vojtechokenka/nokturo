@@ -4,10 +4,10 @@ import { convertToCzk } from '../lib/currency';
 import type { AccountingOrder } from './AccountingSlideOver';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
-  gray: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200',
-  orange: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
-  green: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
-  red: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  gray: 'bg-nokturo-500 text-white',
+  orange: 'bg-amber-600 text-white',
+  green: 'bg-emerald-600 text-white',
+  red: 'bg-red-600 text-white',
 };
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
