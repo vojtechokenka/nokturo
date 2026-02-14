@@ -36,8 +36,6 @@ async function buildUserFromSession(
   /** When profile fetch fails, preserve role from existing user to avoid transient Founder→Client downgrade (e.g. during refreshSession) */
   getExistingUser?: () => { id: string; role: string } | null
 ) {
-  const timeoutMs = 15000;
-
   const fetchProfile = () =>
     supabase
       .from('profiles')
@@ -45,30 +43,30 @@ async function buildUserFromSession(
       .eq('id', session.user.id)
       .maybeSingle();
 
-  const timeoutPromise = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error('Profiles fetch timeout')), timeoutMs)
-  );
+  let profile: { role?: string; first_name?: string; last_name?: string; full_name?: string; avatar_url?: string } | null = null;
 
-  let profile: { role?: string; first_name?: string; last_name?: string; full_name?: string; avatar_url?: string } | null;
-  try {
-    const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: unknown };
-    if (error) throw error;
-    profile = data;
-  } catch (err) {
-    // Retry once after 2s before falling back
+  // Try up to 2 times with short timeouts (3s each)
+  for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      await new Promise((r) => setTimeout(r, 2000));
-      const { data } = await Promise.race([fetchProfile(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error('Retry timeout')), 8000))]) as { data: typeof profile };
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 1000));
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Profiles fetch timeout')), 3000)
+      );
+      const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: unknown };
+      if (error) throw error;
       profile = data;
-    } catch (retryErr) {
-      console.warn('⚠️ Profile fetch failed/timeout (after retry), using minimal user:', retryErr);
-      const minimal = buildMinimalUser(session);
-      // Preserve existing role when profile fetch fails (avoids Founder→Client downgrade during refreshSession)
-      const existing = getExistingUser?.();
-      if (existing?.id === session.user.id && existing.role && minimal.role === 'client') {
-        minimal.role = existing.role as import('./lib/rbac').Role;
+      break; // success
+    } catch (err) {
+      console.warn(`⚠️ Profile fetch attempt ${attempt + 1} failed:`, err);
+      if (attempt === 1) {
+        // Both attempts failed, use minimal user
+        const minimal = buildMinimalUser(session);
+        const existing = getExistingUser?.();
+        if (existing?.id === session.user.id && existing.role && minimal.role === 'client') {
+          minimal.role = existing.role as import('./lib/rbac').Role;
+        }
+        return minimal;
       }
-      return minimal;
     }
   }
 
