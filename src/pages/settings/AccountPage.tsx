@@ -486,7 +486,6 @@ type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'download
 
 function AppUpdateSection() {
   const { t } = useTranslation();
-  const isElectron = !!window.electronAPI?.isElectron;
   const [status, setStatus] = useState<UpdateStatus>('idle');
   const [newVersion, setNewVersion] = useState<string | null>(null);
   const [downloadPercent, setDownloadPercent] = useState(0);
@@ -535,9 +534,13 @@ function AppUpdateSection() {
   }, []);
 
   const handleCheck = useCallback(async () => {
-    if (!window.electronAPI?.checkForUpdate) return;
     setStatus('checking');
     setErrorMsg(null);
+    if (!window.electronAPI?.checkForUpdate) {
+      // Not running in Electron or old preload – show dev status
+      setStatus('dev');
+      return;
+    }
     const result = await window.electronAPI.checkForUpdate();
     if (result.status === 'dev') {
       setStatus('dev');
@@ -568,7 +571,7 @@ function AppUpdateSection() {
         </p>
 
         {/* Action buttons based on status */}
-        {isElectron && status === 'idle' && (
+        {status === 'idle' && (
           <button
             onClick={handleCheck}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
@@ -578,14 +581,14 @@ function AppUpdateSection() {
           </button>
         )}
 
-        {isElectron && status === 'checking' && (
+        {status === 'checking' && (
           <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             {t('settings.account.checkingUpdate', 'Kontroluji...')}
           </span>
         )}
 
-        {isElectron && status === 'available' && (
+        {status === 'available' && (
           <button
             onClick={handleDownload}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-nokturo-700 dark:bg-nokturo-600 text-sm text-white hover:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
@@ -595,14 +598,14 @@ function AppUpdateSection() {
           </button>
         )}
 
-        {isElectron && status === 'downloading' && (
+        {status === 'downloading' && (
           <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
             <Loader2 className="w-3.5 h-3.5 animate-spin" />
             {t('settings.account.downloadingUpdate', 'Stahuji...')} {downloadPercent}%
           </span>
         )}
 
-        {isElectron && status === 'downloaded' && (
+        {status === 'downloaded' && (
           <button
             onClick={handleInstall}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-sm text-white hover:bg-green-500 transition-colors"
@@ -612,14 +615,14 @@ function AppUpdateSection() {
           </button>
         )}
 
-        {isElectron && status === 'up-to-date' && (
+        {status === 'up-to-date' && (
           <span className="inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
             <CheckCircle2 className="w-3.5 h-3.5" />
             {t('settings.account.upToDate', 'Máš nejnovější verzi')}
           </span>
         )}
 
-        {isElectron && status === 'error' && (
+        {status === 'error' && (
           <button
             onClick={handleCheck}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-nokturo-700 text-sm text-red-500 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
@@ -629,8 +632,8 @@ function AppUpdateSection() {
           </button>
         )}
 
-        {isElectron && status === 'dev' && (
-          <span className="text-xs text-nokturo-400 dark:text-nokturo-500">Dev mode</span>
+        {status === 'dev' && (
+          <span className="text-xs text-nokturo-400 dark:text-nokturo-500">Dev mode — update jen v buildu</span>
         )}
       </div>
 
