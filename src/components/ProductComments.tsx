@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
@@ -70,6 +70,51 @@ export function ProductComments({ productId }: ProductCommentsProps) {
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
+
+  // ── Realtime subscription ─────────────────────────────────────
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  useEffect(() => {
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+
+    const channel = supabase
+      .channel(`product-comments-${productId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_comments',
+          filter: `product_id=eq.${productId}`,
+        },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as Comment;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, first_name, last_name, avatar_url')
+              .eq('id', row.author_id)
+              .single();
+            const enriched: Comment = { ...row, profile: profile || { avatar_url: null } };
+            setComments((prev) => (prev.some((c) => c.id === enriched.id) ? prev : [...prev, enriched]));
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as { id: string };
+            setComments((prev) => prev.filter((c) => c.id !== oldRow.id && c.parent_id !== oldRow.id));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as Comment;
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+          }
+        }
+      )
+      .subscribe();
+
+    channelRef.current = channel;
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [productId]);
 
   // ── Post comment ────────────────────────────────────────────
   const handlePost = async (parentId: string | null = null) => {

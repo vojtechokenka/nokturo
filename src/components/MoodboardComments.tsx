@@ -94,6 +94,44 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
     fetchProfiles();
   }, [fetchProfiles]);
 
+  // ── Realtime subscription ─────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel(`moodboard-comments-${moodboardItemId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'moodboard_comments',
+          filter: `moodboard_item_id=eq.${moodboardItemId}`,
+        },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as MoodboardComment;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, first_name, last_name, avatar_url')
+              .eq('id', row.author_id)
+              .single();
+            const enriched: MoodboardComment = { ...row, profile: profile || { avatar_url: null } };
+            setComments((prev) => (prev.some((c) => c.id === enriched.id) ? prev : [...prev, enriched]));
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as { id: string };
+            setComments((prev) => prev.filter((c) => c.id !== oldRow.id));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as MoodboardComment;
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [moodboardItemId]);
+
   // Set currentAuthorId on load (for isOwn check in dev mode)
   useEffect(() => {
     const run = async () => {

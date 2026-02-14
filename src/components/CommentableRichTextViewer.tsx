@@ -382,6 +382,44 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     fetchComments().finally(() => setLoading(false));
   }, [fetchComments]);
 
+  // ── Realtime subscription ─────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel(`text-comments-${productId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_text_comments',
+          filter: `product_id=eq.${productId}`,
+        },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as TextComment;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, first_name, last_name, avatar_url')
+              .eq('id', row.author_id)
+              .single();
+            const enriched: TextComment = { ...row, profile: profile || { avatar_url: null } };
+            setComments((prev) => (prev.some((c) => c.id === enriched.id) ? prev : [...prev, enriched]));
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as { id: string };
+            setComments((prev) => prev.filter((c) => c.id !== oldRow.id && c.parent_id !== oldRow.id));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as TextComment;
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [productId]);
+
   // Position popover relative to container so it scrolls with content (not fixed)
   useLayoutEffect(() => {
     if (!selectionState || !containerRef.current) return;

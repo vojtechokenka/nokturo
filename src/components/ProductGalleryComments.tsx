@@ -107,6 +107,47 @@ export function ProductGalleryComments({
     fetchProfiles();
   }, [fetchProfiles]);
 
+  // ── Realtime subscription ─────────────────────────────────────
+  useEffect(() => {
+    const channel = supabase
+      .channel(`gallery-comments-${productId}-${galleryType}-${imageIndex}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'product_gallery_comments',
+          filter: `product_id=eq.${productId}`,
+        },
+        async (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const row = payload.new as ProductGalleryComment;
+            // Only include comments for this specific gallery image
+            if (row.gallery_type !== galleryType || row.image_index !== imageIndex) return;
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('full_name, first_name, last_name, avatar_url')
+              .eq('id', row.author_id)
+              .single();
+            const enriched: ProductGalleryComment = { ...row, profile: profile || { avatar_url: null } };
+            setComments((prev) => (prev.some((c) => c.id === enriched.id) ? prev : [...prev, enriched]));
+          } else if (payload.eventType === 'DELETE') {
+            const oldRow = payload.old as { id: string };
+            setComments((prev) => prev.filter((c) => c.id !== oldRow.id));
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = payload.new as ProductGalleryComment;
+            if (updated.gallery_type !== galleryType || updated.image_index !== imageIndex) return;
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [productId, galleryType, imageIndex]);
+
   useEffect(() => {
     const run = async () => {
       let id = getUserIdForDb();

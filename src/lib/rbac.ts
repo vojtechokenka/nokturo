@@ -29,7 +29,7 @@ export type Module =
 
 // Full permission matrix
 // Founder = full access
-// Engineer = read brand strategy, identity, moodboard, ideas, materials, components, products, costing, suppliers, accounting; comment on moodboard only
+// Engineer = read all; comment on everything; no write/delete
 // Viewer = read all except accounting; no comment, no edit
 // Client = read + comment on brand strategy, identity, ready for sampling (production.products/sampling)
 const permissionMatrix: Record<Role, Record<Module, Permission>> = {
@@ -51,20 +51,20 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   },
 
   engineer: {
-    'brand.strategy':          { read: true,  write: false, comment: false, delete: false },
-    'brand.identity':          { read: true,  write: false, comment: false, delete: false },
+    'brand.strategy':          { read: true,  write: false, comment: true,  delete: false },
+    'brand.identity':          { read: true,  write: false, comment: true,  delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: true,  delete: false },
-    'prototyping.ideas':       { read: true,  write: false, comment: false, delete: false },
-    'production.materials':    { read: true,  write: false, comment: false, delete: false },
-    'production.components':   { read: true,  write: false, comment: false, delete: false },
-    'production.labels':      { read: true,  write: false, comment: false, delete: false },
-    'production.products':     { read: true,  write: false, comment: false, delete: false },
-    'production.sampling':     { read: true,  write: false, comment: false, delete: false },
-    'business.costing':       { read: true,  write: false, comment: false, delete: false },
-    'business.suppliers':      { read: true,  write: false, comment: false, delete: false },
-    'business.accounting':     { read: true,  write: false, comment: false, delete: false },
-    'communication.chat':     { read: false, write: false, comment: false, delete: false },
-    'communication.comments': { read: false, write: false, comment: false, delete: false },
+    'prototyping.ideas':       { read: true,  write: false, comment: true,  delete: false },
+    'production.materials':    { read: true,  write: false, comment: true,  delete: false },
+    'production.components':   { read: true,  write: false, comment: true,  delete: false },
+    'production.labels':      { read: true,  write: false, comment: true,  delete: false },
+    'production.products':     { read: true,  write: false, comment: true,  delete: false },
+    'production.sampling':     { read: true,  write: false, comment: true,  delete: false },
+    'business.costing':       { read: true,  write: false, comment: true,  delete: false },
+    'business.suppliers':      { read: true,  write: false, comment: true,  delete: false },
+    'business.accounting':     { read: true,  write: false, comment: true,  delete: false },
+    'communication.chat':     { read: true,  write: false, comment: true,  delete: false },
+    'communication.comments': { read: true,  write: false, comment: true,  delete: false },
   },
 
   viewer: {
