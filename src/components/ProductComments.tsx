@@ -103,7 +103,8 @@ export function ProductComments({ productId }: ProductCommentsProps) {
             setComments((prev) => prev.filter((c) => c.id !== oldRow.id && c.parent_id !== oldRow.id));
           } else if (payload.eventType === 'UPDATE') {
             const updated = payload.new as Comment;
-            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+            // Preserve profile from existing comment – real-time payload has no joined data
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated, profile: c.profile } : c)));
           }
         }
       )

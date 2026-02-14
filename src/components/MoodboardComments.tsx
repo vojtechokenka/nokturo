@@ -76,10 +76,11 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
   // ── Fetch comments ──────────────────────────────────────────
   const fetchComments = useCallback(async () => {
     setLoading(true);
-    // Select without profile join – anon may not read profiles in dev; join can fail silently
     const { data, error } = await supabase
       .from('moodboard_comments')
-      .select('*')
+      .select(
+        '*, profile:profiles!moodboard_comments_author_id_fkey(full_name, first_name, last_name, avatar_url)'
+      )
       .eq('moodboard_item_id', moodboardItemId)
       .order('created_at', { ascending: true });
     setComments((error ? [] : data || []) as MoodboardComment[]);
@@ -121,7 +122,8 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
             setComments((prev) => prev.filter((c) => c.id !== oldRow.id));
           } else if (payload.eventType === 'UPDATE') {
             const updated = payload.new as MoodboardComment;
-            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+            // Preserve profile from existing comment – real-time payload has no joined data
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated, profile: c.profile } : c)));
           }
         }
       )
@@ -205,7 +207,7 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
           avatar_url: user.avatarUrl ?? null,
         },
       };
-      setComments((prev) => [...prev, newCommentRow]);
+      setComments((prev) => (prev.some((c) => c.id === newCommentRow.id) ? prev : [...prev, newCommentRow]));
       setNewComment('');
       setTaggedUsers([]);
 

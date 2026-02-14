@@ -137,7 +137,8 @@ export function ProductGalleryComments({
           } else if (payload.eventType === 'UPDATE') {
             const updated = payload.new as ProductGalleryComment;
             if (updated.gallery_type !== galleryType || updated.image_index !== imageIndex) return;
-            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated } : c)));
+            // Preserve profile from existing comment – real-time payload has no joined data
+            setComments((prev) => prev.map((c) => (c.id === updated.id ? { ...c, ...updated, profile: c.profile } : c)));
           }
         }
       )
@@ -222,7 +223,7 @@ export function ProductGalleryComments({
           avatar_url: user.avatarUrl ?? null,
         },
       };
-      setComments((prev) => [...prev, newCommentRow]);
+      setComments((prev) => (prev.some((c) => c.id === newCommentRow.id) ? prev : [...prev, newCommentRow]));
       setNewComment('');
       setTaggedUsers([]);
     }
