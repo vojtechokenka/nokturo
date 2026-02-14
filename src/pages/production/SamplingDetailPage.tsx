@@ -32,11 +32,11 @@ function TocItemsSync({ items, onItems }: { items: TocItem[]; onItems: (items: T
 }
 
 const STATUS_COLORS: Record<string, string> = {
-  concept: 'bg-blue-100 text-blue-700',
-  pattern: 'bg-purple-100 text-purple-700',
-  prototype: 'bg-amber-100 text-amber-700',
-  production: 'bg-green-100 text-green-700',
-  archived: 'bg-nokturo-200 text-nokturo-700',
+  concept: 'bg-blue-600 text-white',
+  pattern: 'bg-violet-600 text-white',
+  prototype: 'bg-amber-600 text-white',
+  production: 'bg-emerald-600 text-white',
+  archived: 'bg-nokturo-500 text-white',
 };
 
 function parseDescriptionBlocks(
