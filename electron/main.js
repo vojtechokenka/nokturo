@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session } = require('electron');
+const { app, BrowserWindow, session, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -46,14 +46,74 @@ function createStaticServer(distPath) {
   });
 }
 
+function sendUpdateStatus(status, info) {
+  const wins = BrowserWindow.getAllWindows();
+  for (const win of wins) {
+    win.webContents.send('update-status', status, info);
+  }
+}
+
 function setupAutoUpdater() {
-  if (!app.isPackaged) return;
-  autoUpdater.autoDownload = true;
+  // Auto-update: check on launch (packaged only), but always register IPC handlers
+  autoUpdater.autoDownload = false; // Don't auto-download; let user decide
   autoUpdater.autoInstallOnAppQuit = true;
-  autoUpdater.on('update-available', (info) => console.log('[Nokturo] Update available:', info.version));
-  autoUpdater.on('update-downloaded', (info) => console.log('[Nokturo] Update downloaded:', info.version));
-  autoUpdater.on('error', (err) => console.error('[Nokturo] Update error:', err));
-  app.whenReady().then(() => autoUpdater.checkForUpdates().catch(() => {}));
+
+  autoUpdater.on('checking-for-update', () => {
+    console.log('[Nokturo] Checking for updates...');
+    sendUpdateStatus('checking');
+  });
+  autoUpdater.on('update-available', (info) => {
+    console.log('[Nokturo] Update available:', info.version);
+    sendUpdateStatus('available', { version: info.version });
+  });
+  autoUpdater.on('update-not-available', () => {
+    console.log('[Nokturo] App is up to date.');
+    sendUpdateStatus('up-to-date');
+  });
+  autoUpdater.on('download-progress', (progress) => {
+    sendUpdateStatus('downloading', { percent: Math.round(progress.percent) });
+  });
+  autoUpdater.on('update-downloaded', (info) => {
+    console.log('[Nokturo] Update downloaded:', info.version);
+    sendUpdateStatus('downloaded', { version: info.version });
+  });
+  autoUpdater.on('error', (err) => {
+    console.error('[Nokturo] Update error:', err);
+    sendUpdateStatus('error', { message: err?.message || 'Unknown error' });
+  });
+
+  // IPC: renderer can request update actions
+  ipcMain.handle('update-check', async () => {
+    if (!app.isPackaged) return { status: 'dev' };
+    try {
+      const result = await autoUpdater.checkForUpdates();
+      return { status: 'ok', version: result?.updateInfo?.version };
+    } catch (err) {
+      return { status: 'error', message: err?.message };
+    }
+  });
+
+  ipcMain.handle('update-download', async () => {
+    try {
+      await autoUpdater.downloadUpdate();
+      return { status: 'ok' };
+    } catch (err) {
+      return { status: 'error', message: err?.message };
+    }
+  });
+
+  ipcMain.handle('update-install', () => {
+    autoUpdater.quitAndInstall(false, true);
+  });
+
+  ipcMain.handle('get-app-version', () => {
+    return app.getVersion();
+  });
+
+  // Auto-check on launch (packaged only)
+  if (app.isPackaged) {
+    app.whenReady().then(() => autoUpdater.checkForUpdates().catch(() => {}));
+  }
 }
 
 function createWindow(loadUrl) {

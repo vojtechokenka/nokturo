@@ -16,5 +16,10 @@ interface Window {
   electronAPI?: {
     platform: string;
     isElectron: boolean;
+    checkForUpdate: () => Promise<{ status: string; version?: string; message?: string }>;
+    downloadUpdate: () => Promise<{ status: string; message?: string }>;
+    installUpdate: () => Promise<void>;
+    getAppVersion: () => Promise<string>;
+    onUpdateStatus: (callback: (status: string, info?: Record<string, unknown>) => void) => () => void;
   };
 }
