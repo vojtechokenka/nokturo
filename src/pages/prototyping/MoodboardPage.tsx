@@ -1038,7 +1038,7 @@ export default function MoodboardPage() {
                     e.stopPropagation();
                     lightboxNext();
                   }}
-                  className="absolute right-4 lg:right-[calc(320px+1rem)] xl:right-[calc(384px+1rem)] top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
                 >
                   <ChevronRight className="w-8 h-8" />
                 </button>
