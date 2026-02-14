@@ -6,10 +6,10 @@ import { hasPermission, canDeleteAnything } from '../lib/rbac';
 import {
   Send,
   Loader2,
-  Trash2,
   AtSign,
   Check,
   X,
+  MoreHorizontal,
 } from 'lucide-react';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
@@ -40,10 +40,11 @@ interface ProfileOption {
 
 interface MoodboardCommentsProps {
   moodboardItemId: string;
+  hasHeaderAbove?: boolean;
 }
 
 // ── Component ─────────────────────────────────────────────────
-export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
+export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: MoodboardCommentsProps) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canComment = user?.role ? hasPermission(user.role, 'prototyping.moodboard', 'comment') : false;
@@ -62,7 +63,16 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
   const [editContent, setEditContent] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
+  const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Close comment menu on outside click
+  useEffect(() => {
+    if (!commentMenuOpen) return;
+    const handle = () => setCommentMenuOpen(null);
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
+  }, [commentMenuOpen]);
 
   // ── Fetch profiles for tagging ───────────────────────────────
   const fetchProfiles = useCallback(async () => {
@@ -342,7 +352,7 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
           </div>
         ) : (
           <>
-            <div className="relative -mx-2 px-3 pt-1 pb-2 pr-4">
+            <div className="-mx-2 px-3 pt-1 pb-2">
               <p className="text-base break-words pr-0 text-inherit">
                 {renderContentWithMentions(
                   comment.content,
@@ -350,34 +360,6 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
                   [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || ''
                 )}
               </p>
-              {/* Edit & Delete: top right of message */}
-              <div className="absolute right-2 top-0 z-10 flex gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-                {canDelete && isOwn && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      startEdit(comment);
-                    }}
-                    className="px-2 py-1 rounded text-xs text-white border-none bg-white/10"
-                  >
-                    {t('common.edit')}
-                  </button>
-                )}
-                {canDelete && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setDeleteTarget(comment.id);
-                    }}
-                    className="px-2 py-1 rounded text-xs text-white bg-red-500 hover:bg-red-600"
-                    title={t('common.delete')}
-                  >
-                    {t('common.delete')}
-                  </button>
-                )}
-              </div>
             </div>
             <div className="flex justify-between items-center mt-4 min-w-0 gap-2">
               <div className="flex gap-2 items-center min-w-0 flex-1">
@@ -398,18 +380,57 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
                   </span>
                 </div>
               </div>
-              {canComment && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleReplyTo(comment);
-                  }}
-                  className="shrink-0 px-2 py-1 rounded text-xs border-none text-white/90 bg-white/10"
-                >
-                  {t('comments.reply')}
-                </button>
-              )}
+              <div className="flex items-center gap-1 shrink-0">
+                {isOwn && (
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCommentMenuOpen(commentMenuOpen === comment.id ? null : comment.id);
+                      }}
+                      className={`p-1 rounded text-white/60 hover:text-white/90 hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                    >
+                      <MoreHorizontal className="w-4 h-4" />
+                    </button>
+                    {commentMenuOpen === comment.id && (
+                      <>
+                        <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
+                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[100px] z-20" onClick={(e) => e.stopPropagation()}>
+                          {isOwn && (
+                            <button
+                              type="button"
+                              onClick={() => { startEdit(comment); setCommentMenuOpen(null); }}
+                              className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
+                            >
+                              {t('common.edit')}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
+                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
+                          >
+                            {t('common.delete')}
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                {canComment && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleReplyTo(comment);
+                    }}
+                    className="shrink-0 px-2 py-1 rounded text-xs border-none text-white/90 bg-white/10"
+                  >
+                    {t('comments.reply')}
+                  </button>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -418,7 +439,7 @@ export function MoodboardComments({ moodboardItemId }: MoodboardCommentsProps) {
   };
 
   return (
-    <section className="mt-4 pt-4 border-t border-nokturo-200 dark:border-nokturo-700 flex-1 flex flex-col min-h-0">
+    <section className={`flex-1 flex flex-col min-h-0 ${hasHeaderAbove ? 'mt-4 pt-4 border-t border-nokturo-200 dark:border-nokturo-700' : ''}`}>
       <div className="flex-1 overflow-y-auto min-h-0">
         {loading ? (
           <div className="flex justify-center py-6">

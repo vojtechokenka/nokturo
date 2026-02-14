@@ -47,7 +47,8 @@
     "logout": "Log out",
     "login": "Log in",
     "created": "Created",
-    "updated": "Updated"
+    "updated": "Updated",
+    "duplicate": "Duplicate"
   },
   "roles": {
     "founder": "Founder",
@@ -662,7 +663,7 @@
     "loadFromUrl": "Load image",
     "pasteHint": "Tip: You can paste images directly with Ctrl+V",
     "columns": "columns",
-    "layoutCycle": "Click to cycle between 3, 4 and 5 columns",
+    "layoutCycle": "Click to cycle between 3, 4, 5 and 6 columns",
     "details": "Details",
     "comments": "Comments",
     "tagUser": "Tag user",

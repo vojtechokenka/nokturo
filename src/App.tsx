@@ -14,16 +14,20 @@ function resolveRole(raw: unknown): Role {
 
 function buildMinimalUser(session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } }) {
   const role = resolveRole(session.user.user_metadata?.role);
-  const fullName = session.user.user_metadata?.full_name as string | undefined;
+  const fullName = (session.user.user_metadata?.full_name as string | undefined) ?? '';
+  // Try to extract firstName/lastName from full_name metadata
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts.length > 0 ? parts[0] : undefined;
+  const lastName = parts.length > 1 ? parts.slice(1).join(' ') : undefined;
   const displayName = fullName || session.user.email || '';
   return {
     id: session.user.id,
     email: session.user.email ?? '',
     name: displayName,
-    firstName: undefined,
-    lastName: undefined,
+    firstName: firstName || undefined,
+    lastName: lastName || undefined,
     role,
-    avatarUrl: undefined,
+    avatarUrl: (session.user.user_metadata?.avatar_url as string | undefined) ?? undefined,
   };
 }
 
@@ -32,12 +36,14 @@ async function buildUserFromSession(
   /** When profile fetch fails, preserve role from existing user to avoid transient Founder→Client downgrade (e.g. during refreshSession) */
   getExistingUser?: () => { id: string; role: string } | null
 ) {
-  const timeoutMs = 5000;
-  const profilePromise = supabase
-    .from('profiles')
-    .select('role, first_name, last_name, full_name, avatar_url')
-    .eq('id', session.user.id)
-    .maybeSingle();
+  const timeoutMs = 15000;
+
+  const fetchProfile = () =>
+    supabase
+      .from('profiles')
+      .select('role, first_name, last_name, full_name, avatar_url')
+      .eq('id', session.user.id)
+      .maybeSingle();
 
   const timeoutPromise = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error('Profiles fetch timeout')), timeoutMs)
@@ -45,17 +51,25 @@ async function buildUserFromSession(
 
   let profile: { role?: string; first_name?: string; last_name?: string; full_name?: string; avatar_url?: string } | null;
   try {
-    const { data } = await Promise.race([profilePromise, timeoutPromise]) as { data: typeof profile };
+    const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: unknown };
+    if (error) throw error;
     profile = data;
   } catch (err) {
-    console.warn('⚠️ Profile fetch failed/timeout, using minimal user:', err);
-    const minimal = buildMinimalUser(session);
-    // Preserve existing role when profile fetch fails (avoids Founder→Client downgrade during refreshSession)
-    const existing = getExistingUser?.();
-    if (existing?.id === session.user.id && existing.role && minimal.role === 'client') {
-      minimal.role = existing.role as import('./lib/rbac').Role;
+    // Retry once after 2s before falling back
+    try {
+      await new Promise((r) => setTimeout(r, 2000));
+      const { data } = await Promise.race([fetchProfile(), new Promise<never>((_, rej) => setTimeout(() => rej(new Error('Retry timeout')), 8000))]) as { data: typeof profile };
+      profile = data;
+    } catch (retryErr) {
+      console.warn('⚠️ Profile fetch failed/timeout (after retry), using minimal user:', retryErr);
+      const minimal = buildMinimalUser(session);
+      // Preserve existing role when profile fetch fails (avoids Founder→Client downgrade during refreshSession)
+      const existing = getExistingUser?.();
+      if (existing?.id === session.user.id && existing.role && minimal.role === 'client') {
+        minimal.role = existing.role as import('./lib/rbac').Role;
+      }
+      return minimal;
     }
-    return minimal;
   }
 
   const role = resolveRole(profile?.role ?? session.user.user_metadata?.role);

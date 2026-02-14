@@ -11,7 +11,7 @@ import type { RichTextBlock } from './RichTextBlockEditor';
 import { extractHeadings } from './RichTextBlockViewer';
 import type { TocItem } from './TableOfContents';
 import { TableOfContents } from './TableOfContents';
-import { MessageSquare, Send, Loader2, AtSign } from 'lucide-react';
+import { MessageSquare, Send, Loader2, AtSign, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
@@ -578,6 +578,17 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     }
   }, [user, productId, comments, replyContent]);
 
+  const handleEditComment = useCallback(async (id: string, newContent: string) => {
+    if (!newContent.trim()) return;
+    const { error } = await supabase
+      .from('product_text_comments')
+      .update({ content: newContent.trim() })
+      .eq('id', id);
+    if (!error) {
+      setComments((prev) => prev.map((c) => c.id === id ? { ...c, content: newContent.trim() } : c));
+    }
+  }, []);
+
   const handleDelete = useCallback(async (id: string) => {
     const { error } = await supabase.from('product_text_comments').delete().eq('id', id);
     if (error) {
@@ -799,6 +810,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           displayParentOverrides={displayParentOverrides}
           onReply={handleReply}
           onDelete={handleDelete}
+          onEdit={handleEditComment}
           onClose={() => setActiveThreadId(null)}
           skipNextBackdropClickRef={skipNextBackdropClickRef}
           replyTo={replyTo}
@@ -823,6 +835,7 @@ function CommentThreadPopover({
   displayParentOverrides,
   onReply,
   onDelete,
+  onEdit,
   onClose,
   skipNextBackdropClickRef,
   replyTo,
@@ -840,6 +853,7 @@ function CommentThreadPopover({
   displayParentOverrides: Record<string, string>;
   onReply: (id: string, displayParentContent?: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string, newContent: string) => void;
   onClose: () => void;
   skipNextBackdropClickRef?: React.MutableRefObject<boolean>;
   replyTo: string | null;
@@ -853,6 +867,10 @@ function CommentThreadPopover({
   canDelete: boolean;
 }) {
   const { t } = useTranslation();
+  const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editContent, setEditContent] = useState('');
 
   const renderComment = (c: TextComment, allComments: TextComment[]) => {
     const name =
@@ -860,12 +878,16 @@ function CommentThreadPopover({
       c.profile?.full_name ||
       'Unknown';
     const isOwn = currentAuthorId === c.author_id;
+    const canAct = isOwn; // only own comments can be edited/deleted
     const parent = c.parent_id ? allComments.find((x) => x.id === c.parent_id) : null;
     const parentPreviewRaw = displayParentOverrides[c.id] ?? parent?.content;
     const parentPreview = parentPreviewRaw?.split('\n')[0]?.trim();
     const parentPreviewTruncated = parentPreview
       ? parentPreview.length > 50 ? `${parentPreview.slice(0, 50)}...` : parentPreview
       : null;
+
+    const isEditing = editingId === c.id;
+
     return (
       <div
         key={c.id}
@@ -876,28 +898,44 @@ function CommentThreadPopover({
             {parentPreviewTruncated}
           </p>
         )}
-        <div className="relative -mx-2 px-3 pt-1 pb-2 pr-4">
-          <p className="text-base break-words text-inherit">
-            {renderContentWithMentions(c.content, isOwn, currentUserDisplayName)}
-          </p>
-          <div className="absolute right-2 top-0 z-10 flex gap-2 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
-            {canDelete && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  const isRoot = c.id === rootComment.id;
-                  if (isRoot && !window.confirm(t('comments.deleteRootConfirm'))) return;
-                  onDelete(c.id);
-                }}
-                className="px-2 py-1 rounded text-xs text-white bg-red-500 hover:bg-red-600"
-                title={t('common.delete')}
-              >
-                {t('common.delete')}
-              </button>
-            )}
-          </div>
+        <div className="-mx-2 px-3 pt-1 pb-2">
+          {isEditing ? (
+            <div className="flex flex-col gap-1.5">
+              <textarea
+                className="w-full text-sm bg-white dark:bg-nokturo-700 border border-nokturo-300 dark:border-nokturo-600 rounded px-2 py-1.5 text-nokturo-900 dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-nokturo-500"
+                rows={2}
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                autoFocus
+              />
+              <div className="flex gap-1.5 justify-end">
+                <button
+                  type="button"
+                  onClick={() => { setEditingId(null); setEditContent(''); }}
+                  className="px-2 py-1 text-xs rounded text-nokturo-500 dark:text-nokturo-400 hover:bg-nokturo-100 dark:hover:bg-white/10"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editContent.trim()) {
+                      onEdit(c.id, editContent);
+                      setEditingId(null);
+                      setEditContent('');
+                    }
+                  }}
+                  className="px-2 py-1 text-xs rounded bg-nokturo-800 dark:bg-white text-white dark:text-nokturo-900 hover:bg-nokturo-900 dark:hover:bg-nokturo-100"
+                >
+                  {t('common.save')}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="text-base break-words text-inherit">
+              {renderContentWithMentions(c.content, isOwn, currentUserDisplayName)}
+            </p>
+          )}
         </div>
         <div className="flex justify-between items-center mt-4 min-w-0 gap-2">
           <div className="flex gap-2 items-center min-w-0 flex-1">
@@ -918,22 +956,87 @@ function CommentThreadPopover({
               </span>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (replyTo === c.id) {
-                setReplyTo(null);
-                setReplyContent('');
-              } else {
-                const authorName = [c.profile?.first_name, c.profile?.last_name].filter(Boolean).join(' ') || c.profile?.full_name || 'Unknown';
-                setReplyTo(c.id);
-                setReplyContent(`@${authorName} `);
-              }
-            }}
-            className="shrink-0 px-2 py-1 rounded text-xs text-nokturo-500 hover:text-nokturo-700 dark:text-white/90 dark:hover:text-white dark:bg-white/10"
-          >
-            {t('comments.reply')}
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            {canAct && (
+              <div className="relative" data-comment-menu>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (commentMenuOpen === c.id) {
+                      setCommentMenuOpen(null);
+                      setMenuPos(null);
+                    } else {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setMenuPos({ top: rect.bottom + 4, left: rect.right });
+                      setCommentMenuOpen(c.id);
+                    }
+                  }}
+                  className={`p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-white/60 dark:hover:text-white/90 hover:bg-nokturo-100 dark:hover:bg-white/10 transition-all ${commentMenuOpen === c.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                >
+                  <MoreHorizontal className="w-4 h-4" />
+                </button>
+                {commentMenuOpen === c.id && menuPos && (
+                  <>
+                    <div className="fixed inset-0 z-[100]" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); setMenuPos(null); }} />
+                    <div
+                      className="fixed bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[100px] z-[101]"
+                      style={{ top: menuPos.top, left: menuPos.left, transform: 'translateX(-100%)' }}
+                    >
+                      {isOwn && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingId(c.id);
+                            setEditContent(c.content);
+                            setCommentMenuOpen(null);
+                            setMenuPos(null);
+                          }}
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          {t('common.edit')}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          setCommentMenuOpen(null);
+                          setMenuPos(null);
+                          const isRoot = c.id === rootComment.id;
+                          if (isRoot && !window.confirm(t('comments.deleteRootConfirm'))) return;
+                          onDelete(c.id);
+                        }}
+                        className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        {t('common.delete')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => {
+                if (replyTo === c.id) {
+                  setReplyTo(null);
+                  setReplyContent('');
+                } else {
+                  const authorName = [c.profile?.first_name, c.profile?.last_name].filter(Boolean).join(' ') || c.profile?.full_name || 'Unknown';
+                  setReplyTo(c.id);
+                  setReplyContent(`@${authorName} `);
+                }
+              }}
+              className="shrink-0 px-2 py-1 rounded text-xs text-nokturo-500 hover:text-nokturo-700 dark:text-white/90 dark:hover:text-white dark:bg-white/10"
+            >
+              {t('comments.reply')}
+            </button>
+          </div>
         </div>
       </div>
     );

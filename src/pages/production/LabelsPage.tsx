@@ -16,7 +16,20 @@ import {
   Trash2,
   Tag,
   Loader2,
+  MoreVertical,
+  Copy,
 } from 'lucide-react';
+
+const TAG_BADGE_CLASSES: Record<string, string> = {
+  gray: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200',
+  orange: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  green: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+  purple: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+  pink: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
+  red: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  yellow: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300',
+};
 
 export default function LabelsPage() {
   const { t } = useTranslation();
@@ -33,6 +46,15 @@ export default function LabelsPage() {
   const [editingLabel, setEditingLabel] = useState<Label | null>(null);
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+
+  // Close card menu on outside click
+  useEffect(() => {
+    if (!cardMenuOpen) return;
+    const handle = () => setCardMenuOpen(null);
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
+  }, [cardMenuOpen]);
 
   const fetchLabels = useCallback(async () => {
     setLoading(true);
@@ -153,6 +175,24 @@ export default function LabelsPage() {
     setDeleteTarget(null);
   };
 
+  const handleDuplicate = async (lbl: Label) => {
+    const { data, error } = await supabase
+      .from('labels')
+      .insert({
+        name: `${lbl.name} (copy)`,
+        typ: lbl.typ,
+        height_mm: lbl.height_mm,
+        width_mm: lbl.width_mm,
+        design_url: lbl.design_url,
+        material_id: lbl.material_id,
+      })
+      .select('*')
+      .single();
+    if (!error && data) {
+      fetchLabels();
+    }
+  };
+
   const handleSaved = () => {
     setSlideOverOpen(false);
     setEditingLabel(null);
@@ -234,33 +274,49 @@ export default function LabelsPage() {
                   </div>
                 )}
 
-                <div
-                  className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end gap-2 p-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <button
-                    type="button"
-                    onClick={() => openEdit(lbl)}
-                    className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-                    title={t('common.edit')}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  {canDelete && (
+                <div className="absolute top-2 right-2 z-10" onClick={(e) => e.stopPropagation()}>
+                  <div className="relative">
                     <button
                       type="button"
-                      onClick={() => setDeleteTarget(lbl.id)}
-                      className="p-2 rounded bg-red-700 text-red-100 hover:text-red-50 transition-colors"
-                      title={t('common.delete')}
+                      onClick={() => setCardMenuOpen(cardMenuOpen === lbl.id ? null : lbl.id)}
+                      className={`p-1.5 rounded transition-all ${cardMenuOpen === lbl.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <MoreVertical className="w-4 h-4" />
                     </button>
-                  )}
+                    {cardMenuOpen === lbl.id && (
+                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20">
+                        <button
+                          type="button"
+                          onClick={() => { openEdit(lbl); setCardMenuOpen(null); }}
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          {t('common.edit')}
+                        </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => { setDeleteTarget(lbl.id); setCardMenuOpen(null); }}
+                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            {t('common.delete')}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-nokturo-700 text-xs px-2 py-0.5 rounded-full">
-                  {t(`labels.types.${lbl.typ}`) !== `labels.types.${lbl.typ}` ? t(`labels.types.${lbl.typ}`) : lbl.typ}
-                </span>
+                {lbl.typ && (() => {
+                  const typOpt = typOptions.find((o) => o.name === lbl.typ);
+                  const colorCls = typOpt ? TAG_BADGE_CLASSES[typOpt.color] ?? TAG_BADGE_CLASSES.gray : TAG_BADGE_CLASSES.gray;
+                  return (
+                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded font-medium ${colorCls}`}>
+                      {t(`labels.types.${lbl.typ}`) !== `labels.types.${lbl.typ}` ? t(`labels.types.${lbl.typ}`) : lbl.typ}
+                    </span>
+                  );
+                })()}
               </div>
 
               <div className="p-3">
@@ -325,6 +381,8 @@ export default function LabelsPage() {
         }}
         onSaved={handleSaved}
         canDelete={canDelete}
+        onDelete={(id) => { setDeleteTarget(id); setSlideOverOpen(false); setEditingLabel(null); }}
+        onDuplicate={(lbl) => { handleDuplicate(lbl); setSlideOverOpen(false); setEditingLabel(null); }}
       />
     </PageShell>
   );

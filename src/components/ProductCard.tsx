@@ -5,11 +5,11 @@ import type { ProductWithMaterials } from './ProductSlideOver';
 
 // ── Status badge colours (shared with product pages) ─────────────
 const STATUS_COLORS: Record<string, string> = {
-  concept: 'bg-blue-100 text-blue-700',
-  pattern: 'bg-purple-100 text-purple-700',
-  prototype: 'bg-amber-100 text-amber-700',
-  production: 'bg-green-100 text-green-700',
-  archived: 'bg-nokturo-200 text-nokturo-700',
+  concept: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  pattern: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  prototype: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  production: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+  archived: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-700 dark:text-nokturo-200',
 };
 
 export interface ProductCardProps {
@@ -41,7 +41,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
         {/* Visual top section – first image from Design gallery or placeholder (4:5 format) */}
         <div className="aspect-[4/5] bg-nokturo-100 dark:bg-nokturo-700 relative flex flex-col items-center justify-center p-4 overflow-hidden">
           {product.priority && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-red-700 text-[var(--tw-ring-offset-color)] text-xs whitespace-nowrap z-10">
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 text-xs font-medium whitespace-nowrap z-10">
               {t('products.priority')}
             </span>
           )}

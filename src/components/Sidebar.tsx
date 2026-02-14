@@ -255,7 +255,7 @@ export function Sidebar() {
         )}
         <div className="min-w-0 flex-1 leading-tight">
           <div className="text-sm text-nokturo-900 dark:text-nokturo-100 truncate font-medium leading-tight">
-            {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name}
+            {user?.firstName || user?.name}
           </div>
           <div className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate leading-tight">
             {user?.role && t(`roles.${user.role}`)}

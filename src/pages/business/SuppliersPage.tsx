@@ -20,14 +20,14 @@ const FETCH_TIMEOUT_MS = 5000;
 
 // ── Category badge colours by NotionSelect color ─────────────────
 const TAG_BADGE_CLASSES: Record<string, string> = {
-  gray: 'bg-nokturo-200 text-nokturo-800',
-  orange: 'bg-amber-100 text-amber-700',
-  blue: 'bg-blue-100 text-blue-700',
-  green: 'bg-emerald-100 text-emerald-700',
-  purple: 'bg-violet-100 text-violet-700',
-  pink: 'bg-pink-100 text-pink-700',
-  red: 'bg-red-100 text-red-700',
-  yellow: 'bg-amber-100 text-amber-800',
+  gray: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200',
+  orange: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  green: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+  purple: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+  pink: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
+  red: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  yellow: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300',
 };
 
 export default function SuppliersPage() {
@@ -355,7 +355,7 @@ export default function SuppliersPage() {
               <span className="shrink-0 flex justify-start items-center">
                 {supplier.category && (
                   <span
-                    className={`inline-block text-[11px] px-2 py-0.5 rounded-lg font-medium whitespace-nowrap ${
+                    className={`inline-block text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap ${
                       TAG_BADGE_CLASSES[
                         categories.find((c) => c.name === supplier.category)?.color ?? 'gray'
                       ] ?? TAG_BADGE_CLASSES.gray

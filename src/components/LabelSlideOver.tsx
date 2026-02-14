@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, ImageIcon } from 'lucide-react';
+import { X, Loader2, ImageIcon, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
 import {
   NotionSelect,
   type NotionSelectOption,
@@ -47,6 +47,8 @@ interface LabelSlideOverProps {
   onClose: () => void;
   canDelete?: boolean;
   onSaved: () => void;
+  onDelete?: (id: string) => void;
+  onDuplicate?: (label: Label) => void;
 }
 
 // ── Component ────────────────────────────────────────────────
@@ -58,6 +60,8 @@ export function LabelSlideOver({
   onClose,
   onSaved,
   canDelete = true,
+  onDelete,
+  onDuplicate,
 }: LabelSlideOverProps) {
   const { t } = useTranslation();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -68,6 +72,7 @@ export function LabelSlideOver({
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
   useEffect(() => {
     if (label) {
       setForm({
@@ -198,12 +203,49 @@ export function LabelSlideOver({
           <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
             {label ? t('labels.editLabel') : t('labels.addLabel')}
           </h3>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {label && (
+              <div className="relative">
+                <button
+                  onClick={() => setMenuOpen((p) => !p)}
+                  className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </button>
+                {menuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                      {onDuplicate && (
+                        <button
+                          onClick={() => { onDuplicate(label); setMenuOpen(false); }}
+                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          {t('materials.duplicate')}
+                        </button>
+                      )}
+                      {canDelete && onDelete && (
+                        <button
+                          onClick={() => { onDelete(label.id); setMenuOpen(false); }}
+                          className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          {t('common.delete')}
+                        </button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         <form

@@ -14,8 +14,8 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
-        /* H1/H2 v rich textu – IvyPresto Text z Adobe Fonts. Font-family ověřte v kit CSS na fonts.adobe.com */
-        headline: ['ivypresto-text', 'Georgia', 'serif'],
+        /* H1/H2 v rich textu – IvyPresto Headline z Adobe Fonts */
+        headline: ['ivypresto-headline', 'Georgia', 'serif'],
         body: ['Inter', 'sans-serif'],
       },
       colors: {

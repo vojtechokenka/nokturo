@@ -19,6 +19,17 @@ import {
   Loader2,
 } from 'lucide-react';
 
+const TAG_BADGE_CLASSES: Record<string, string> = {
+  gray: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200',
+  orange: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  blue: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  green: 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300',
+  purple: 'bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300',
+  pink: 'bg-pink-100 dark:bg-pink-900/40 text-pink-700 dark:text-pink-300',
+  red: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300',
+  yellow: 'bg-amber-100 dark:bg-amber-900/40 text-amber-800 dark:text-amber-300',
+};
+
 export default function ComponentsPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
@@ -259,9 +270,15 @@ export default function ComponentsPage() {
                 </div>
 
                 {/* Type badge */}
-                <span className="absolute top-2 left-2 bg-white/95 backdrop-blur-sm text-nokturo-700 text-xs px-2 py-0.5 rounded-full">
-                  {t(`components.types.${comp.type}`) !== `components.types.${comp.type}` ? t(`components.types.${comp.type}`) : comp.type}
-                </span>
+                {comp.type && (() => {
+                  const catOpt = categories.find((o) => o.name === comp.type);
+                  const colorCls = catOpt ? TAG_BADGE_CLASSES[catOpt.color] ?? TAG_BADGE_CLASSES.gray : TAG_BADGE_CLASSES.gray;
+                  return (
+                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded font-medium ${colorCls}`}>
+                      {t(`components.types.${comp.type}`) !== `components.types.${comp.type}` ? t(`components.types.${comp.type}`) : comp.type}
+                    </span>
+                  );
+                })()}
               </div>
 
               {/* Card body */}

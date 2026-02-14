@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { countryCodeToFlag } from '../lib/countryUtils';
-import { X, Package, Pencil } from 'lucide-react';
+import { X, Package, Pencil, Copy, Trash2, MoreVertical } from 'lucide-react';
 import type { Material } from './MaterialSlideOver';
 
 interface Supplier {
@@ -20,6 +20,9 @@ interface MaterialDetailSlideOverProps {
   material: Material | null;
   onClose: () => void;
   onEdit: (material: Material) => void;
+  onDuplicate?: (material: Material) => void;
+  onDelete?: (id: string) => void;
+  canDelete?: boolean;
 }
 
 export function MaterialDetailSlideOver({
@@ -27,10 +30,14 @@ export function MaterialDetailSlideOver({
   material,
   onClose,
   onEdit,
+  onDuplicate,
+  onDelete,
+  canDelete = false,
 }: MaterialDetailSlideOverProps) {
   const { t } = useTranslation();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [targetedProducts, setTargetedProducts] = useState<ProductSummary[]>([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!open || !material) return;
@@ -91,13 +98,46 @@ export function MaterialDetailSlideOver({
             {material.name}
           </h3>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onEdit(material)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
-            >
-              <Pencil className="w-4 h-4" />
-              {t('common.edit')}
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((p) => !p)}
+                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                    <button
+                      onClick={() => { onEdit(material); setMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      {t('common.edit')}
+                    </button>
+                    {onDuplicate && (
+                      <button
+                        onClick={() => { onDuplicate(material); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        {t('materials.duplicate')}
+                      </button>
+                    )}
+                    {canDelete && onDelete && (
+                      <button
+                        onClick={() => { onDelete(material.id); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {t('common.delete')}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
@@ -253,7 +293,7 @@ export function MaterialDetailSlideOver({
                   {targetedProducts.map((p) => (
                     <span
                       key={p.id}
-                      className="inline-flex px-2.5 py-1 rounded-full bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200 text-xs"
+                      className="inline-flex px-2 py-0.5 rounded bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200 text-xs font-medium"
                     >
                       {p.name}
                     </span>

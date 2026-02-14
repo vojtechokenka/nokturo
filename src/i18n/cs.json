@@ -47,7 +47,8 @@
     "logout": "Odhl\u00e1sit se",
     "login": "P\u0159ihl\u00e1sit se",
     "created": "Vytvořeno",
-    "updated": "Upraveno"
+    "updated": "Upraveno",
+    "duplicate": "Duplikovat"
   },
   "roles": {
     "founder": "Zakladatel",
@@ -668,7 +669,7 @@
     "loadFromUrl": "Na\u010d\u00edst obr\u00e1zek",
     "pasteHint": "Tip: Obr\u00e1zky m\u016f\u017eete vkl\u00e1dat p\u0159\u00edmo pomoc\u00ed Ctrl+V",
     "columns": "sloupc\u016f",
-    "layoutCycle": "Klikn\u011bte pro p\u0159epnut\u00ed mezi 3, 4 a 5 sloupci",
+    "layoutCycle": "Klikn\u011bte pro p\u0159epnut\u00ed mezi 3, 4, 5 a 6 sloupci",
     "details": "Detail",
     "comments": "Koment\u00e1\u0159e",
     "tagUser": "Ozna\u010dit uživatele",

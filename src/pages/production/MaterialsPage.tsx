@@ -14,7 +14,7 @@ import {
   getUniqueTargetProductOptions,
 } from '../../lib/compositionUtils';
 import { MaterialDetailSlideOver } from '../../components/MaterialDetailSlideOver';
-import { Plus, Pencil, Trash2, Package, Loader2, Copy } from 'lucide-react';
+import { Plus, Pencil, Trash2, Package, Loader2, Copy, MoreVertical } from 'lucide-react';
 
 export default function MaterialsPage() {
   const { t } = useTranslation();
@@ -43,6 +43,16 @@ export default function MaterialsPage() {
 
   // Delete dialog
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  // Card three-dot menu
+  const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+
+  // Close card menu on outside click
+  useEffect(() => {
+    if (!cardMenuOpen) return;
+    const handle = () => setCardMenuOpen(null);
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
+  }, [cardMenuOpen]);
 
   // ── Fetch ──────────────────────────────────────────────────
   const fetchMaterials = useCallback(async () => {
@@ -306,43 +316,48 @@ export default function MaterialsPage() {
                   </div>
                 )}
 
-                {/* Hover overlay with actions */}
-                <div className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-between gap-2 p-2">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDuplicate(mat);
-                    }}
-                    className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-                    title={t('materials.duplicate')}
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <div className="flex gap-2">
+                {/* Three-dot menu (top-right) */}
+                <div className="absolute top-2 right-2 z-10">
+                  <div className="relative">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        openEdit(mat);
+                        setCardMenuOpen(cardMenuOpen === mat.id ? null : mat.id);
                       }}
-                      className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-                      title={t('common.edit')}
+                      className={`p-1.5 rounded transition-all ${cardMenuOpen === mat.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <MoreVertical className="w-4 h-4" />
                     </button>
-                    {canDelete && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteTarget(mat.id);
-                        }}
-                        className="p-2 rounded bg-red-700 text-red-100 hover:text-red-50 transition-colors"
-                        title={t('common.delete')}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    {cardMenuOpen === mat.id && (
+                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[130px] z-20" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => { openEdit(mat); setCardMenuOpen(null); }}
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          {t('common.edit')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { handleDuplicate(mat); setCardMenuOpen(null); }}
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        >
+                          <Copy className="w-3 h-3" />
+                          {t('materials.duplicate')}
+                        </button>
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => { setDeleteTarget(mat.id); setCardMenuOpen(null); }}
+                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            {t('common.delete')}
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -423,6 +438,9 @@ export default function MaterialsPage() {
         material={viewingMaterial}
         onClose={() => setViewingMaterial(null)}
         onEdit={closeDetailAndEdit}
+        onDuplicate={(mat) => { handleDuplicate(mat); setViewingMaterial(null); }}
+        onDelete={(id) => { setDeleteTarget(id); setViewingMaterial(null); }}
+        canDelete={canDelete}
       />
     </PageShell>
   );

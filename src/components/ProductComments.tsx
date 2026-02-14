@@ -7,8 +7,8 @@ import {
   Send,
   Loader2,
   MessageSquare,
-  Trash2,
   CornerDownRight,
+  MoreHorizontal,
 } from 'lucide-react';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
@@ -52,6 +52,15 @@ export function ProductComments({ productId }: ProductCommentsProps) {
   const [replyContent, setReplyContent] = useState('');
   const [sending, setSending] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
+
+  // Close comment menu on outside click
+  useEffect(() => {
+    if (!commentMenuOpen) return;
+    const handle = () => setCommentMenuOpen(null);
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
+  }, [commentMenuOpen]);
 
   // ── Fetch comments ──────────────────────────────────────────
   const fetchComments = useCallback(async () => {
@@ -204,7 +213,35 @@ export function ProductComments({ productId }: ProductCommentsProps) {
             </p>
 
             {/* Actions */}
-            <div className="flex items-center gap-3 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {isOwn && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCommentMenuOpen(commentMenuOpen === comment.id ? null : comment.id);
+                    }}
+                    className="p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-nokturo-500 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+                  >
+                    <MoreHorizontal className="w-3.5 h-3.5" />
+                  </button>
+                  {commentMenuOpen === comment.id && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
+                      <div className="absolute left-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[100px] z-20" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          type="button"
+                          onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
+                          className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
+                        >
+                          {t('common.delete')}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
               {!isReply && (
                 <button
                   onClick={() => {
@@ -215,15 +252,6 @@ export function ProductComments({ productId }: ProductCommentsProps) {
                 >
                   <CornerDownRight className="w-3 h-3" />
                   {t('comments.reply')}
-                </button>
-              )}
-              {canDelete && (
-                <button
-                  onClick={() => setDeleteTarget(comment.id)}
-                  className="flex items-center gap-1 text-xs text-nokturo-500 hover:text-red-500 transition-colors"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  {t('common.delete')}
                 </button>
               )}
             </div>

@@ -568,7 +568,7 @@ export function MaterialSlideOver({
                 return opt ? (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200 text-xs"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200 text-xs font-medium"
                   >
                     {opt.name}
                     <button

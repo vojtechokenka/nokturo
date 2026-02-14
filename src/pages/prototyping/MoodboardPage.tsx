@@ -23,10 +23,23 @@ import {
   Link2,
   LayoutGrid,
   Pencil,
+  MoreVertical,
 } from 'lucide-react';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
 const inputClass = INPUT_CLASS;
+
+// Notion-style tag colors (same as NotionSelect)
+const TAG_COLORS: Record<string, string> = {
+  gray: 'bg-nokturo-500 text-white',
+  orange: 'bg-amber-600 text-white',
+  blue: 'bg-blue-600 text-white',
+  green: 'bg-emerald-600 text-white',
+  purple: 'bg-violet-600 text-white',
+  pink: 'bg-pink-600 text-white',
+  red: 'bg-red-600 text-white',
+  yellow: 'bg-amber-500 text-nokturo-900',
+};
 
 // ── Types ─────────────────────────────────────────────────────
 interface MoodboardItem {
@@ -69,6 +82,20 @@ export default function MoodboardPage() {
 
   // Lightbox
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxMenuOpen, setLightboxMenuOpen] = useState(false);
+
+  // Card menu
+  const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!cardMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('[data-card-menu]')) setCardMenuOpen(null);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [cardMenuOpen]);
 
   // Close lightbox on ESC
   useEffect(() => {
@@ -102,8 +129,8 @@ export default function MoodboardPage() {
   // Categories (from DB, Notion-style)
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
 
-  // Gallery layout: 3, 4, or 5 columns
-  const [galleryColumns, setGalleryColumns] = useState<3 | 4 | 5>(4);
+  // Gallery layout: 3, 4, 5, or 6 columns
+  const [galleryColumns, setGalleryColumns] = useState<3 | 4 | 5 | 6>(4);
 
   // ── Fetch ───────────────────────────────────────────────────
   const fetchItems = useCallback(async () => {
@@ -539,11 +566,13 @@ export default function MoodboardPage() {
   const lightboxPrev = () => {
     if (lightboxIndex !== null) {
       setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : items.length - 1);
+      setLightboxMenuOpen(false);
     }
   };
   const lightboxNext = () => {
     if (lightboxIndex !== null) {
       setLightboxIndex(lightboxIndex < items.length - 1 ? lightboxIndex + 1 : 0);
+      setLightboxMenuOpen(false);
     }
   };
 
@@ -574,7 +603,7 @@ export default function MoodboardPage() {
         {/* Add button + layout toggle */}
         <div className="flex gap-3 shrink-0">
           <button
-            onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : 3))}
+            onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
             className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-lg hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
             title={t('moodboard.layoutCycle')}
           >
@@ -606,7 +635,8 @@ export default function MoodboardPage() {
         <div className={`columns-1 sm:columns-2 ${
           galleryColumns === 3 ? 'lg:columns-3' :
           galleryColumns === 4 ? 'lg:columns-4' :
-          'lg:columns-5'
+          galleryColumns === 5 ? 'lg:columns-5' :
+          'lg:columns-6'
         } gap-4 space-y-4`}
         >
           {items.map((item, idx) => (
@@ -622,30 +652,39 @@ export default function MoodboardPage() {
                   className="w-full object-cover rounded-lg"
                   loading="lazy"
                 />
-                {/* Hover overlay – edit + delete */}
-                <div className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-start justify-end gap-2 p-2">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openEdit(item);
-                    }}
-                    className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-                    title={t('common.edit')}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                  {canDelete && (
+                {/* Hover overlay – three-dot menu */}
+                <div className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-start justify-end p-2">
+                  <div className="relative" data-card-menu>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setDeleteTarget(item.id);
+                        setCardMenuOpen(cardMenuOpen === item.id ? null : item.id);
                       }}
-                      className="p-2 rounded bg-red-700 text-red-100 hover:text-red-50 transition-colors"
-                      title={t('common.delete')}
+                      className={`p-2 rounded transition-colors ${cardMenuOpen === item.id ? 'bg-white/30' : 'hover:bg-white/20'} text-white`}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <MoreVertical className="w-4 h-4" />
                     </button>
-                  )}
+                    {cardMenuOpen === item.id && (
+                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={() => { openEdit(item); setCardMenuOpen(null); }}
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        >
+                          <Pencil className="w-3 h-3" />
+                          {t('common.edit')}
+                        </button>
+                        {canDelete && (
+                          <button
+                            onClick={() => { setDeleteTarget(item.id); setCardMenuOpen(null); }}
+                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            {t('common.delete')}
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1035,29 +1074,43 @@ export default function MoodboardPage() {
             >
               <X className="w-5 h-5" />
             </button>
-            <div className="absolute bottom-4 left-4 flex gap-2 z-10" onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => {
-                  openEdit(items[lightboxIndex]);
-                  setLightboxIndex(null);
-                }}
-                className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-                title={t('common.edit')}
-              >
-                <Pencil className="w-4 h-4" />
-              </button>
-              {canDelete && (
+            <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
+              <div className="relative">
                 <button
-                  onClick={() => {
-                    setDeleteTarget(items[lightboxIndex].id);
-                    setLightboxIndex(null);
-                  }}
-                  className="p-2 rounded bg-red-700 text-red-100 hover:text-red-50 transition-colors"
-                  title={t('common.delete')}
+                  onClick={() => setLightboxMenuOpen((p) => !p)}
+                  className="p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <MoreVertical className="w-5 h-5" />
                 </button>
-              )}
+                {lightboxMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20">
+                    <button
+                      onClick={() => {
+                        openEdit(items[lightboxIndex]);
+                        setLightboxIndex(null);
+                        setLightboxMenuOpen(false);
+                      }}
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      {t('common.edit')}
+                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={() => {
+                          setDeleteTarget(items[lightboxIndex].id);
+                          setLightboxIndex(null);
+                          setLightboxMenuOpen(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {t('common.delete')}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -1066,35 +1119,44 @@ export default function MoodboardPage() {
             className="w-full lg:w-80 xl:w-96 bg-white dark:bg-nokturo-800 flex flex-col overflow-hidden shrink-0 max-h-[40vh] lg:max-h-none order-2"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-4 pt-3 pb-2 shrink-0 space-y-0.5">
-              {items[lightboxIndex].title && (
-                <p className="text-nokturo-900 dark:text-nokturo-100 font-medium text-sm truncate">
-                  {items[lightboxIndex].title}
-                </p>
-              )}
-              {items[lightboxIndex].notes && (
-                <p className="text-nokturo-600 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap mb-2">
-                  {items[lightboxIndex].notes}
-                </p>
-              )}
-              {items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0 && (
-                <div className="flex flex-wrap gap-1 pt-0.5">
-                  {items[lightboxIndex].categories!.map((cat) => (
-                    <span
-                      key={cat}
-                      className="inline-block text-[10px] px-2 py-0.5 rounded-full bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-700 dark:text-nokturo-300"
-                    >
-                      {t(`moodboard.categories.${cat}`) !== `moodboard.categories.${cat}`
-                        ? t(`moodboard.categories.${cat}`)
-                        : cat}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            {(items[lightboxIndex].title || items[lightboxIndex].notes || (items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0)) && (
+              <div className="px-4 pt-3 pb-2 shrink-0 space-y-0.5">
+                {items[lightboxIndex].title && (
+                  <p className="text-nokturo-900 dark:text-nokturo-100 font-medium text-sm truncate">
+                    {items[lightboxIndex].title}
+                  </p>
+                )}
+                {items[lightboxIndex].notes && (
+                  <p className="text-nokturo-600 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap mb-2">
+                    {items[lightboxIndex].notes}
+                  </p>
+                )}
+                {items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-0.5">
+                    {items[lightboxIndex].categories!.map((cat) => {
+                      const catOption = categories.find((c) => c.name === cat);
+                      const colorClass = TAG_COLORS[catOption?.color ?? 'gray'] ?? TAG_COLORS.gray;
+                      return (
+                        <span
+                          key={cat}
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${colorClass}`}
+                        >
+                          {t(`moodboard.categories.${cat}`) !== `moodboard.categories.${cat}`
+                            ? t(`moodboard.categories.${cat}`)
+                            : cat}
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto min-h-0 flex flex-col px-4 pb-4">
-              <MoodboardComments moodboardItemId={items[lightboxIndex].id} />
+              <MoodboardComments
+                moodboardItemId={items[lightboxIndex].id}
+                hasHeaderAbove={!!(items[lightboxIndex].title || items[lightboxIndex].notes || (items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0))}
+              />
             </div>
           </div>
         </div>

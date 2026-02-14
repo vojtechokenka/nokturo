@@ -28,6 +28,7 @@ import {
   Scissors,
   Tag,
   X,
+  MoreVertical,
 } from 'lucide-react';
 
 // ── Parse description (legacy or rich blocks) ────────────────────
@@ -67,6 +68,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [pageMenuOpen, setPageMenuOpen] = useState(false);
   const [viewingMaterial, setViewingMaterial] = useState<Material | null>(null);
   const [lightbox, setLightbox] = useState<{
     gallery: { url: string; caption?: string }[];
@@ -196,7 +198,7 @@ export default function ProductDetailPage() {
   return (
     <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
       <div className="max-w-5xl mx-auto">
-        {/* Back */}
+        {/* Back + Actions */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={() => navigate('/production/products')}
@@ -205,28 +207,37 @@ export default function ProductDetailPage() {
             <ArrowLeft className="w-4 h-4" />
             {t('common.back')}
           </button>
-        </div>
-
-        {/* Edit + Delete - fixed bottom-right, icon only */}
-        <div className="fixed bottom-6 right-6 flex items-center gap-2 z-40">
-          <button
-            onClick={() => setEditOpen(true)}
-            className="p-2.5 bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800"
-            title={t('common.edit')}
-            aria-label={t('common.edit')}
-          >
-            <Pencil className="w-5 h-5" />
-          </button>
-          {canDelete && (
+          <div className="relative">
             <button
-              onClick={() => setDeleteConfirm(true)}
-              className="p-2.5 text-red-600 bg-red-50 rounded-lg hover:bg-red-100"
-              title={t('common.delete')}
-              aria-label={t('common.delete')}
+              onClick={() => setPageMenuOpen((p) => !p)}
+              className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
             >
-              <Trash2 className="w-5 h-5" />
+              <MoreVertical className="w-5 h-5" />
             </button>
-          )}
+            {pageMenuOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setPageMenuOpen(false)} />
+                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                  <button
+                    onClick={() => { setEditOpen(true); setPageMenuOpen(false); }}
+                    className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    {t('common.edit')}
+                  </button>
+                  {canDelete && (
+                    <button
+                      onClick={() => { setDeleteConfirm(true); setPageMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      {t('common.delete')}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* Hero header */}
@@ -239,12 +250,12 @@ export default function ProductDetailPage() {
               )}
               <div className="flex flex-wrap gap-2 mt-3">
                 {product.priority && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
+                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300">
                     {t('products.priority')}
                   </span>
                 )}
                 {product.ready_for_sampling && (
-                  <span className="text-xs px-2.5 py-1 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
+                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300">
                     {t('products.readyForSampling')}
                   </span>
                 )}

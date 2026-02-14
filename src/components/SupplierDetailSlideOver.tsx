@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import { X, Pencil, Trash2, ExternalLink, MoreVertical } from 'lucide-react';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import type { Supplier } from './SupplierSlideOver';
 import type { NotionSelectOption } from './NotionSelect';
@@ -33,6 +34,7 @@ export function SupplierDetailSlideOver({
   onDelete,
 }: SupplierDetailSlideOverProps) {
   const { t } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (!open || !supplier) return null;
 
@@ -47,24 +49,48 @@ export function SupplierDetailSlideOver({
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <div className="flex items-center gap-2 min-w-0">
-            <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 truncate">
-              {supplier.name}
-            </h3>
+          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 truncate min-w-0">
+            {supplier.name}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0">
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((p) => !p)}
+                className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                    <button
+                      onClick={() => { onEdit(supplier); setMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      {t('common.edit')}
+                    </button>
+                    {onDelete && (
+                      <button
+                        onClick={() => { onDelete(supplier.id); onClose(); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {t('common.delete')}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
             <button
-              onClick={() => onEdit(supplier)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-nokturo-700 dark:text-nokturo-300 bg-nokturo-100 dark:bg-nokturo-700 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 rounded-lg transition-colors shrink-0"
+              onClick={onClose}
+              className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 shrink-0"
             >
-              <Pencil className="w-4 h-4" />
-              {t('common.edit')}
+              <X className="w-5 h-5" />
             </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 shrink-0"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
 
         {/* Content */}
@@ -78,7 +104,7 @@ export function SupplierDetailSlideOver({
             )}
             {supplier.category && (
               <span
-                className={`inline-block text-[11px] px-2 py-0.5 rounded-lg font-medium ${
+                className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${
                   TAG_BADGE_CLASSES[categoryColor] ?? TAG_BADGE_CLASSES.gray
                 }`}
               >
@@ -184,21 +210,6 @@ export function SupplierDetailSlideOver({
           )}
         </div>
 
-        {/* Delete button – pinned to bottom */}
-        {onDelete && (
-          <div className="shrink-0 px-6 py-4 bg-white dark:bg-nokturo-800">
-            <button
-              onClick={() => {
-                onDelete(supplier.id);
-                onClose();
-              }}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors rounded-lg"
-            >
-              <Trash2 className="w-4 h-4" />
-              {t('common.delete')}
-            </button>
-          </div>
-        )}
       </div>
     </>
   );

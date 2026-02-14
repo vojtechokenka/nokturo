@@ -18,6 +18,7 @@ import {
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
+  MoreHorizontal,
 } from 'lucide-react';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { INPUT_CLASS } from '../../lib/inputStyles';
@@ -45,6 +46,18 @@ interface Idea {
   position?: number;
   author?: IdeaAuthor | null;
 }
+
+// Notion-style tag badge colors (same as NotionSelect)
+const TAG_COLORS: Record<string, string> = {
+  gray: 'bg-nokturo-500 text-white',
+  orange: 'bg-amber-600 text-white',
+  blue: 'bg-blue-600 text-white',
+  green: 'bg-emerald-600 text-white',
+  purple: 'bg-violet-600 text-white',
+  pink: 'bg-pink-600 text-white',
+  red: 'bg-red-600 text-white',
+  yellow: 'bg-amber-500 text-nokturo-900',
+};
 
 // Map Notion category color → sticky note background (no border, no rounding)
 const CATEGORY_BG: Record<string, string> = {
@@ -85,6 +98,16 @@ export default function IdeasPage() {
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  // Card three-dot menu
+  const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+
+  // Close card menu on outside click
+  useEffect(() => {
+    if (!cardMenuOpen) return;
+    const handle = () => setCardMenuOpen(null);
+    document.addEventListener('click', handle);
+    return () => document.removeEventListener('click', handle);
+  }, [cardMenuOpen]);
 
   // Drag-and-drop
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -431,7 +454,7 @@ export default function IdeasPage() {
                   if (fromIndex !== toIndex) handleReorder(fromIndex, toIndex);
                 }}
                 title={t('ideas.dragToReorder')}
-                className={`group ${colorClass} text-slate-800 overflow-hidden transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] ${
+                className={`group ${colorClass} text-slate-800 transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] ${
                   isDragging ? 'opacity-50 scale-95' : ''
                 } hover:-translate-y-0.25`}
               >
@@ -463,14 +486,18 @@ export default function IdeasPage() {
                     const cats = idea.categories ?? (idea.category ? [idea.category] : []);
                     return cats.length > 0 ? (
                       <div className="flex flex-wrap gap-1 mb-1.5">
-                        {cats.map((c) => (
-                        <span
-                          key={c}
-                          className="text-[10px] px-1.5 py-0.5 rounded bg-white text-black shrink-0"
-                        >
-                          {c}
-                        </span>
-                        ))}
+                        {cats.map((c) => {
+                          const catOption = categories.find((opt) => opt.name === c);
+                          const colorCls = catOption ? TAG_COLORS[catOption.color] ?? TAG_COLORS.gray : TAG_COLORS.gray;
+                          return (
+                            <span
+                              key={c}
+                              className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${colorCls}`}
+                            >
+                              {c}
+                            </span>
+                          );
+                        })}
                       </div>
                     ) : null;
                   })()}
@@ -514,22 +541,35 @@ export default function IdeasPage() {
                         </span>
                       </div>
                     </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="relative shrink-0">
                       <button
-                        onClick={() => openEdit(idea)}
-                        className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-                        title={t('common.edit')}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCardMenuOpen(cardMenuOpen === idea.id ? null : idea.id);
+                        }}
+                        className={`p-1.5 rounded transition-all ${cardMenuOpen === idea.id ? 'opacity-100 bg-black/10 dark:bg-white/10' : 'opacity-0 group-hover:opacity-100'} hover:bg-black/10 dark:hover:bg-white/10`}
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      {canDelete && (
-                        <button
-                          onClick={() => setDeleteTarget(idea.id)}
-                          className="p-2 rounded bg-red-700 text-red-100 hover:text-red-50 transition-colors"
-                          title={t('common.delete')}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      {cardMenuOpen === idea.id && (
+                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => { openEdit(idea); setCardMenuOpen(null); }}
+                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            {t('common.edit')}
+                          </button>
+                          {canDelete && (
+                            <button
+                              onClick={() => { setDeleteTarget(idea.id); setCardMenuOpen(null); }}
+                              className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              {t('common.delete')}
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

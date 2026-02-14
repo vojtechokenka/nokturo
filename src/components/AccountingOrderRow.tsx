@@ -42,7 +42,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
     >
       <td className="py-2.5 pl-4 pr-6 align-middle">
         <span
-          className={`inline-block text-[11px] px-2 py-0.5 rounded-lg font-medium whitespace-nowrap ${
+          className={`inline-block text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap ${
             TAG_BADGE_CLASSES[ORDER_STATUS_COLORS[order.order_status] ?? 'gray'] ?? TAG_BADGE_CLASSES.gray
           }`}
         >

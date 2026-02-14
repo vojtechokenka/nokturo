@@ -8,11 +8,11 @@ import type { RichTextBlock } from './RichTextBlockEditor';
 
 // ── Status badge colours ──────────────────────────────────────
 const STATUS_COLORS: Record<string, string> = {
-  concept: 'bg-blue-500/20 text-blue-400 border-blue-500/30',
-  pattern: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
-  prototype: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  production: 'bg-green-500/20 text-green-400 border-green-500/30',
-  archived: 'bg-nokturo-600/20 text-nokturo-400 border-nokturo-600/30',
+  concept: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300',
+  pattern: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300',
+  prototype: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300',
+  production: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300',
+  archived: 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-700 dark:text-nokturo-200',
 };
 
 // ── Props ─────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ export function ProductTechPack({
                   )}
                 </div>
                 <span
-                  className={`text-xs px-2.5 py-1 rounded-full border shrink-0 ${
+                  className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${
                     STATUS_COLORS[product.status] ?? STATUS_COLORS.concept
                   }`}
                 >
