@@ -462,6 +462,13 @@ export default function AccountPage() {
             </button>
           </div>
         )}
+
+        {/* App version */}
+        <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700">
+          <p className="text-xs text-nokturo-400 dark:text-nokturo-500 text-center">
+            Nokturo v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'}
+          </p>
+        </div>
       </div>
 
       {/* Toast */}

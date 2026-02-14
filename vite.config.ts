@@ -19,6 +19,7 @@ const env = fs.existsSync(envFile)
 export default defineConfig({
   plugins: [react()],
   define: {
+    __APP_VERSION__: JSON.stringify(require('./package.json').version),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
     // Explicitně definuj env pro build (fallback na process.env)
     'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(
