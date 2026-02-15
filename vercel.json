@@ -2,17 +2,20 @@
   "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
   "framework": "vite",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "rewrites": [
     {
-      "source": "/app/(.*)",
-      "destination": "/app/index.html"
-    }
-  ],
-  "redirects": [
+      "source": "/app/assets/:path*",
+      "destination": "/assets/:path*"
+    },
     {
       "source": "/app",
-      "destination": "/app/",
-      "permanent": false
+      "destination": "/index.html"
+    },
+    {
+      "source": "/app/:path*",
+      "destination": "/index.html"
     }
   ],
   "headers": [
