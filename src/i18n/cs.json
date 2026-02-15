@@ -675,7 +675,9 @@
     "tagUser": "Ozna\u010dit uživatele",
     "tagUserPlaceholder": "Napište komentář a označte uživatele – dostanou notifikaci...",
     "taggedYou": "Vás označil v novém obrázku moodboardu",
-    "commentAndTag": "Komentář a označení"
+    "commentAndTag": "Komentář a označení",
+    "addMoreImages": "Přidat další obrázky",
+    "galleryCount": "{{count}} obrázků"
   },
   "ideas": {
     "addIdea": "P\u0159idat n\u00e1pad",

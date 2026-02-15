@@ -24,6 +24,8 @@ import {
   LayoutGrid,
   Pencil,
   MoreVertical,
+  GripVertical,
+  Images,
 } from 'lucide-react';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
@@ -42,6 +44,12 @@ const TAG_COLORS: Record<string, string> = {
 };
 
 // ── Types ─────────────────────────────────────────────────────
+interface MoodboardSubImage {
+  id: string;
+  image_url: string;
+  sort_order: number;
+}
+
 interface MoodboardItem {
   id: string;
   title: string | null;
@@ -50,6 +58,14 @@ interface MoodboardItem {
   notes: string | null;
   created_by: string | null;
   created_at: string;
+  sub_images: MoodboardSubImage[];
+}
+
+interface UploadImage {
+  id: string;
+  file: File | null;
+  blob: Blob | null;
+  preview: string;
 }
 
 // ── Component ─────────────────────────────────────────────────
@@ -67,8 +83,7 @@ export default function MoodboardPage() {
 
   // Upload modal
   const [showUpload, setShowUpload] = useState(false);
-  const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadPreview, setUploadPreview] = useState<string>('');
+  const [uploadImages, setUploadImages] = useState<UploadImage[]>([]);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadCategories, setUploadCategories] = useState<string[]>([]);
   const [uploadNotes, setUploadNotes] = useState('');
@@ -79,9 +94,11 @@ export default function MoodboardPage() {
   const [uploadError, setUploadError] = useState('');
   const [urlError, setUrlError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [dragImgIdx, setDragImgIdx] = useState<number | null>(null);
 
   // Lightbox
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [lightboxSubIndex, setLightboxSubIndex] = useState(0);
   const [lightboxMenuOpen, setLightboxMenuOpen] = useState(false);
 
   // Card menu
@@ -97,15 +114,7 @@ export default function MoodboardPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, [cardMenuOpen]);
 
-  // Close lightbox on ESC
-  useEffect(() => {
-    if (lightboxIndex === null) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxIndex(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [lightboxIndex]);
+  // (lightboxSubIndex is managed explicitly in navigation handlers)
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -123,7 +132,6 @@ export default function MoodboardPage() {
 
   // URL input (inside upload modal)
   const [urlInput, setUrlInput] = useState('');
-  const [urlLoadedBlob, setUrlLoadedBlob] = useState<Blob | null>(null);
   const [urlLoading, setUrlLoading] = useState(false);
 
   // Categories (from DB, Notion-style)
@@ -138,7 +146,7 @@ export default function MoodboardPage() {
 
     let query = supabase
       .from('moodboard_items')
-      .select('*')
+      .select('*, moodboard_item_images(id, image_url, sort_order)')
       .order('created_at', { ascending: false });
 
     if (categoryFilter.length > 0) {
@@ -148,9 +156,12 @@ export default function MoodboardPage() {
     const { data, error } = await query;
     if (!error && data) {
       setItems(
-        (data as { categories?: string[] | null }[]).map((row) => ({
+        (data as any[]).map((row) => ({
           ...row,
           categories: Array.isArray(row.categories) ? row.categories : [],
+          sub_images: Array.isArray(row.moodboard_item_images)
+            ? (row.moodboard_item_images as MoodboardSubImage[]).sort((a, b) => a.sort_order - b.sort_order)
+            : [],
         })) as MoodboardItem[]
       );
     }
@@ -254,34 +265,44 @@ export default function MoodboardPage() {
   );
 
   // ── File handling ───────────────────────────────────────────
-  const handleFileSelect = useCallback((file: File) => {
-    if (file.size > 10 * 1024 * 1024) {
-      setUploadError('File too large (max 10 MB)');
-      return;
+  const addFilesToUpload = useCallback((files: File[]) => {
+    const newImages: UploadImage[] = [];
+    for (const file of files) {
+      if (file.size > 10 * 1024 * 1024) continue;
+      newImages.push({
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+        file,
+        blob: null,
+        preview: URL.createObjectURL(file),
+      });
     }
-    setUrlInput('');
-    setUrlLoadedBlob(null);
-    setUploadFile(file);
-    setUploadPreview(URL.createObjectURL(file));
-    setUploadError('');
-    setUrlError('');
+    if (newImages.length > 0) {
+      setUploadImages((prev) => [...prev, ...newImages]);
+      setUploadError('');
+    }
+  }, []);
+
+  const removeUploadImage = useCallback((id: string) => {
+    setUploadImages((prev) => {
+      const img = prev.find((i) => i.id === id);
+      if (img && img.preview.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+      return prev.filter((i) => i.id !== id);
+    });
   }, []);
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files[0];
-    if (file && file.type.startsWith('image/')) {
-      handleFileSelect(file);
-    }
+    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+    if (files.length > 0) addFilesToUpload(files);
   };
 
   const resetUpload = () => {
     setShowUpload(false);
-    setUploadFile(null);
-    if (uploadPreview.startsWith('blob:')) URL.revokeObjectURL(uploadPreview);
-    setUploadPreview('');
+    uploadImages.forEach((img) => {
+      if (img.preview.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+    });
+    setUploadImages([]);
     setUrlInput('');
-    setUrlLoadedBlob(null);
     setUploadTitle('');
     setUploadCategories([]);
     setUploadNotes('');
@@ -289,18 +310,23 @@ export default function MoodboardPage() {
     setUploadTaggedUsers([]);
     setUploadError('');
     setUrlError('');
+    setDragImgIdx(null);
   };
 
-  const clearImage = () => {
-    setUploadFile(null);
-    if (uploadPreview.startsWith('blob:')) URL.revokeObjectURL(uploadPreview);
-    setUploadPreview('');
-    setUrlInput('');
-    setUrlLoadedBlob(null);
-    setUploadError('');
-    setUrlError('');
-    fileInputRef.current && (fileInputRef.current.value = '');
+  // Drag-reorder helpers for upload thumbnails
+  const handleImgDragStart = (idx: number) => setDragImgIdx(idx);
+  const handleImgDragOver = (e: React.DragEvent, idx: number) => {
+    e.preventDefault();
+    if (dragImgIdx === null || dragImgIdx === idx) return;
+    setUploadImages((prev) => {
+      const arr = [...prev];
+      const [moved] = arr.splice(dragImgIdx, 1);
+      arr.splice(idx, 0, moved);
+      return arr;
+    });
+    setDragImgIdx(idx);
   };
+  const handleImgDragEnd = () => setDragImgIdx(null);
 
   // ── URL paste handler ───────────────────────────────────────
   const handleUrlPaste = (e: React.ClipboardEvent) => {
@@ -311,7 +337,7 @@ export default function MoodboardPage() {
     }
   };
 
-  // ── Load image from URL (preview only) ───────────────────────
+  // ── Load image from URL (adds to gallery) ───────────────────────
   const handleUrlLoad = useCallback(async (urlOverride?: string) => {
     const url = (urlOverride ?? urlInput).trim();
     if (!url) return;
@@ -360,9 +386,14 @@ export default function MoodboardPage() {
         const binary = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
         blob = new Blob([binary], { type: contentType || 'image/png' });
       }
-      setUrlLoadedBlob(blob);
-      setUploadPreview(URL.createObjectURL(blob));
-      setUploadFile(null);
+      const preview = URL.createObjectURL(blob);
+      setUploadImages((prev) => [...prev, {
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+        file: null,
+        blob,
+        preview,
+      }]);
+      setUrlInput('');
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       const isGeneric =
@@ -384,84 +415,97 @@ export default function MoodboardPage() {
 
   // ── Upload to Supabase Storage ──────────────────────────────
   const handleUpload = async () => {
-    const fileToUpload = uploadFile || (urlLoadedBlob ? new File([urlLoadedBlob], `image-${Date.now()}.png`, { type: urlLoadedBlob.type }) : null);
-    if (!fileToUpload) return;
+    if (uploadImages.length === 0) return;
     setUploading(true);
     setUploadError('');
 
     try {
-      const ext = fileToUpload.name.split('.').pop() || 'png';
-      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const filePath = `moodboard/${fileName}`;
+      // Upload all images sequentially to storage
+      const uploadedUrls: string[] = [];
+      for (const img of uploadImages) {
+        const fileToUpload = img.file || (img.blob ? new File([img.blob], `image-${Date.now()}-${Math.random().toString(36).slice(2)}.png`, { type: img.blob.type }) : null);
+        if (!fileToUpload) continue;
 
-      // Use ArrayBuffer + explicit contentType – avoids Electron FormData/File issues
-      const arrayBuffer = await fileToUpload.arrayBuffer();
-      const contentType = fileToUpload.type || 'image/png';
-      const { error: storageError } = await supabase.storage
-        .from('uploads')
-        .upload(filePath, arrayBuffer, { contentType, cacheControl: '3600' });
+        const ext = fileToUpload.name.split('.').pop() || 'png';
+        const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const filePath = `moodboard/${fileName}`;
 
-      if (storageError) {
-        setUploadError(storageError.message);
+        const arrayBuffer = await fileToUpload.arrayBuffer();
+        const contentType = fileToUpload.type || 'image/png';
+        const { error: storageError } = await supabase.storage
+          .from('uploads')
+          .upload(filePath, arrayBuffer, { contentType, cacheControl: '3600' });
+
+        if (storageError) throw new Error(storageError.message);
+
+        const { data: urlData } = supabase.storage.from('uploads').getPublicUrl(filePath);
+        uploadedUrls.push(urlData.publicUrl);
+      }
+
+      if (uploadedUrls.length === 0) {
         setUploading(false);
         return;
       }
 
-    // Get public URL
-    const { data: urlData } = supabase.storage
-      .from('uploads')
-      .getPublicUrl(filePath);
-
-    // Insert record
-    const { data: insertedItem, error: insertError } = await supabase
-      .from('moodboard_items')
-      .insert({
-        title: uploadTitle || null,
-        image_url: urlData.publicUrl,
-        categories: uploadCategories.length > 0 ? uploadCategories : [],
-        notes: uploadNotes || null,
-        created_by: getUserIdForDb(),
-      })
-      .select('id')
-      .single();
-
-    if (insertError) {
-      setUploadError(insertError.message);
-      setUploading(false);
-      return;
-    }
-
-    // Optional: add comment with tags (creates notifications for tagged users)
-    if (insertedItem && (uploadComment.trim() || uploadTaggedUsers.length > 0)) {
-      const authorId = getUserIdForDb();
-      const content = uploadComment.trim() || t('moodboard.taggedYou');
-      const { data: comment } = await supabase
-        .from('moodboard_comments')
+      // Insert moodboard_items with the first (cover) image
+      const { data: insertedItem, error: insertError } = await supabase
+        .from('moodboard_items')
         .insert({
-          moodboard_item_id: insertedItem.id,
-          author_id: authorId,
-          content,
-          tagged_user_ids: uploadTaggedUsers,
+          title: uploadTitle || null,
+          image_url: uploadedUrls[0],
+          categories: uploadCategories.length > 0 ? uploadCategories : [],
+          notes: uploadNotes || null,
+          created_by: getUserIdForDb(),
         })
         .select('id')
         .single();
 
-      if (comment && uploadTaggedUsers.length > 0 && user) {
-        const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
-        for (const taggedId of uploadTaggedUsers) {
-          await supabase.from('notifications').insert({
-            user_id: taggedId,
-            type: 'moodboard_tag',
-            title: t('notifications.moodboardTagTitle', { name: authorName }),
-            body: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
-            link: '/prototyping/moodboard',
+      if (insertError) throw new Error(insertError.message);
+
+      // Insert sub-images (additional images beyond the first)
+      if (uploadedUrls.length > 1 && insertedItem) {
+        const subImages = uploadedUrls.slice(1).map((url, idx) => ({
+          moodboard_item_id: insertedItem.id,
+          image_url: url,
+          sort_order: idx,
+        }));
+        const { error: subError } = await supabase
+          .from('moodboard_item_images')
+          .insert(subImages);
+        if (subError) throw new Error(subError.message);
+      }
+
+      // Optional: add comment with tags (creates notifications for tagged users)
+      if (insertedItem && (uploadComment.trim() || uploadTaggedUsers.length > 0)) {
+        const authorId = getUserIdForDb();
+        const content = uploadComment.trim() || t('moodboard.taggedYou');
+        const { data: comment } = await supabase
+          .from('moodboard_comments')
+          .insert({
             moodboard_item_id: insertedItem.id,
-            comment_id: comment.id,
-            from_user_id: authorId,
-          });
+            author_id: authorId,
+            content,
+            tagged_user_ids: uploadTaggedUsers,
+          })
+          .select('id')
+          .single();
+
+        if (comment && uploadTaggedUsers.length > 0 && user) {
+          const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
+          for (const taggedId of uploadTaggedUsers) {
+            await supabase.from('notifications').insert({
+              user_id: taggedId,
+              type: 'moodboard_tag',
+              title: t('notifications.moodboardTagTitle', { name: authorName }),
+              body: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
+              link: '/prototyping/moodboard',
+              moodboard_item_id: insertedItem.id,
+              comment_id: comment.id,
+              from_user_id: authorId,
+            });
+          }
         }
       }
-    }
 
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -547,13 +591,13 @@ export default function MoodboardPage() {
           const file = new File([blob], `image-${Date.now()}.${ext}`, {
             type: blob.type,
           });
-          handleFileSelect(file);
+          addFilesToUpload([file]);
           setShowUpload(true);
           break;
         }
       }
     },
-    [handleFileSelect],
+    [addFilesToUpload],
   );
 
   // Register / tear down the paste listener
@@ -562,19 +606,54 @@ export default function MoodboardPage() {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
-  // ── Lightbox nav ────────────────────────────────────────────
-  const lightboxPrev = () => {
-    if (lightboxIndex !== null) {
-      setLightboxIndex(lightboxIndex > 0 ? lightboxIndex - 1 : items.length - 1);
-      setLightboxMenuOpen(false);
+  // ── Lightbox nav (gallery-aware) ─────────────────────────────
+  const getItemGallery = useCallback((item: MoodboardItem): string[] => {
+    const urls = [item.image_url];
+    if (item.sub_images && item.sub_images.length > 0) {
+      urls.push(...item.sub_images.map((si) => si.image_url));
     }
-  };
-  const lightboxNext = () => {
-    if (lightboxIndex !== null) {
-      setLightboxIndex(lightboxIndex < items.length - 1 ? lightboxIndex + 1 : 0);
-      setLightboxMenuOpen(false);
+    return urls;
+  }, []);
+
+  const lightboxPrev = useCallback(() => {
+    if (lightboxIndex === null) return;
+    if (lightboxSubIndex > 0) {
+      setLightboxSubIndex(lightboxSubIndex - 1);
+    } else {
+      const prevIdx = lightboxIndex > 0 ? lightboxIndex - 1 : items.length - 1;
+      const prevItem = items[prevIdx];
+      const prevGalleryLen = 1 + (prevItem?.sub_images?.length || 0);
+      setLightboxIndex(prevIdx);
+      setLightboxSubIndex(prevGalleryLen - 1);
     }
-  };
+    setLightboxMenuOpen(false);
+  }, [lightboxIndex, lightboxSubIndex, items]);
+
+  const lightboxNext = useCallback(() => {
+    if (lightboxIndex === null) return;
+    const currentItem = items[lightboxIndex];
+    const galleryLen = 1 + (currentItem?.sub_images?.length || 0);
+    if (lightboxSubIndex < galleryLen - 1) {
+      setLightboxSubIndex(lightboxSubIndex + 1);
+    } else {
+      const nextIdx = lightboxIndex < items.length - 1 ? lightboxIndex + 1 : 0;
+      setLightboxIndex(nextIdx);
+      setLightboxSubIndex(0);
+    }
+    setLightboxMenuOpen(false);
+  }, [lightboxIndex, lightboxSubIndex, items]);
+
+  // Keyboard: ESC, Left, Right
+  useEffect(() => {
+    if (lightboxIndex === null) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { setLightboxIndex(null); }
+      if (e.key === 'ArrowLeft') lightboxPrev();
+      if (e.key === 'ArrowRight') lightboxNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [lightboxIndex, lightboxPrev, lightboxNext]);
 
   // ── Input class ─────────────────────────────────────────────
 
@@ -643,7 +722,7 @@ export default function MoodboardPage() {
             <div
               key={item.id}
               className="break-inside-avoid group rounded-lg overflow-hidden cursor-pointer"
-              onClick={() => setLightboxIndex(idx)}
+              onClick={() => { setLightboxIndex(idx); setLightboxSubIndex(0); }}
             >
               <div className="relative">
                 <img
@@ -652,6 +731,13 @@ export default function MoodboardPage() {
                   className="w-full object-cover rounded-lg"
                   loading="lazy"
                 />
+                {/* Multi-image badge */}
+                {item.sub_images && item.sub_images.length > 0 && (
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded z-[1]">
+                    <Images className="w-3 h-3" />
+                    <span>{1 + item.sub_images.length}</span>
+                  </div>
+                )}
                 {/* Hover overlay – three-dot menu */}
                 <div className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-start justify-end p-2">
                   <div className="relative" data-card-menu>
@@ -714,8 +800,22 @@ export default function MoodboardPage() {
               </button>
             </div>
 
-            {/* Drop zone or URL - conditional, one disables the other */}
-            {!uploadPreview ? (
+            {/* Hidden multi-file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) addFilesToUpload(files);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+            />
+
+            {/* Drop zone / thumbnails */}
+            {uploadImages.length === 0 ? (
               <>
                 <div
                   onDragOver={(e) => e.preventDefault()}
@@ -728,16 +828,6 @@ export default function MoodboardPage() {
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs mt-1">
                     {t('moodboard.supportedFormats')}
                   </p>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) handleFileSelect(file);
-                    }}
-                  />
                 </div>
 
                 {/* URL input – below drop zone */}
@@ -771,21 +861,83 @@ export default function MoodboardPage() {
                 </div>
               </>
             ) : (
-              <div className="space-y-3 mb-4">
-                <div className="relative">
-                  <img
-                    src={uploadPreview}
-                    alt="Preview"
-                    className="w-full rounded-lg max-h-48 object-cover"
-                  />
+              <div className="space-y-3 mb-4"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+              >
+                {/* Reorderable thumbnails grid */}
+                <div className="grid grid-cols-4 gap-2">
+                  {uploadImages.map((img, idx) => (
+                    <div
+                      key={img.id}
+                      draggable
+                      onDragStart={() => handleImgDragStart(idx)}
+                      onDragOver={(e) => handleImgDragOver(e, idx)}
+                      onDragEnd={handleImgDragEnd}
+                      className={`relative group rounded-lg overflow-hidden cursor-grab active:cursor-grabbing ${
+                        idx === 0 ? 'ring-2 ring-blue-400' : ''
+                      } ${dragImgIdx === idx ? 'opacity-40' : ''}`}
+                    >
+                      <img src={img.preview} alt="" className="w-full aspect-square object-cover" />
+                      {idx === 0 && (
+                        <span className="absolute top-1 left-1 text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-medium leading-tight">
+                          Cover
+                        </span>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); removeUploadImage(img.id); }}
+                        className="absolute top-1 right-1 p-0.5 bg-black/60 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                      <div className="absolute bottom-1 left-1 text-white/50 pointer-events-none">
+                        <GripVertical className="w-3 h-3" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <button
-                  onClick={clearImage}
-                  className="flex items-center gap-2 px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/25 rounded-lg transition-colors w-full justify-center"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {t('moodboard.deleteImage')}
-                </button>
+
+                {/* Add more + URL input */}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-300 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 rounded-lg transition-colors"
+                  >
+                    <Plus className="w-3 h-3" />
+                    {t('moodboard.addMoreImages')}
+                  </button>
+                </div>
+
+                {/* URL input for adding more via URL */}
+                <div>
+                  <div className="relative">
+                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                    <input
+                      type="url"
+                      value={urlInput}
+                      onChange={(e) => {
+                        setUrlInput(e.target.value);
+                        if (urlError) setUrlError('');
+                      }}
+                      onPaste={handleUrlPaste}
+                      onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
+                      placeholder={t('moodboard.urlPlaceholder')}
+                      className={`${inputClass} pl-10 ${urlError ? 'ring-2 ring-red-400/50 focus:ring-red-400' : ''}`}
+                    />
+                    {urlLoading && (
+                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 animate-spin" />
+                    )}
+                  </div>
+                  {urlError && (
+                    <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 mt-2 space-y-1">
+                      <div>{urlError}</div>
+                      {urlError === t('moodboard.invalidUrl') && (
+                        <div className="text-nokturo-500 dark:text-nokturo-400 text-xs">{t('moodboard.invalidUrlHint')}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -888,7 +1040,7 @@ export default function MoodboardPage() {
               </button>
               <button
                 onClick={handleUpload}
-                disabled={(!uploadFile && !urlLoadedBlob) || uploading}
+                disabled={uploadImages.length === 0 || uploading}
                 className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -1015,14 +1167,19 @@ export default function MoodboardPage() {
       )}
 
       {/* ── Lightbox: photo (left) | modal info + comments (right) ───── */}
-      {lightboxIndex !== null && items[lightboxIndex] && (
+      {lightboxIndex !== null && items[lightboxIndex] && (() => {
+        const lbItem = items[lightboxIndex];
+        const lbGallery = getItemGallery(lbItem);
+        const lbImageUrl = lbGallery[lightboxSubIndex] || lbItem.image_url;
+        const totalImages = items.reduce((acc, it) => acc + 1 + (it.sub_images?.length || 0), 0);
+        return (
         <div
           className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col lg:flex-row"
           onClick={() => setLightboxIndex(null)}
         >
           {/* 1. Photo area (left) */}
           <div className="flex-1 relative flex items-center justify-center min-w-0 p-4 min-h-0 order-1">
-            {items.length > 1 && (
+            {totalImages > 1 && (
               <>
                 <button
                   onClick={(e) => {
@@ -1045,24 +1202,46 @@ export default function MoodboardPage() {
               </>
             )}
 
-            {/\.svg(\?|$)/i.test(items[lightboxIndex].image_url) ? (
+            {/\.svg(\?|$)/i.test(lbImageUrl) ? (
               <img
-                src={items[lightboxIndex].image_url}
-                alt={items[lightboxIndex].title || 'Moodboard'}
+                src={lbImageUrl}
+                alt={lbItem.title || 'Moodboard'}
                 width={400}
                 height={400}
-                className="max-w-full max-h-[50vh] lg:max-h-[90vh] object-contain rounded-lg aspect-square shrink-0"
+                className="max-w-full max-h-[50vh] lg:max-h-[85vh] object-contain rounded-lg aspect-square shrink-0"
                 style={{ imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] }}
                 loading="eager"
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <img
-                src={items[lightboxIndex].image_url}
-                alt={items[lightboxIndex].title || 'Moodboard'}
-                className="max-w-full max-h-[50vh] lg:max-h-[90vh] w-auto h-auto object-contain rounded-lg"
+                src={lbImageUrl}
+                alt={lbItem.title || 'Moodboard'}
+                className="max-w-full max-h-[50vh] lg:max-h-[85vh] w-auto h-auto object-contain rounded-lg"
                 onClick={(e) => e.stopPropagation()}
               />
+            )}
+
+            {/* Mini-gallery thumbnails */}
+            {lbGallery.length > 1 && (
+              <div
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 rounded-lg p-1.5 z-10 max-w-[80%] overflow-x-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {lbGallery.map((url, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setLightboxSubIndex(idx)}
+                    className={`w-10 h-10 rounded overflow-hidden border-2 transition-all shrink-0 ${
+                      idx === lightboxSubIndex
+                        ? 'border-white scale-110'
+                        : 'border-transparent opacity-60 hover:opacity-90'
+                    }`}
+                  >
+                    <img src={url} alt="" className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
             )}
 
             <button
@@ -1086,7 +1265,7 @@ export default function MoodboardPage() {
                   <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20">
                     <button
                       onClick={() => {
-                        openEdit(items[lightboxIndex]);
+                        openEdit(lbItem);
                         setLightboxIndex(null);
                         setLightboxMenuOpen(false);
                       }}
@@ -1098,7 +1277,7 @@ export default function MoodboardPage() {
                     {canDelete && (
                       <button
                         onClick={() => {
-                          setDeleteTarget(items[lightboxIndex].id);
+                          setDeleteTarget(lbItem.id);
                           setLightboxIndex(null);
                           setLightboxMenuOpen(false);
                         }}
@@ -1119,21 +1298,21 @@ export default function MoodboardPage() {
             className="w-full lg:w-80 xl:w-96 bg-white dark:bg-nokturo-800 flex flex-col overflow-hidden shrink-0 max-h-[40vh] lg:max-h-none order-2"
             onClick={(e) => e.stopPropagation()}
           >
-            {(items[lightboxIndex].title || items[lightboxIndex].notes || (items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0)) && (
+            {(lbItem.title || lbItem.notes || (lbItem.categories && lbItem.categories.length > 0)) && (
               <div className="px-4 pt-3 pb-2 shrink-0 space-y-0.5">
-                {items[lightboxIndex].title && (
+                {lbItem.title && (
                   <p className="text-nokturo-900 dark:text-nokturo-100 font-medium text-sm truncate">
-                    {items[lightboxIndex].title}
+                    {lbItem.title}
                   </p>
                 )}
-                {items[lightboxIndex].notes && (
+                {lbItem.notes && (
                   <p className="text-nokturo-600 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap mb-2">
-                    {items[lightboxIndex].notes}
+                    {lbItem.notes}
                   </p>
                 )}
-                {items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0 && (
+                {lbItem.categories && lbItem.categories.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-0.5">
-                    {items[lightboxIndex].categories!.map((cat) => {
+                    {lbItem.categories!.map((cat) => {
                       const catOption = categories.find((c) => c.name === cat);
                       const colorClass = TAG_COLORS[catOption?.color ?? 'gray'] ?? TAG_COLORS.gray;
                       return (
@@ -1154,13 +1333,14 @@ export default function MoodboardPage() {
 
             <div className="flex-1 overflow-y-auto min-h-0 flex flex-col px-4 pb-4">
               <MoodboardComments
-                moodboardItemId={items[lightboxIndex].id}
-                hasHeaderAbove={!!(items[lightboxIndex].title || items[lightboxIndex].notes || (items[lightboxIndex].categories && items[lightboxIndex].categories.length > 0))}
+                moodboardItemId={lbItem.id}
+                hasHeaderAbove={!!(lbItem.title || lbItem.notes || (lbItem.categories && lbItem.categories.length > 0))}
               />
             </div>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* ── Delete confirmation ─────────────────────────────── */}
       {deleteTarget && (

@@ -63,6 +63,14 @@ CREATE TABLE public.moodboard_items (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+CREATE TABLE public.moodboard_item_images (
+  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  moodboard_item_id UUID NOT NULL REFERENCES public.moodboard_items(id) ON DELETE CASCADE,
+  image_url         TEXT NOT NULL,
+  sort_order        INTEGER NOT NULL DEFAULT 0,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 CREATE TABLE public.ideas (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title       TEXT NOT NULL,
@@ -218,6 +226,7 @@ ALTER TABLE public.brand_strategy ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.brand_identity ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.moodboard_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.moodboard_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.moodboard_item_images ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Authenticated users can read moodboard_categories"
   ON public.moodboard_categories FOR SELECT

@@ -669,7 +669,9 @@
     "tagUser": "Tag user",
     "tagUserPlaceholder": "Write a comment and tag users – they'll get a notification...",
     "taggedYou": "Tagged you in a new moodboard image",
-    "commentAndTag": "Comment and tag"
+    "commentAndTag": "Comment and tag",
+    "addMoreImages": "Add more images",
+    "galleryCount": "{{count}} images"
   },
   "ideas": {
     "addIdea": "Add Idea",
