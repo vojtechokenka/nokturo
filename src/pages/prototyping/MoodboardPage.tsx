@@ -308,6 +308,8 @@ export default function MoodboardPage() {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    // Skip if this is an internal reorder drag (not an external file drop)
+    if (dragImgIdxRef.current !== null) return;
     const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
     if (files.length > 0) addFilesToUpload(files);
   };

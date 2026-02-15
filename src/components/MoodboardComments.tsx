@@ -446,7 +446,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
             <Loader2 className="w-5 h-5 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
           </div>
         ) : comments.length === 0 ? null : (
-          <div className="space-y-2 mb-4">
+          <div className="space-y-2 pt-4 mb-4">
             {comments.map(renderComment)}
           </div>
         )}
