@@ -95,6 +95,7 @@ export default function MoodboardPage() {
   const [urlError, setUrlError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragImgIdx, setDragImgIdx] = useState<number | null>(null);
+  const dragImgIdxRef = useRef<number | null>(null);
 
   // Lightbox
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -153,7 +154,22 @@ export default function MoodboardPage() {
       query = query.overlaps('categories', categoryFilter);
     }
 
-    const { data, error } = await query;
+    let { data, error } = await query;
+
+    // Fallback: if moodboard_item_images table doesn't exist yet, query without join
+    if (error) {
+      let fallbackQuery = supabase
+        .from('moodboard_items')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (categoryFilter.length > 0) {
+        fallbackQuery = fallbackQuery.overlaps('categories', categoryFilter);
+      }
+      const fallback = await fallbackQuery;
+      data = fallback.data;
+      error = fallback.error;
+    }
+
     if (!error && data) {
       setItems(
         (data as any[]).map((row) => ({
@@ -313,20 +329,28 @@ export default function MoodboardPage() {
     setDragImgIdx(null);
   };
 
-  // Drag-reorder helpers for upload thumbnails
-  const handleImgDragStart = (idx: number) => setDragImgIdx(idx);
+  // Drag-reorder helpers for upload thumbnails (ref for synchronous index tracking)
+  const handleImgDragStart = (idx: number) => {
+    dragImgIdxRef.current = idx;
+    setDragImgIdx(idx);
+  };
   const handleImgDragOver = (e: React.DragEvent, idx: number) => {
     e.preventDefault();
-    if (dragImgIdx === null || dragImgIdx === idx) return;
+    const fromIdx = dragImgIdxRef.current;
+    if (fromIdx === null || fromIdx === idx) return;
+    dragImgIdxRef.current = idx;
+    setDragImgIdx(idx);
     setUploadImages((prev) => {
       const arr = [...prev];
-      const [moved] = arr.splice(dragImgIdx, 1);
+      const [moved] = arr.splice(fromIdx, 1);
       arr.splice(idx, 0, moved);
       return arr;
     });
-    setDragImgIdx(idx);
   };
-  const handleImgDragEnd = () => setDragImgIdx(null);
+  const handleImgDragEnd = () => {
+    dragImgIdxRef.current = null;
+    setDragImgIdx(null);
+  };
 
   // ── URL paste handler ───────────────────────────────────────
   const handleUrlPaste = (e: React.ClipboardEvent) => {

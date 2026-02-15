@@ -1,6 +1,6 @@
 -- Add support for multiple images per moodboard item (mini-gallery)
 CREATE TABLE IF NOT EXISTS public.moodboard_item_images (
-  id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   moodboard_item_id UUID NOT NULL REFERENCES public.moodboard_items(id) ON DELETE CASCADE,
   image_url         TEXT NOT NULL,
   sort_order        INTEGER NOT NULL DEFAULT 0,
