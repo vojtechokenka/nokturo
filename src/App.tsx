@@ -7,7 +7,7 @@ import { useSleepModeStore } from './stores/sleepModeStore';
 import { SleepMode } from './components/SleepMode';
 import type { Role } from './lib/rbac';
 
-const VALID_ROLES: Role[] = ['founder', 'engineer', 'viewer', 'client'];
+const VALID_ROLES: Role[] = ['founder', 'engineer', 'viewer', 'client', 'host'];
 
 function resolveRole(raw: unknown): Role {
   const s = typeof raw === 'string' ? raw.toLowerCase() : '';

@@ -7,9 +7,9 @@ import type { Role } from '../lib/rbac';
 // Route permissions – which roles can access which pages
 export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/settings/users': ['founder'],
-  '/brand/strategy': ['founder', 'engineer', 'viewer', 'client'],
-  '/brand/identity': ['founder', 'engineer', 'viewer', 'client'],
-  '/prototyping/moodboard': ['founder', 'engineer', 'viewer'],
+  '/brand/strategy': ['founder', 'engineer', 'viewer', 'client', 'host'],
+  '/brand/identity': ['founder', 'engineer', 'viewer', 'client', 'host'],
+  '/prototyping/moodboard': ['founder', 'engineer', 'viewer', 'host'],
   '/prototyping/ideas': ['founder', 'engineer', 'viewer'],
   '/production/materials': ['founder', 'engineer', 'viewer'],
   '/production/components': ['founder', 'engineer', 'viewer'],
@@ -23,8 +23,8 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/business/accounting': ['founder', 'engineer'],
   '/communication/chat': ['founder', 'engineer', 'viewer'],
   '/communication/comments': ['founder', 'engineer', 'viewer'],
-  '/settings/account': ['founder', 'engineer', 'viewer', 'client'],
-  '/settings/security': ['founder', 'engineer', 'viewer', 'client'],
+  '/settings/account': ['founder', 'engineer', 'viewer', 'client', 'host'],
+  '/settings/security': ['founder', 'engineer', 'viewer', 'client', 'host'],
 };
 
 // Feature permissions – which roles can use which features

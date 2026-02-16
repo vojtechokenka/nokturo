@@ -133,7 +133,7 @@ function BlockView({ block }: { block: RichTextBlock }) {
       return (
         <ListTag className={`font-body pl-6 my-5 space-y-1 ${block.style === 'numbered' ? 'list-decimal' : 'list-disc'} text-nokturo-700 dark:text-nokturo-300`}>
           {block.items.filter((i) => i?.trim()).map((item, i) => (
-            <li key={i}>{item}</li>
+            <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
           ))}
         </ListTag>
       );
@@ -174,6 +174,7 @@ function BlockView({ block }: { block: RichTextBlock }) {
       const gridCols = Math.max(1, block.columns ?? 1);
       const gridRows = Math.max(1, block.rows ?? 1);
       const headerCount = block.headerRowCount ?? 0;
+      const headerColCount = block.headerColumnCount ?? 0;
       return (
         <div
           className="border border-nokturo-200 dark:border-nokturo-700 my-8 overflow-hidden"
@@ -185,13 +186,20 @@ function BlockView({ block }: { block: RichTextBlock }) {
           {block.cells.slice(0, gridRows * gridCols).map((cell, i) => {
             const rowIdx = Math.floor(i / gridCols);
             const colIdx = i % gridCols;
-            const isHeader = headerCount > 0 && rowIdx < headerCount;
+            const isHeaderRow = headerCount > 0 && rowIdx < headerCount;
+            const isHeaderCol = headerColCount > 0 && colIdx < headerColCount;
+            const isHeader = isHeaderRow || isHeaderCol;
             const isLastHeaderRow = headerCount > 0 && rowIdx === headerCount - 1;
+            const isLastHeaderCol = headerColCount > 0 && colIdx === headerColCount - 1;
             return (
               <div
                 key={i}
-                className={`font-body border-r border-nokturo-200 dark:border-nokturo-700 p-2 text-sm ${
-                  colIdx === gridCols - 1 ? 'border-r-0' : ''
+                className={`font-body p-2 text-sm ${
+                  colIdx === gridCols - 1
+                    ? 'border-r-0'
+                    : isLastHeaderCol
+                      ? 'border-r-2 border-nokturo-300 dark:border-nokturo-600'
+                      : 'border-r border-nokturo-200 dark:border-nokturo-700'
                 } ${
                   rowIdx === gridRows - 1
                     ? 'border-b-0'

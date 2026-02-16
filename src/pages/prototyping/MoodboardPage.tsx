@@ -80,6 +80,10 @@ export default function MoodboardPage() {
   const [items, setItems] = useState<MoodboardItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  // Stable sort key: only updated on fetch, not on mark-as-read, so posts don't jump
+  const [sortUnreadIds, setSortUnreadIds] = useState<Set<string>>(new Set());
+  // Track items marked as read to prevent race with fetchUnreadCounts
+  const recentlyReadRef = useRef<Set<string>>(new Set());
 
   // Filter (multiselect: show items that have ANY of selected categories)
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -218,7 +222,12 @@ export default function MoodboardPage() {
           counts[c.moodboard_item_id] = (counts[c.moodboard_item_id] || 0) + 1;
         }
       }
+      // Exclude items the user just marked as read (prevents race condition)
+      for (const id of recentlyReadRef.current) {
+        delete counts[id];
+      }
       setUnreadCounts(counts);
+      setSortUnreadIds(new Set(Object.keys(counts).filter((id) => counts[id] > 0)));
     } catch {
       // Silently fail if moodboard_comment_reads table doesn't exist yet
     }
@@ -232,31 +241,34 @@ export default function MoodboardPage() {
   const markItemAsRead = useCallback(async (itemId: string) => {
     const userId = getUserIdForDb();
     if (!userId) return;
+    // Track to prevent fetchUnreadCounts from re-adding this item
+    recentlyReadRef.current.add(itemId);
+    // Optimistically remove bell icon (but keep sort position stable via sortUnreadIds)
+    setUnreadCounts((prev) => {
+      const next = { ...prev };
+      delete next[itemId];
+      return next;
+    });
     try {
       await supabase.from('moodboard_comment_reads').upsert(
         { user_id: userId, moodboard_item_id: itemId, last_read_at: new Date().toISOString() },
         { onConflict: 'user_id,moodboard_item_id' }
       );
-      setUnreadCounts((prev) => {
-        const next = { ...prev };
-        delete next[itemId];
-        return next;
-      });
     } catch {
       // Silently fail if table doesn't exist yet
     }
   }, []);
 
-  // Sorted items: unread first
+  // Sorted items: unread first (uses stable sortUnreadIds so posts don't jump when marked as read)
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => {
-      const aUnread = unreadCounts[a.id] || 0;
-      const bUnread = unreadCounts[b.id] || 0;
-      if (aUnread > 0 && bUnread === 0) return -1;
-      if (aUnread === 0 && bUnread > 0) return 1;
+      const aUnread = sortUnreadIds.has(a.id);
+      const bUnread = sortUnreadIds.has(b.id);
+      if (aUnread && !bUnread) return -1;
+      if (!aUnread && bUnread) return 1;
       return 0;
     });
-  }, [items, unreadCounts]);
+  }, [items, sortUnreadIds]);
 
   // Auto-open lightbox when navigating from a notification with ?item=<id>
   useEffect(() => {

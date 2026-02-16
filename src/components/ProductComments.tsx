@@ -13,6 +13,16 @@ import {
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
+import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
+import type { MentionProfile } from './MentionSuggestions';
+import { sendMentionNotifications } from '../lib/sendMentionNotifications';
+
+interface ProfileOption {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  full_name: string | null;
+}
 
 // ── Types ─────────────────────────────────────────────────────
 interface Comment {
@@ -53,6 +63,39 @@ export function ProductComments({ productId }: ProductCommentsProps) {
   const [sending, setSending] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
+
+  const mention = useMentionSuggestions(newComment, profiles as MentionProfile[]);
+  const replyMention = useMentionSuggestions(replyContent, profiles as MentionProfile[]);
+
+  const handleMentionSelect = useCallback((profile: MentionProfile) => {
+    const newValue = mention.applyMention(profile);
+    setNewComment(newValue);
+    if (!taggedUsers.includes(profile.id)) {
+      setTaggedUsers((prev) => [...prev, profile.id]);
+    }
+  }, [mention, taggedUsers]);
+
+  const handleReplyMentionSelect = useCallback((profile: MentionProfile) => {
+    const newValue = replyMention.applyMention(profile);
+    setReplyContent(newValue);
+    if (!taggedUsers.includes(profile.id)) {
+      setTaggedUsers((prev) => [...prev, profile.id]);
+    }
+  }, [replyMention, taggedUsers]);
+
+  const fetchProfiles = useCallback(async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, full_name')
+      .neq('id', user?.id ?? '');
+    setProfiles((data || []) as ProfileOption[]);
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchProfiles();
+  }, [fetchProfiles]);
 
   // Close comment menu on outside click
   useEffect(() => {
@@ -141,12 +184,26 @@ export function ProductComments({ productId }: ProductCommentsProps) {
     });
 
     if (!error) {
+      // Create notifications for tagged users
+      if (taggedUsers.length > 0) {
+        const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
+        await sendMentionNotifications({
+          taggedUserIds: taggedUsers,
+          authorId,
+          authorName,
+          content: content.trim(),
+          type: 'product_tag',
+          link: `/communication/comments?product=${productId}`,
+        });
+      }
+
       if (parentId) {
         setReplyContent('');
         setReplyTo(null);
       } else {
         setNewComment('');
       }
+      setTaggedUsers([]);
       fetchComments();
     }
     setSending(false);
@@ -258,21 +315,37 @@ export function ProductComments({ productId }: ProductCommentsProps) {
 
             {/* Reply input */}
             {replyTo === comment.id && (
-              <div className="flex items-end gap-2 mt-2">
-                <input
-                  type="text"
-                  value={replyContent}
-                  onChange={(e) => setReplyContent(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handlePost(comment.id);
-                    }
-                  }}
-                  placeholder={t('comments.replyPlaceholder')}
-                  className={`${INPUT_CLASS} flex-1`}
-                  autoFocus
-                />
+              <div className="flex items-end gap-2 mt-2 relative">
+                <div className="flex-1 relative">
+                  {replyMention.active && (
+                    <MentionDropdown
+                      profiles={replyMention.filtered}
+                      selectedIdx={replyMention.selectedIdx}
+                      onSelect={handleReplyMentionSelect}
+                    />
+                  )}
+                  <input
+                    type="text"
+                    value={replyContent}
+                    onChange={(e) => setReplyContent(e.target.value)}
+                    onKeyDown={(e) => {
+                      const result = replyMention.handleKeyDown(e);
+                      if (result === 'select') {
+                        const p = replyMention.getSelectedProfile();
+                        if (p) handleReplyMentionSelect(p);
+                        return;
+                      }
+                      if (result) return;
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handlePost(comment.id);
+                      }
+                    }}
+                    placeholder={t('comments.replyPlaceholder')}
+                    className={`${INPUT_CLASS}`}
+                    autoFocus
+                  />
+                </div>
                 <button
                   onClick={() => handlePost(comment.id)}
                   disabled={!replyContent.trim() || sending}
@@ -317,20 +390,36 @@ export function ProductComments({ productId }: ProductCommentsProps) {
 
         {/* New comment input (only if role can comment) */}
         {canComment && (
-        <div className="flex items-end gap-2 pt-3 border-t border-nokturo-200 dark:border-nokturo-700">
-          <input
-            type="text"
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handlePost(null);
-              }
-            }}
-            placeholder={t('comments.placeholder')}
-            className={`${INPUT_CLASS} flex-1`}
-          />
+        <div className="flex items-end gap-2 pt-3 border-t border-nokturo-200 dark:border-nokturo-700 relative">
+          <div className="flex-1 relative">
+            {mention.active && (
+              <MentionDropdown
+                profiles={mention.filtered}
+                selectedIdx={mention.selectedIdx}
+                onSelect={handleMentionSelect}
+              />
+            )}
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(e) => {
+                const result = mention.handleKeyDown(e);
+                if (result === 'select') {
+                  const p = mention.getSelectedProfile();
+                  if (p) handleMentionSelect(p);
+                  return;
+                }
+                if (result) return;
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handlePost(null);
+                }
+              }}
+              placeholder={t('comments.placeholder')}
+              className={`${INPUT_CLASS}`}
+            />
+          </div>
           <button
             onClick={() => handlePost(null)}
             disabled={!newComment.trim() || sending}

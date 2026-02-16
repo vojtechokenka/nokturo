@@ -54,7 +54,8 @@
     "founder": "Zakladatel",
     "engineer": "Inženýr",
     "viewer": "Prohlížeč",
-    "client": "Klient"
+    "client": "Klient",
+    "host": "Host"
   },
   "notionSelect": {
     "searchPlaceholder": "Hledat mo\u017enost...",
@@ -724,7 +725,11 @@
   },
   "notifications": {
     "title": "Notifikace",
-    "moodboardTagTitle": "{{name}} vás označil v komentáři moodboardu",
+    "moodboardTagTitle": "{{name}} vás označil/a v komentáři moodboardu",
+    "galleryTagTitle": "{{name}} vás označil/a v komentáři galerie",
+    "textTagTitle": "{{name}} vás označil/a v textovém komentáři",
+    "productTagTitle": "{{name}} vás označil/a v komentáři produktu",
+    "commentReplyTitle": "{{name}} odpověděl/a na váš komentář",
     "noNotifications": "Žádné notifikace",
     "markAllRead": "Označit vše jako přečtené",
     "clearAll": "Smazat vše"
@@ -772,6 +777,7 @@
     "deleteRow": "Smazat řádek",
     "deleteColumn": "Smazat sloupec",
     "addHeaderRow": "Přidat hlavičkový řádek",
+    "addHeaderColumn": "Přidat hlavičkový sloupec",
     "gridCellTextPlaceholder": "Zadejte text...",
     "link": "Odkaz",
     "divider": "Oddělovač",

@@ -54,7 +54,8 @@
     "founder": "Founder",
     "engineer": "Engineer",
     "viewer": "Viewer",
-    "client": "Client"
+    "client": "Client",
+    "host": "Host"
   },
   "notionSelect": {
     "searchPlaceholder": "Search for an option...",
@@ -719,6 +720,10 @@
   "notifications": {
     "title": "Notifications",
     "moodboardTagTitle": "{{name}} tagged you in a moodboard comment",
+    "galleryTagTitle": "{{name}} tagged you in a gallery comment",
+    "textTagTitle": "{{name}} tagged you in a text comment",
+    "productTagTitle": "{{name}} tagged you in a product comment",
+    "commentReplyTitle": "{{name}} replied to your comment",
     "noNotifications": "No notifications",
     "markAllRead": "Mark all as read",
     "clearAll": "Clear all"
@@ -766,6 +771,7 @@
     "deleteRow": "Delete row",
     "deleteColumn": "Delete column",
     "addHeaderRow": "Add header row",
+    "addHeaderColumn": "Add header column",
     "gridCellTextPlaceholder": "Enter text...",
     "link": "Link",
     "divider": "Divider",

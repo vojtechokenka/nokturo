@@ -14,6 +14,9 @@ import {
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
+import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
+import type { MentionProfile } from './MentionSuggestions';
+import { sendMentionNotifications } from '../lib/sendMentionNotifications';
 
 // ── Types ─────────────────────────────────────────────────────
 interface MoodboardComment {
@@ -65,6 +68,16 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const mention = useMentionSuggestions(newComment, profiles as MentionProfile[]);
+
+  const handleMentionSelect = useCallback((profile: MentionProfile) => {
+    const newValue = mention.applyMention(profile);
+    setNewComment(newValue);
+    if (!taggedUsers.includes(profile.id)) {
+      setTaggedUsers((prev) => [...prev, profile.id]);
+    }
+  }, [mention, taggedUsers]);
 
   // Close comment menu on outside click
   useEffect(() => {
@@ -222,17 +235,17 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       setTaggedUsers([]);
 
       // Create notifications for tagged users
-      for (const taggedId of taggedUsers) {
+      if (taggedUsers.length > 0) {
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
-        await supabase.from('notifications').insert({
-          user_id: taggedId,
+        await sendMentionNotifications({
+          taggedUserIds: taggedUsers,
+          authorId,
+          authorName,
+          content,
           type: 'moodboard_tag',
-          title: t('notifications.moodboardTagTitle', { name: authorName }),
-          body: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
-              link: `/prototyping/moodboard?item=${moodboardItemId}`,
-          moodboard_item_id: moodboardItemId,
-          comment_id: comment.id,
-          from_user_id: authorId,
+          link: `/prototyping/moodboard?item=${moodboardItemId}`,
+          moodboardItemId,
+          commentId: comment.id,
         });
       }
     }
@@ -457,12 +470,26 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       <div className="flex flex-col gap-2 shrink-0 pt-3">
         <div className="relative flex gap-2">
           <div className="flex-1 relative">
+            {mention.active && (
+              <MentionDropdown
+                profiles={mention.filtered}
+                selectedIdx={mention.selectedIdx}
+                onSelect={handleMentionSelect}
+              />
+            )}
             <input
               ref={inputRef}
               type="text"
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={(e) => {
+                const result = mention.handleKeyDown(e);
+                if (result === 'select') {
+                  const p = mention.getSelectedProfile();
+                  if (p) handleMentionSelect(p);
+                  return;
+                }
+                if (result) return;
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
                   handlePost();

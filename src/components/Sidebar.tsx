@@ -99,7 +99,7 @@ export function Sidebar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
-  const role = user?.role ?? 'client';
+  const role = user?.role ?? 'host';
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -159,14 +159,22 @@ export function Sidebar() {
     deleteNotification(n.id);
     setShowNotifications(false);
     if (n.link) {
-      const currentPath = window.location.hash?.replace(/^#/, '').split('?')[0] || window.location.pathname;
+      const currentHash = window.location.hash?.replace(/^#/, '') || '';
+      const currentPath = currentHash.split('?')[0] || window.location.pathname.replace(/^\/app/, '');
       const targetPath = n.link.split('?')[0];
-      if (currentPath === targetPath || currentPath.endsWith(targetPath)) {
-        // Same page: dispatch custom event so the page can react without a full navigation
+      const isSamePage = currentPath === targetPath || currentPath.endsWith(targetPath);
+
+      if (isSamePage) {
+        // Same page: try custom events for in-page navigation
         const url = new URL(n.link, window.location.origin);
         const itemId = url.searchParams.get('item');
         if (itemId) {
           window.dispatchEvent(new CustomEvent('open-moodboard-item', { detail: { itemId } }));
+        } else {
+          // Force re-navigation even on same page (React Router will update query params)
+          const targetLink = n.link;
+          navigate(targetLink, { replace: true });
+          setTimeout(() => navigate(targetLink), 50);
         }
       } else {
         navigate(n.link);
@@ -239,7 +247,7 @@ export function Sidebar() {
           )}
         </div>
         {showNotifications && (
-          <div className="absolute bottom-full left-0 mb-2 w-[360px] rounded-xl max-h-80 overflow-hidden flex flex-col z-50 bg-white border border-nokturo-200 shadow-2xl shadow-nokturo-900/10 dark:bg-nokturo-900 dark:border-nokturo-600 dark:shadow-black/50">
+          <div className="absolute bottom-full left-3 mb-2 w-[360px] rounded-xl max-h-80 overflow-hidden flex flex-col z-50 bg-white border border-nokturo-200 shadow-2xl shadow-nokturo-900/10 dark:bg-nokturo-900 dark:border-nokturo-600 dark:shadow-black/50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-nokturo-100 dark:border-nokturo-700 shrink-0">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-nokturo-700 dark:text-nokturo-300" />

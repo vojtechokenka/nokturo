@@ -2,7 +2,7 @@
 // RBAC – Role-Based Access Control for Nokturo
 // ──────────────────────────────────────────────
 
-export type Role = 'founder' | 'engineer' | 'viewer' | 'client';
+export type Role = 'founder' | 'engineer' | 'viewer' | 'client' | 'host';
 
 export interface Permission {
   read: boolean;
@@ -32,6 +32,7 @@ export type Module =
 // Engineer = read all; comment on everything; no write/delete
 // Viewer = read all except accounting; no comment, no edit
 // Client = read + comment on brand strategy, identity, ready for sampling (production.products/sampling)
+// Host = read-only on brand strategy, identity, moodboard; no comment, no write, no delete
 const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   founder: {
     'brand.strategy':          { read: true, write: true, comment: true, delete: true },
@@ -94,6 +95,23 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
     'production.labels':      { read: false, write: false, comment: false, delete: false },
     'production.products':     { read: true,  write: false, comment: true,  delete: false },
     'production.sampling':     { read: true,  write: false, comment: true,  delete: false },
+    'business.costing':       { read: false, write: false, comment: false, delete: false },
+    'business.suppliers':      { read: false, write: false, comment: false, delete: false },
+    'business.accounting':     { read: false, write: false, comment: false, delete: false },
+    'communication.chat':     { read: false, write: false, comment: false, delete: false },
+    'communication.comments': { read: false, write: false, comment: false, delete: false },
+  },
+
+  host: {
+    'brand.strategy':          { read: true,  write: false, comment: false, delete: false },
+    'brand.identity':          { read: true,  write: false, comment: false, delete: false },
+    'prototyping.moodboard':   { read: true,  write: false, comment: false, delete: false },
+    'prototyping.ideas':       { read: false, write: false, comment: false, delete: false },
+    'production.materials':    { read: false, write: false, comment: false, delete: false },
+    'production.components':   { read: false, write: false, comment: false, delete: false },
+    'production.labels':      { read: false, write: false, comment: false, delete: false },
+    'production.products':     { read: false, write: false, comment: false, delete: false },
+    'production.sampling':     { read: false, write: false, comment: false, delete: false },
     'business.costing':       { read: false, write: false, comment: false, delete: false },
     'business.suppliers':      { read: false, write: false, comment: false, delete: false },
     'business.accounting':     { read: false, write: false, comment: false, delete: false },

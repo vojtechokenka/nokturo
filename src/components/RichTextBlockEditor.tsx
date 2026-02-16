@@ -45,6 +45,7 @@ export type RichTextBlock =
       columns: number;
       rows: number;
       headerRowCount: number;
+      headerColumnCount: number;
       cells: { type: 'text' | 'image'; content: string }[];
     }
   | { id: string; type: 'link'; url: string; text: string }
@@ -136,6 +137,79 @@ const EditableParagraph = forwardRef<
     />
   );
 });
+
+// ── Editable list item (supports bold/italic via Ctrl+B / Ctrl+I) ───
+function EditableListItem({
+  html,
+  placeholder,
+  onSave,
+  onEnter,
+  onBackspaceEmpty,
+}: {
+  html: string;
+  placeholder?: string;
+  onSave: (html: string) => void;
+  onEnter: () => void;
+  onBackspaceEmpty: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const savedHtml = useRef(html);
+
+  useEffect(() => {
+    if (ref.current && ref.current.innerHTML !== html) {
+      ref.current.innerHTML = html;
+    }
+    savedHtml.current = html;
+  }, [html]);
+
+  const save = useCallback(() => {
+    if (ref.current) {
+      const v = ref.current.innerHTML;
+      if (v !== savedHtml.current) {
+        savedHtml.current = v;
+        onSave(v);
+      }
+    }
+  }, [onSave]);
+
+  const handleInput = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(save, 400);
+  }, [save]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      save();
+      onEnter();
+    }
+    if (e.key === 'Backspace' && ref.current) {
+      const content = ref.current.innerHTML;
+      if (!content || content === '<br>') {
+        e.preventDefault();
+        onBackspaceEmpty();
+      }
+    }
+  }, [save, onEnter, onBackspaceEmpty]);
+
+  return (
+    <div
+      ref={ref}
+      contentEditable
+      suppressContentEditableWarning
+      onInput={handleInput}
+      onBlur={() => {
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+        save();
+      }}
+      onKeyDown={handleKeyDown}
+      data-placeholder={placeholder}
+      className="flex-1 bg-transparent outline-none min-h-[1.4em] text-sm text-nokturo-700 dark:text-nokturo-300 empty:before:content-[attr(data-placeholder)] empty:before:text-nokturo-400 dark:empty:before:text-nokturo-500 empty:before:pointer-events-none"
+    />
+  );
+}
 
 // ── Editable cell for grid (supports bold/italic/link) ──────────
 function GridCell({
@@ -305,6 +379,7 @@ function AddBlockMenu({
         columns: 1,
         rows: 1,
         headerRowCount: 0,
+        headerColumnCount: 0,
         cells: [{ type: 'text' as const, content: '' }],
       },
     },
@@ -557,20 +632,29 @@ function BlockRenderer({
             </div>
             <div className="space-y-1 pl-2">
               {(block.items?.length ? block.items : ['']).map((item, i) => (
-                <div key={i} className="flex items-center gap-2 group/list-item">
-                  <span className="text-nokturo-400 dark:text-nokturo-500 text-sm shrink-0 w-4">
+                <div key={i} className="flex items-start gap-2 group/list-item">
+                  <span className="text-nokturo-400 dark:text-nokturo-500 text-sm shrink-0 w-4 pt-[2px]">
                     {block.style === 'numbered' ? `${i + 1}.` : '•'}
                   </span>
-                  <input
-                    type="text"
-                    value={item}
-                    onChange={(e) => {
+                  <EditableListItem
+                    html={item}
+                    placeholder={t('richText.listItemPlaceholder')}
+                    onSave={(html) => {
                       const next = [...(block.items || [''])];
-                      next[i] = e.target.value;
+                      next[i] = html;
                       onUpdate(block.id, { items: next });
                     }}
-                    placeholder={t('richText.listItemPlaceholder')}
-                    className="flex-1 bg-transparent border-0 focus:ring-0 focus:outline-none text-sm text-nokturo-700 dark:text-nokturo-300 placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500"
+                    onEnter={() => {
+                      const next = [...(block.items || [''])];
+                      next.splice(i + 1, 0, '');
+                      onUpdate(block.id, { items: next });
+                    }}
+                    onBackspaceEmpty={() => {
+                      if ((block.items || ['']).length > 1) {
+                        const next = (block.items || ['']).filter((_, j) => j !== i);
+                        onUpdate(block.id, { items: next });
+                      }
+                    }}
                   />
                   <button
                     type="button"
@@ -750,6 +834,7 @@ function BlockRenderer({
           const cols = Math.max(1, block.columns ?? 1);
           const rows = Math.max(1, block.rows ?? 1);
           const headerRowCount = block.headerRowCount ?? 0;
+          const headerColumnCount = block.headerColumnCount ?? 0;
           const cells = block.cells ?? [];
           const totalCells = rows * cols;
           const normalizedCells = Array(totalCells)
@@ -784,6 +869,21 @@ function BlockRenderer({
             if (headerRowCount === 0) return;
             onUpdate(block.id, { headerRowCount: 0 });
           };
+          const addHeaderColumn = () => {
+            if (headerColumnCount >= 1) return;
+            const newCells: { type: 'text' | 'image'; content: string }[] = [];
+            for (let r = 0; r < rows; r++) {
+              newCells.push({ type: 'text', content: '' });
+              for (let c = 0; c < cols; c++) {
+                newCells.push(normalizedCells[r * cols + c]);
+              }
+            }
+            onUpdate(block.id, { columns: cols + 1, headerColumnCount: 1, cells: newCells });
+          };
+          const removeHeaderColumn = () => {
+            if (headerColumnCount === 0) return;
+            onUpdate(block.id, { headerColumnCount: 0 });
+          };
           const deleteRow = (rowIdx: number) => {
             if (rows <= 1) return;
             const newCells = normalizedCells.filter((_, i) => Math.floor(i / cols) !== rowIdx);
@@ -793,35 +893,49 @@ function BlockRenderer({
           const deleteColumn = (colIdx: number) => {
             if (cols <= 1) return;
             const newCells = normalizedCells.filter((_, i) => i % cols !== colIdx);
-            onUpdate(block.id, { columns: cols - 1, cells: newCells });
+            const newHeaderColCount = headerColumnCount > 0 && colIdx < headerColumnCount ? headerColumnCount - 1 : headerColumnCount;
+            onUpdate(block.id, { columns: cols - 1, headerColumnCount: newHeaderColCount, cells: newCells });
           };
 
           return (
           <div className="mb-4">
-            {/* Formatting bar — shown when a text cell is focused */}
-            {gridFocusedCell !== null && (
-              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                <FormattingBar
-                  onBold={() => execFormat('bold')}
-                  onItalic={() => execFormat('italic')}
-                  onLink={handleLink}
-                  isBold={document.queryCommandState?.('bold') ?? false}
-                  isItalic={document.queryCommandState?.('italic') ?? false}
-                />
-                <div className="h-4 w-px bg-nokturo-200 dark:bg-nokturo-600" />
-                <button
-                  type="button"
-                  onClick={headerRowCount === 0 ? addHeaderRow : removeHeaderRow}
-                  className={`px-2 py-0.5 rounded text-xs ${
-                    headerRowCount > 0
-                      ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                  }`}
-                >
-                  {t('richText.addHeaderRow')}
-                </button>
-              </div>
-            )}
+            {/* Header toggles — always visible */}
+            <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+              {gridFocusedCell !== null && (
+                <>
+                  <FormattingBar
+                    onBold={() => execFormat('bold')}
+                    onItalic={() => execFormat('italic')}
+                    onLink={handleLink}
+                    isBold={document.queryCommandState?.('bold') ?? false}
+                    isItalic={document.queryCommandState?.('italic') ?? false}
+                  />
+                  <div className="h-4 w-px bg-nokturo-200 dark:bg-nokturo-600" />
+                </>
+              )}
+              <button
+                type="button"
+                onClick={headerRowCount === 0 ? addHeaderRow : removeHeaderRow}
+                className={`px-2 py-0.5 rounded text-xs ${
+                  headerRowCount > 0
+                    ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
+                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                }`}
+              >
+                {t('richText.addHeaderRow')}
+              </button>
+              <button
+                type="button"
+                onClick={headerColumnCount === 0 ? addHeaderColumn : removeHeaderColumn}
+                className={`px-2 py-0.5 rounded text-xs ${
+                  headerColumnCount > 0
+                    ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
+                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                }`}
+              >
+                {t('richText.addHeaderColumn')}
+              </button>
+            </div>
             <div className="flex items-stretch">
               {/* Add column left */}
               <button
@@ -832,73 +946,109 @@ function BlockRenderer({
               >
                 <Plus size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300" />
               </button>
-              {/* Main table */}
-              <div
-                className="border border-nokturo-200 dark:border-nokturo-600 overflow-hidden flex flex-1 min-w-0"
-                onMouseLeave={() => { setGridHoveredRow(null); setGridHoveredCol(null); }}
-              >
-                {/* Row delete handles - left */}
-                <div className="flex flex-col shrink-0 border-r border-nokturo-200 dark:border-nokturo-600 bg-nokturo-50/50 dark:bg-nokturo-700/50">
-                  {Array.from({ length: rows }, (_, r) => (
+              {/* Table + add row */}
+              <div className="flex-1 min-w-0 flex flex-col">
+                {/* Main table */}
+                <div
+                  className="border border-nokturo-200 dark:border-nokturo-600 overflow-hidden flex min-w-0"
+                  onMouseLeave={() => { setGridHoveredRow(null); setGridHoveredCol(null); }}
+                >
+                  {/* Row delete handles - left */}
+                  <div className="flex flex-col shrink-0 border-r border-nokturo-200 dark:border-nokturo-600 bg-nokturo-50/50 dark:bg-nokturo-700/50">
+                    {Array.from({ length: rows }, (_, r) => (
+                      <div
+                        key={r}
+                        className="flex items-center justify-center min-h-[36px] w-7 border-b border-nokturo-200 dark:border-nokturo-600 last:border-b-0"
+                        onMouseEnter={() => setGridHoveredRow(r)}
+                      >
+                        {rows > 1 && (gridHoveredRow === r) && (
+                          <button
+                            type="button"
+                            onClick={() => deleteRow(r)}
+                            className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                            title={t('richText.deleteRow')}
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Grid + column delete handles */}
+                  <div className="flex-1 min-w-0 flex flex-col">
                     <div
-                      key={r}
-                      className="flex items-center justify-center min-h-[36px] w-7 border-b border-nokturo-200 dark:border-nokturo-600 last:border-b-0"
-                      onMouseEnter={() => setGridHoveredRow(r)}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${cols}, minmax(80px, 1fr))`,
+                      }}
                     >
-                      {rows > 1 && (gridHoveredRow === r) && (
-                        <button
-                          type="button"
-                          onClick={() => deleteRow(r)}
-                          className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
-                          title={t('richText.deleteRow')}
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                {/* Grid + column delete handles */}
-                <div className="flex-1 min-w-0 flex flex-col">
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${cols}, minmax(80px, 1fr))`,
-                    }}
-                  >
-                    {normalizedCells.map((cell, i) => {
-                  const rowIdx = Math.floor(i / cols);
-                  const colIdx = i % cols;
-                  const isHeader = headerRowCount > 0 && rowIdx < headerRowCount;
-                  return (
-                    <div
-                      key={i}
-                      className={`border-r border-b border-nokturo-200 dark:border-nokturo-600 ${colIdx === cols - 1 ? 'border-r-0' : ''} ${
-                        rowIdx === rows - 1 ? 'border-b-0' : ''
-                      } ${isHeader ? 'bg-nokturo-100 dark:bg-nokturo-700 font-semibold' : 'bg-white dark:bg-nokturo-800'}`}
-                      onMouseEnter={() => { setGridHoveredRow(rowIdx); setGridHoveredCol(colIdx); }}
-                    >
-                      <div className="min-h-[36px] p-1.5 group/cell relative">
-                        {cell.type === 'text' ? (
-                          <GridCell
-                            content={cell.content}
-                            isHeader={isHeader}
-                            placeholder={t('richText.gridCellTextPlaceholder')}
-                            onSave={(html) => {
-                              const next = [...normalizedCells];
-                              next[i] = { ...cell, content: html };
-                              onUpdate(block.id, { cells: next });
-                            }}
-                            onFocus={() => setGridFocusedCell(i)}
-                            onBlur={() => setGridFocusedCell(null)}
-                          />
-                        ) : (
-                          <div className="min-h-[32px]">
-                            {cell.content ? (
-                              <div className="relative group/img">
-                                <img src={cell.content} alt="" className="w-full h-8 object-cover" />
-                                <label className="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer text-white text-xs">
-                                  {t('richText.changeImage')}
+                      {normalizedCells.map((cell, i) => {
+                    const rowIdx = Math.floor(i / cols);
+                    const colIdx = i % cols;
+                    const isHeaderRow = headerRowCount > 0 && rowIdx < headerRowCount;
+                    const isHeaderCol = headerColumnCount > 0 && colIdx < headerColumnCount;
+                    const isHeader = isHeaderRow || isHeaderCol;
+                    const isLastHeaderCol = headerColumnCount > 0 && colIdx === headerColumnCount - 1;
+                    return (
+                      <div
+                        key={i}
+                        className={`border-b border-nokturo-200 dark:border-nokturo-600 ${
+                          colIdx === cols - 1
+                            ? 'border-r-0'
+                            : isLastHeaderCol
+                              ? 'border-r-2 border-r-nokturo-300 dark:border-r-nokturo-500'
+                              : 'border-r border-r-nokturo-200 dark:border-r-nokturo-600'
+                        } ${
+                          rowIdx === rows - 1 ? 'border-b-0' : ''
+                        } ${isHeader ? 'bg-nokturo-100 dark:bg-nokturo-700 font-semibold' : 'bg-white dark:bg-nokturo-800'}`}
+                        onMouseEnter={() => { setGridHoveredRow(rowIdx); setGridHoveredCol(colIdx); }}
+                      >
+                        <div className="min-h-[36px] p-1.5 group/cell relative">
+                          {cell.type === 'text' ? (
+                            <GridCell
+                              content={cell.content}
+                              isHeader={isHeader}
+                              placeholder={t('richText.gridCellTextPlaceholder')}
+                              onSave={(html) => {
+                                const next = [...normalizedCells];
+                                next[i] = { ...cell, content: html };
+                                onUpdate(block.id, { cells: next });
+                              }}
+                              onFocus={() => setGridFocusedCell(i)}
+                              onBlur={() => setGridFocusedCell(null)}
+                            />
+                          ) : (
+                            <div className="min-h-[32px]">
+                              {cell.content ? (
+                                <div className="relative group/img">
+                                  <img src={cell.content} alt="" className="w-full h-8 object-cover" />
+                                  <label className="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer text-white text-xs">
+                                    {t('richText.changeImage')}
+                                    <input
+                                      type="file"
+                                      accept="image/*"
+                                      className="hidden"
+                                      onChange={async (e) => {
+                                        const f = e.target.files?.[0];
+                                        if (f) {
+                                          try {
+                                            const url = await onUploadImage(f);
+                                            const next = [...normalizedCells];
+                                            next[i] = { type: 'image', content: url };
+                                            onUpdate(block.id, { cells: next });
+                                            onToast({ type: 'success', message: t('moodboard.imageAdded') });
+                                          } catch {
+                                            onToast({ type: 'error', message: t('richText.uploadError') });
+                                          }
+                                        }
+                                      }}
+                                    />
+                                  </label>
+                                </div>
+                              ) : (
+                                <label className="flex items-center justify-center w-full h-8 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 text-xs">
+                                  <ImageIcon size={14} className="mr-1" />
+                                  {t('richText.uploadImage')}
                                   <input
                                     type="file"
                                     accept="image/*"
@@ -919,88 +1069,73 @@ function BlockRenderer({
                                     }}
                                   />
                                 </label>
-                              </div>
-                            ) : (
-                              <label className="flex items-center justify-center w-full h-8 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 text-xs">
-                                <ImageIcon size={14} className="mr-1" />
-                                {t('richText.uploadImage')}
-                                <input
-                                  type="file"
-                                  accept="image/*"
-                                  className="hidden"
-                                  onChange={async (e) => {
-                                    const f = e.target.files?.[0];
-                                    if (f) {
-                                      try {
-                                        const url = await onUploadImage(f);
-                                        const next = [...normalizedCells];
-                                        next[i] = { type: 'image', content: url };
-                                        onUpdate(block.id, { cells: next });
-                                        onToast({ type: 'success', message: t('moodboard.imageAdded') });
-                                      } catch {
-                                        onToast({ type: 'error', message: t('richText.uploadError') });
-                                      }
-                                    }
-                                  }}
-                                />
-                              </label>
-                            )}
+                              )}
+                            </div>
+                          )}
+                          <div className="absolute top-1 right-1 opacity-0 group-hover/cell:opacity-100 flex gap-0.5">
+                            {(['text', 'image'] as const).map((tipo) => (
+                              <button
+                                key={tipo}
+                                type="button"
+                                onClick={() => {
+                                  const next = [...normalizedCells];
+                                  next[i] = { type: tipo, content: '' };
+                                  onUpdate(block.id, { cells: next });
+                                }}
+                                className={`p-0.5 rounded text-[10px] ${
+                                  cell.type === tipo ? 'bg-nokturo-200 dark:bg-nokturo-600' : 'bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                                }`}
+                                title={tipo === 'text' ? t('richText.paragraph') : t('richText.image')}
+                              >
+                                {tipo === 'text' ? <Type size={10} /> : <ImageIcon size={10} />}
+                              </button>
+                            ))}
                           </div>
-                        )}
-                        <div className="absolute top-1 right-1 opacity-0 group-hover/cell:opacity-100 flex gap-0.5">
-                          {(['text', 'image'] as const).map((tipo) => (
-                            <button
-                              key={tipo}
-                              type="button"
-                              onClick={() => {
-                                const next = [...normalizedCells];
-                                next[i] = { type: tipo, content: '' };
-                                onUpdate(block.id, { cells: next });
-                              }}
-                              className={`p-0.5 rounded text-[10px] ${
-                                cell.type === tipo ? 'bg-nokturo-200 dark:bg-nokturo-600' : 'bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                              }`}
-                              title={tipo === 'text' ? t('richText.paragraph') : t('richText.image')}
-                            >
-                              {tipo === 'text' ? <Type size={10} /> : <ImageIcon size={10} />}
-                            </button>
-                          ))}
                         </div>
                       </div>
+                    );
+                  })}
                     </div>
-                  );
-                })}
+                    {/* Column delete handles - bottom */}
+                    {cols > 1 && (
+                      <div
+                        className="flex border-t border-nokturo-200 dark:border-nokturo-600 bg-nokturo-50/50 dark:bg-nokturo-700/50"
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: `repeat(${cols}, minmax(80px, 1fr))`,
+                        }}
+                      >
+                        {Array.from({ length: cols }, (_, c) => (
+                          <div
+                            key={c}
+                            className="flex items-center justify-center min-h-[28px] border-r border-nokturo-200 dark:border-nokturo-600 last:border-r-0"
+                            onMouseEnter={() => setGridHoveredCol(c)}
+                          >
+                            {(gridHoveredCol === c) && (
+                              <button
+                                type="button"
+                                onClick={() => deleteColumn(c)}
+                                className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                                title={t('richText.deleteColumn')}
+                              >
+                                <Trash2 size={12} />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  {/* Column delete handles - bottom */}
-                  {cols > 1 && (
-                    <div
-                      className="flex border-t border-nokturo-200 dark:border-nokturo-600 bg-nokturo-50/50 dark:bg-nokturo-700/50"
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: `repeat(${cols}, minmax(80px, 1fr))`,
-                      }}
-                    >
-                      {Array.from({ length: cols }, (_, c) => (
-                        <div
-                          key={c}
-                          className="flex items-center justify-center min-h-[28px] border-r border-nokturo-200 dark:border-nokturo-600 last:border-r-0"
-                          onMouseEnter={() => setGridHoveredCol(c)}
-                        >
-                          {(gridHoveredCol === c) && (
-                            <button
-                              type="button"
-                              onClick={() => deleteColumn(c)}
-                              className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
-                              title={t('richText.deleteColumn')}
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
+                {/* Add row below */}
+                <button
+                  type="button"
+                  onClick={addRow}
+                  className="group/addrow flex items-center justify-center h-6 w-full shrink-0 border border-t-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-b-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
+                  title={t('richText.addRow')}
+                >
+                  <Plus size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addrow:text-nokturo-600 dark:group-hover/addrow:text-nokturo-300" />
+                </button>
               </div>
               {/* Add column right */}
               <button
@@ -1010,17 +1145,6 @@ function BlockRenderer({
                 title={t('richText.addColumn')}
               >
                 <Plus size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300" />
-              </button>
-            </div>
-            {/* Add row below */}
-            <div className="flex justify-center mt-1">
-              <button
-                type="button"
-                onClick={addRow}
-                className="flex items-center gap-1 px-2 py-0.5 text-xs text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
-              >
-                <Plus size={12} />
-                {t('richText.addRow')}
               </button>
             </div>
           </div>

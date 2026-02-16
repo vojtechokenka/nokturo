@@ -10,7 +10,7 @@ import { UserPlus, Loader2, Copy, Check, ArrowLeft } from 'lucide-react';
 import type { Role } from '../../lib/rbac';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
-const ROLES: Role[] = ['founder', 'engineer', 'viewer', 'client'];
+const ROLES: Role[] = ['founder', 'engineer', 'viewer', 'client', 'host'];
 
 function isSessionExpiredError(msg: string | undefined): boolean {
   if (!msg) return false;

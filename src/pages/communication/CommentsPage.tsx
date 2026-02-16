@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import { ProductComments } from '../../components/ProductComments';
@@ -29,10 +30,20 @@ const STATUS_COLORS: Record<string, string> = {
 // ── Component ─────────────────────────────────────────────────
 export default function CommentsPage() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
 
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  // Auto-select product from ?product= query param (e.g. from notification deep-link)
+  const productFromUrl = searchParams.get('product');
+  useEffect(() => {
+    if (productFromUrl && !selectedProductId) {
+      setSelectedProductId(productFromUrl);
+    }
+  }, [productFromUrl]);
+
   // Fetch products
   useEffect(() => {
     (async () => {

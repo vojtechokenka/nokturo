@@ -15,6 +15,9 @@ import { MessageSquare, Send, Loader2, AtSign, MoreHorizontal, Pencil, Trash2 } 
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
+import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
+import type { MentionProfile } from './MentionSuggestions';
+import { sendMentionNotifications } from '../lib/sendMentionNotifications';
 
 // ── Types ─────────────────────────────────────────────────────
 export interface TextComment {
@@ -245,7 +248,7 @@ function CommentableBlockView({
         data-block-id={block.id}
       >
         {block.items.filter((i) => i?.trim()).map((item, i) => (
-          <li key={i}>{item}</li>
+          <li key={i} dangerouslySetInnerHTML={{ __html: item }} />
         ))}
       </ListTag>
     );
@@ -261,6 +264,7 @@ function CommentableBlockView({
     const gridCols = Math.max(1, block.columns ?? 1);
     const gridRows = Math.max(1, block.rows ?? 1);
     const headerCount = block.headerRowCount ?? 0;
+    const headerColCount = block.headerColumnCount ?? 0;
     return (
       <div
         className="border border-nokturo-200 dark:border-nokturo-600 my-8 overflow-hidden"
@@ -270,13 +274,20 @@ function CommentableBlockView({
         {block.cells.slice(0, gridRows * gridCols).map((cell, i) => {
           const rowIdx = Math.floor(i / gridCols);
           const colIdx = i % gridCols;
-          const isHeader = headerCount > 0 && rowIdx < headerCount;
+          const isHeaderRow = headerCount > 0 && rowIdx < headerCount;
+          const isHeaderCol = headerColCount > 0 && colIdx < headerColCount;
+          const isHeader = isHeaderRow || isHeaderCol;
           const isLastHeaderRow = headerCount > 0 && rowIdx === headerCount - 1;
+          const isLastHeaderCol = headerColCount > 0 && colIdx === headerColCount - 1;
           return (
             <div
               key={i}
-              className={`font-body border-r border-nokturo-200 dark:border-nokturo-600 p-2 text-sm ${
-                colIdx === gridCols - 1 ? 'border-r-0' : ''
+              className={`font-body p-2 text-sm ${
+                colIdx === gridCols - 1
+                  ? 'border-r-0'
+                  : isLastHeaderCol
+                    ? 'border-r-2 border-nokturo-300 dark:border-nokturo-500'
+                    : 'border-r border-nokturo-200 dark:border-nokturo-600'
               } ${
                 rowIdx === gridRows - 1
                   ? 'border-b-0'
@@ -332,6 +343,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   const [displayParentOverrides, setDisplayParentOverrides] = useState<Record<string, string>>({});
   const [showUserPicker, setShowUserPicker] = useState(false);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
+  const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
@@ -345,14 +357,30 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     fetchProfiles();
   }, [fetchProfiles]);
 
+  const mention = useMentionSuggestions(commentInput, profiles as MentionProfile[]);
+
+  const handleMentionSelect = useCallback((profile: MentionProfile) => {
+    const newValue = mention.applyMention(profile);
+    setCommentInput(newValue);
+    if (!taggedUsers.includes(profile.id)) {
+      setTaggedUsers((prev) => [...prev, profile.id]);
+    }
+  }, [mention, taggedUsers]);
+
   useEffect(() => {
-    if (!selectionState) setShowUserPicker(false);
+    if (!selectionState) {
+      setShowUserPicker(false);
+      setTaggedUsers([]);
+    }
   }, [selectionState]);
 
   const addMentionToComment = useCallback((profile: ProfileOption) => {
     const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.full_name || '?';
     setCommentInput((prev) => (prev.trim() ? `${prev} @${name} ` : `@${name} `));
-  }, []);
+    if (!taggedUsers.includes(profile.id)) {
+      setTaggedUsers((prev) => [...prev, profile.id]);
+    }
+  }, [taggedUsers]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -524,7 +552,22 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     setSending(false);
     if (!error && data) {
       setComments((prev) => [...prev, data as TextComment]);
+
+      // Create notifications for tagged users
+      if (taggedUsers.length > 0) {
+        const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
+        await sendMentionNotifications({
+          taggedUserIds: taggedUsers,
+          authorId,
+          authorName,
+          content: commentInput.trim(),
+          type: 'text_tag',
+          link: `/production/sampling/${productId}`,
+        });
+      }
+
       setCommentInput('');
+      setTaggedUsers([]);
       setSelectionState(null);
       setPopoverPosition(null);
       setShowUserPicker(false);
@@ -533,7 +576,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     } else {
       setAddError(error?.message || t('comments.postFailed'));
     }
-  }, [user, productId, selectionState, commentInput]);
+  }, [user, productId, selectionState, commentInput, taggedUsers]);
 
   const handleReply = useCallback(async (parentId: string, displayParentContent?: string) => {
     let authorId = getUserIdForDb();
@@ -737,6 +780,13 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           </div>
           <div className="flex gap-2">
             <div className="flex-1 relative flex items-center">
+              {mention.active && (
+                <MentionDropdown
+                  profiles={mention.filtered}
+                  selectedIdx={mention.selectedIdx}
+                  onSelect={handleMentionSelect}
+                />
+              )}
               <input
                 type="text"
                 value={commentInput}
@@ -745,6 +795,13 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
                 className={`${INPUT_CLASS} pr-8`}
                 autoFocus
                 onKeyDown={(e) => {
+                  const result = mention.handleKeyDown(e);
+                  if (result === 'select') {
+                    const p = mention.getSelectedProfile();
+                    if (p) handleMentionSelect(p);
+                    return;
+                  }
+                  if (result) return;
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleAddComment();
@@ -822,6 +879,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           currentAuthorId={currentAuthorId}
           currentUserDisplayName={[user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || ''}
           canDelete={canDelete}
+          profiles={profiles as MentionProfile[]}
         />
       )}
     </div>
@@ -847,6 +905,7 @@ function CommentThreadPopover({
   currentAuthorId,
   currentUserDisplayName = '',
   canDelete,
+  profiles = [],
 }: {
   rootComment: TextComment;
   threadComments: TextComment[];
@@ -865,12 +924,20 @@ function CommentThreadPopover({
   currentAuthorId: string | null;
   currentUserDisplayName?: string;
   canDelete: boolean;
+  profiles?: MentionProfile[];
 }) {
   const { t } = useTranslation();
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
   const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+
+  const replyMention = useMentionSuggestions(replyContent, profiles);
+
+  const handleReplyMentionSelect = useCallback((profile: MentionProfile) => {
+    const newValue = replyMention.applyMention(profile);
+    setReplyContent(newValue);
+  }, [replyMention, setReplyContent]);
 
   const renderComment = (c: TextComment, allComments: TextComment[]) => {
     const name =
@@ -1067,20 +1134,36 @@ function CommentThreadPopover({
             .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
             .map((c) => renderComment(c, threadComments))}
         </div>
-        <div className="flex gap-2 mt-3 pt-3 border-t border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <input
-            type="text"
-            value={replyContent}
-            onChange={(e) => setReplyContent(e.target.value)}
-            placeholder={replyTo ? t('comments.replyPlaceholder') : t('comments.placeholder')}
-            className={`${INPUT_CLASS} flex-1 min-w-0`}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                onReply(replyTo ?? rootComment.id);
-              }
-            }}
-          />
+        <div className="flex gap-2 mt-3 pt-3 border-t border-nokturo-200 dark:border-nokturo-600 shrink-0 relative">
+          <div className="flex-1 min-w-0 relative">
+            {replyMention.active && (
+              <MentionDropdown
+                profiles={replyMention.filtered}
+                selectedIdx={replyMention.selectedIdx}
+                onSelect={handleReplyMentionSelect}
+              />
+            )}
+            <input
+              type="text"
+              value={replyContent}
+              onChange={(e) => setReplyContent(e.target.value)}
+              placeholder={replyTo ? t('comments.replyPlaceholder') : t('comments.placeholder')}
+              className={`${INPUT_CLASS} w-full`}
+              onKeyDown={(e) => {
+                const result = replyMention.handleKeyDown(e);
+                if (result === 'select') {
+                  const p = replyMention.getSelectedProfile();
+                  if (p) handleReplyMentionSelect(p);
+                  return;
+                }
+                if (result) return;
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  onReply(replyTo ?? rootComment.id);
+                }
+              }}
+            />
+          </div>
           <button
             onClick={() => onReply(replyTo ?? rootComment.id)}
             disabled={!replyContent.trim() || sending}
