@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { RouterProvider } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import { router } from './router';
 import { useAuthStore } from './stores/authStore';
+import { useSleepModeStore } from './stores/sleepModeStore';
+import { SleepMode } from './components/SleepMode';
 import type { Role } from './lib/rbac';
 
 const VALID_ROLES: Role[] = ['founder', 'engineer', 'viewer', 'client'];
@@ -95,6 +97,40 @@ export default function App() {
   const setAuthLoading = useAuthStore((s) => s.setLoading);
   const setInitialized = useAuthStore((s) => s.setInitialized);
 
+  const sleepActive = useSleepModeStore((s) => s.isActive);
+  const sleepReason = useSleepModeStore((s) => s.reason);
+  const activateSleep = useSleepModeStore((s) => s.activate);
+  const deactivateSleep = useSleepModeStore((s) => s.deactivate);
+
+  // Wake-up handler: refresh session + profile, then dismiss overlay
+  const wakeUp = useCallback(async () => {
+    console.log('🌅 Waking up application...');
+
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.refreshSession();
+
+      if (sessionError || !session) {
+        console.error('Session refresh failed:', sessionError);
+        await supabase.auth.signOut();
+        deactivateSleep();
+        setUser(null, undefined);
+        return;
+      }
+
+      const freshUser = await buildUserFromSession(session, () => useAuthStore.getState().user);
+      setUser(freshUser, session);
+
+      // Short pause for a smooth transition
+      await new Promise((r) => setTimeout(r, 400));
+
+      deactivateSleep();
+      console.log('✅ Application awake!');
+    } catch (error) {
+      console.error('Wake up failed:', error);
+      deactivateSleep();
+    }
+  }, [deactivateSleep, setUser]);
+
   useEffect(() => {
     // Safety: pokud se nic nedokončí do 8s (např. fetch visí), odblokuj
     const safetyTimer = setTimeout(() => {
@@ -165,9 +201,68 @@ export default function App() {
     };
   }, [setUser, setAuthLoading, setInitialized]);
 
+  // Session health check – every 30 s while logged in
+  useEffect(() => {
+    if (!user) return;
+
+    const checkSessionHealth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+
+        if (error || !session) {
+          console.warn('⚠️ Session health check failed');
+          activateSleep('Your session expired');
+          return;
+        }
+
+        // Warn when session expires in < 5 min
+        const timeLeft = (session.expires_at ?? 0) - Math.floor(Date.now() / 1000);
+        if (timeLeft > 0 && timeLeft < 300) {
+          console.warn('⚠️ Session expiring soon, refreshing…');
+          const { error: refreshErr } = await supabase.auth.refreshSession();
+          if (refreshErr) {
+            activateSleep('Your session is expiring soon');
+          }
+        }
+      } catch {
+        console.error('Session health check error');
+        activateSleep('Connection lost');
+      }
+    };
+
+    const interval = setInterval(checkSessionHealth, 30_000);
+    return () => clearInterval(interval);
+  }, [user, activateSleep]);
+
+  // Re-check session when window regains focus
+  useEffect(() => {
+    if (!user) return;
+
+    const handleFocus = async () => {
+      console.log('🔍 Window focused, checking session…');
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error || !session) {
+          console.warn('⚠️ Session lost while inactive');
+          activateSleep('Session expired while inactive');
+        }
+      } catch {
+        console.error('Focus check error');
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user, activateSleep]);
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-nokturo-50 dark:bg-nokturo-900 text-nokturo-900 dark:text-nokturo-100">Loading...</div>;
   }
 
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      {sleepActive && <SleepMode onWakeUp={wakeUp} reason={sleepReason} />}
+    </>
+  );
 }

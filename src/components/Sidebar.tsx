@@ -140,30 +140,34 @@ export function Sidebar() {
     return () => document.removeEventListener('click', handler);
   }, []);
 
-  const markAsRead = async (id: string) => {
-    await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)));
-    setUnreadCount((c) => Math.max(0, c - 1));
+  const deleteNotification = async (id: string) => {
+    const notif = notifications.find((n) => n.id === id);
+    const wasUnread = notif && !notif.read_at;
+    await supabase.from('notifications').delete().eq('id', id);
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
   };
 
-  const markAllRead = async () => {
+  const clearAllNotifications = async () => {
     if (!user?.id || user.id === 'dev-user') return;
-    await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('user_id', user.id).is('read_at', null);
-    fetchNotifications();
+    await supabase.from('notifications').delete().eq('user_id', user.id);
+    setNotifications([]);
+    setUnreadCount(0);
   };
 
   const handleNotificationClick = (n: Notification) => {
-    markAsRead(n.id);
+    deleteNotification(n.id);
     setShowNotifications(false);
     if (n.link) {
-      // Force navigation even if already on the same page (e.g. moodboard → moodboard?item=...)
       const currentPath = window.location.hash?.replace(/^#/, '').split('?')[0] || window.location.pathname;
       const targetPath = n.link.split('?')[0];
       if (currentPath === targetPath || currentPath.endsWith(targetPath)) {
-        // Same base path: navigate with replace to trigger re-render with new search params
-        navigate(n.link, { replace: true });
-        // Force reload for hash router
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        // Same page: dispatch custom event so the page can react without a full navigation
+        const url = new URL(n.link, window.location.origin);
+        const itemId = url.searchParams.get('item');
+        if (itemId) {
+          window.dispatchEvent(new CustomEvent('open-moodboard-item', { detail: { itemId } }));
+        }
       } else {
         navigate(n.link);
       }
@@ -235,34 +239,50 @@ export function Sidebar() {
           )}
         </div>
         {showNotifications && (
-          <div className="absolute bottom-full left-4 right-4 mb-2 bg-white dark:bg-nokturo-800 rounded-lg max-h-64 overflow-hidden flex flex-col z-50 shadow-lg dark:shadow-nokturo-900/50">
-            <div className="flex items-center justify-between px-3 py-2 shrink-0">
-              <span className="text-sm font-semibold text-nokturo-900 dark:text-nokturo-100">{t('notifications.title')}</span>
-              {unreadCount > 0 && (
+          <div className="absolute bottom-full left-0 mb-2 w-[360px] rounded-xl max-h-80 overflow-hidden flex flex-col z-50 bg-white border border-nokturo-200 shadow-2xl shadow-nokturo-900/10 dark:bg-nokturo-900 dark:border-nokturo-600 dark:shadow-black/50">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-nokturo-100 dark:border-nokturo-700 shrink-0">
+              <div className="flex items-center gap-2">
+                <Bell className="w-4 h-4 text-nokturo-700 dark:text-nokturo-300" />
+                <span className="text-sm font-semibold text-nokturo-900 dark:text-nokturo-100">{t('notifications.title')}</span>
+                {unreadCount > 0 && (
+                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white px-1">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              {notifications.length > 0 && (
                 <button
                   type="button"
-                  onClick={markAllRead}
-                  className="text-xs text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200"
+                  onClick={clearAllNotifications}
+                  className="text-xs text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 >
-                  {t('notifications.markAllRead')}
+                  {t('notifications.clearAll')}
                 </button>
               )}
             </div>
             <div className="overflow-y-auto flex-1 min-h-0">
               {notifications.length === 0 ? (
-                <p className="px-3 py-4 text-sm text-nokturo-500 dark:text-nokturo-400 text-center">{t('notifications.noNotifications')}</p>
+                <div className="px-4 py-8 text-center">
+                  <Bell className="w-8 h-8 text-nokturo-300 dark:text-nokturo-600 mx-auto mb-2" />
+                  <p className="text-sm text-nokturo-500 dark:text-nokturo-400">{t('notifications.noNotifications')}</p>
+                </div>
               ) : (
                 notifications.map((n) => (
                   <button
                     key={n.id}
                     type="button"
                     onClick={() => handleNotificationClick(n)}
-                    className={`w-full text-left px-3 py-2.5 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors ${
-                      !n.read_at ? 'bg-nokturo-50/50 dark:bg-nokturo-700/30' : ''
+                    className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 border-b last:border-b-0 ${
+                      !n.read_at
+                        ? 'bg-blue-50/60 hover:bg-blue-50 border-blue-100/50 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 dark:border-nokturo-700/50'
+                        : 'hover:bg-nokturo-50 border-nokturo-100/50 dark:hover:bg-nokturo-800/50 dark:border-nokturo-700/50'
                     }`}
                   >
-                    <p className="text-sm text-nokturo-900 dark:text-nokturo-100 font-medium truncate">{n.title}</p>
-                    {n.body && <p className="text-xs text-nokturo-600 dark:text-nokturo-400 truncate mt-0.5">{n.body}</p>}
+                    <span className={`shrink-0 mt-1.5 w-2 h-2 rounded-full ${!n.read_at ? 'bg-red-500' : 'bg-nokturo-300 dark:bg-nokturo-600'}`} />
+                    <div className="min-w-0 flex-1">
+                      <p className={`text-sm truncate ${!n.read_at ? 'text-nokturo-900 dark:text-nokturo-100 font-semibold' : 'text-nokturo-700 dark:text-nokturo-300 font-medium'}`}>{n.title}</p>
+                      {n.body && <p className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate mt-0.5">{n.body}</p>}
+                    </div>
                   </button>
                 ))
               )}

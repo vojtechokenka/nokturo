@@ -720,7 +720,8 @@
     "title": "Notifications",
     "moodboardTagTitle": "{{name}} tagged you in a moodboard comment",
     "noNotifications": "No notifications",
-    "markAllRead": "Mark all as read"
+    "markAllRead": "Mark all as read",
+    "clearAll": "Clear all"
   },
   "comments": {
     "addComment": "Add Comment",

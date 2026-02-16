@@ -726,7 +726,8 @@
     "title": "Notifikace",
     "moodboardTagTitle": "{{name}} vás označil v komentáři moodboardu",
     "noNotifications": "Žádné notifikace",
-    "markAllRead": "Označit vše jako přečtené"
+    "markAllRead": "Označit vše jako přečtené",
+    "clearAll": "Smazat vše"
   },
   "comments": {
     "addComment": "P\u0159idat koment\u00e1\u0159",

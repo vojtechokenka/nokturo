@@ -204,7 +204,7 @@ function BlockView({ block }: { block: RichTextBlock }) {
               >
                 {cell.type === 'text' ? (
                   cell.content?.trim() ? (
-                    <span className="whitespace-pre-wrap">{cell.content}</span>
+                    <span className="whitespace-pre-wrap [&_a]:underline [&_a]:text-blue-600 dark:[&_a]:text-blue-400" dangerouslySetInnerHTML={{ __html: cell.content }} />
                   ) : null
                 ) : cell.content ? (
                   <img src={cell.content} alt="" className="w-full max-h-24 object-cover" />

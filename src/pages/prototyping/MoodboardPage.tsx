@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
@@ -27,6 +27,7 @@ import {
   MoreVertical,
   GripVertical,
   Images,
+  Bell,
 } from 'lucide-react';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
@@ -75,8 +76,6 @@ export default function MoodboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
-  const notifItemHandled = useRef(false);
-
   // ── State ───────────────────────────────────────────────────
   const [items, setItems] = useState<MoodboardItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -248,22 +247,50 @@ export default function MoodboardPage() {
     }
   }, []);
 
+  // Sorted items: unread first
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      const aUnread = unreadCounts[a.id] || 0;
+      const bUnread = unreadCounts[b.id] || 0;
+      if (aUnread > 0 && bUnread === 0) return -1;
+      if (aUnread === 0 && bUnread > 0) return 1;
+      return 0;
+    });
+  }, [items, unreadCounts]);
+
   // Auto-open lightbox when navigating from a notification with ?item=<id>
   useEffect(() => {
-    if (notifItemHandled.current || loading || items.length === 0) return;
+    if (loading || items.length === 0) return;
     const itemId = searchParams.get('item');
     if (itemId) {
-      notifItemHandled.current = true;
       const idx = items.findIndex((i) => i.id === itemId);
       if (idx >= 0) {
         setLightboxIndex(idx);
         setLightboxSubIndex(0);
+        markItemAsRead(itemId);
       }
       const newParams = new URLSearchParams(searchParams);
       newParams.delete('item');
       setSearchParams(newParams, { replace: true });
     }
-  }, [items, loading, searchParams, setSearchParams]);
+  }, [items, loading, searchParams, setSearchParams, markItemAsRead]);
+
+  // Listen for same-page notification clicks (custom event from Sidebar)
+  useEffect(() => {
+    if (loading || items.length === 0) return;
+    const handler = (e: Event) => {
+      const itemId = (e as CustomEvent).detail?.itemId;
+      if (!itemId) return;
+      const idx = items.findIndex((i) => i.id === itemId);
+      if (idx >= 0) {
+        setLightboxIndex(idx);
+        setLightboxSubIndex(0);
+        markItemAsRead(itemId);
+      }
+    };
+    window.addEventListener('open-moodboard-item', handler);
+    return () => window.removeEventListener('open-moodboard-item', handler);
+  }, [items, loading, markItemAsRead]);
 
   const fetchCategories = useCallback(async () => {
     const { data, error } = await supabase
@@ -821,39 +848,28 @@ export default function MoodboardPage() {
           'lg:columns-6'
         } gap-4 space-y-4`}
         >
-          {[...items].sort((a, b) => {
-            const aUnread = unreadCounts[a.id] || 0;
-            const bUnread = unreadCounts[b.id] || 0;
-            if (aUnread > 0 && bUnread === 0) return -1;
-            if (aUnread === 0 && bUnread > 0) return 1;
-            return 0;
-          }).map((item) => (
+          {sortedItems.map((item) => (
             <div
               key={item.id}
-              className="break-inside-avoid group rounded-lg overflow-hidden cursor-pointer"
+              className="break-inside-avoid group relative ml-4 cursor-pointer"
               onClick={() => { const origIdx = items.findIndex((i) => i.id === item.id); setLightboxIndex(origIdx); setLightboxSubIndex(0); markItemAsRead(item.id); }}
             >
-              <div className="relative">
+              {/* Unread comments indicator – left of image */}
+              {unreadCounts[item.id] > 0 && (
+                <div className="absolute -left-3.5 top-3 z-10">
+                  <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-red-500 shadow-lg ring-2 ring-white dark:ring-nokturo-800">
+                    <Bell className="h-3.5 w-3.5 text-white" />
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-40" />
+                  </div>
+                </div>
+              )}
+              <div className="relative rounded-lg overflow-hidden">
                 <img
                   src={item.image_url}
                   alt={item.title || 'Moodboard'}
                   className="w-full object-cover rounded-lg"
                   loading="lazy"
                 />
-                {/* Unread comments indicator */}
-                {unreadCounts[item.id] > 0 && (
-                  <div className="absolute top-2 right-2 z-[2] flex items-center gap-1">
-                    <span className="relative flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
-                    </span>
-                    {unreadCounts[item.id] > 1 && (
-                      <span className="text-xs font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
-                        {unreadCounts[item.id]}
-                      </span>
-                    )}
-                  </div>
-                )}
                 {/* Multi-image badge */}
                 {item.sub_images && item.sub_images.length > 0 && (
                   <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded z-[1]">
