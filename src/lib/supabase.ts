@@ -20,5 +20,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     // Electron: hash router — tokeny detekuje ručně AuthCallback
     detectSessionInUrl: !isElectron(),
     storage: window.localStorage,
+    storageKey: 'sb-auth-token',
+    flowType: 'pkce',
+  },
+  global: {
+    headers: {
+      'x-client-info': 'nokturo-app',
+    },
   },
 });

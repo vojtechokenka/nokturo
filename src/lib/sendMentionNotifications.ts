@@ -21,9 +21,28 @@ interface SendMentionNotificationsParams {
   commentId?: string;
 }
 
+/** Map old granular types to new broad types */
+const TYPE_MAP: Record<NotificationType, string> = {
+  moodboard_tag: 'mention',
+  gallery_tag: 'mention',
+  text_tag: 'mention',
+  product_tag: 'mention',
+  comment_reply: 'comment',
+};
+
+/** Map old types to reference_type for context */
+const REFERENCE_TYPE_MAP: Record<NotificationType, string> = {
+  moodboard_tag: 'moodboard',
+  gallery_tag: 'gallery',
+  text_tag: 'text',
+  product_tag: 'product',
+  comment_reply: 'comment',
+};
+
 /**
  * Creates notification rows for each tagged user.
  * Skips the author (can't notify yourself).
+ * Deduplicates: won't create a duplicate for the same recipient + link within 1 hour.
  */
 export async function sendMentionNotifications({
   taggedUserIds,
@@ -47,20 +66,56 @@ export async function sendMentionNotifications({
   }[type];
 
   const title = i18n.t(titleKey, { name: authorName });
-  const body = content.slice(0, 100) + (content.length > 100 ? '...' : '');
+  const message = content.slice(0, 100) + (content.length > 100 ? '...' : '');
 
-  const rows = uniqueIds.map((userId) => ({
-    user_id: userId,
-    type,
+  // Deduplication: check which recipients already have an active notification for this link
+  const alreadyNotified = new Set<string>();
+  if (link) {
+    try {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const { data: existing } = await supabase
+        .from('notifications')
+        .select('recipient_id')
+        .in('recipient_id', uniqueIds)
+        .eq('link', link)
+        .eq('dismissed', false)
+        .gte('created_at', oneHourAgo);
+
+      if (existing) {
+        for (const n of existing) {
+          alreadyNotified.add(n.recipient_id);
+        }
+      }
+    } catch (err) {
+      console.warn('Dedup check failed, proceeding without:', err);
+    }
+  }
+
+  const newRecipients = uniqueIds.filter((id) => !alreadyNotified.has(id));
+  if (newRecipients.length === 0) return;
+
+  const referenceId = moodboardItemId || commentId || null;
+
+  const rows = newRecipients.map((userId) => ({
+    recipient_id: userId,
+    sender_id: authorId,
+    type: TYPE_MAP[type] || 'mention',
     title,
-    body,
+    message,
     link,
-    from_user_id: authorId,
-    ...(moodboardItemId ? { moodboard_item_id: moodboardItemId } : {}),
-    ...(commentId ? { comment_id: commentId } : {}),
+    reference_type: REFERENCE_TYPE_MAP[type] || 'moodboard',
+    reference_id: referenceId,
+    metadata: {
+      original_type: type,
+      ...(moodboardItemId ? { moodboard_item_id: moodboardItemId } : {}),
+      ...(commentId ? { comment_id: commentId } : {}),
+    },
   }));
 
-  await supabase.from('notifications').insert(rows);
+  const { error } = await supabase.from('notifications').insert(rows);
+  if (error) {
+    console.error('Failed to insert notifications:', error);
+  }
 }
 
 /**

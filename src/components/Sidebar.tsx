@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
 import { canAccessSection, canAccessModule } from '../lib/rbac';
 import type { Module } from '../lib/rbac';
 import { supabase } from '../lib/supabase';
+import { useNotifications } from '../hooks/useNotifications';
+import type { Notification } from '../hooks/useNotifications';
 import {
   Briefcase,
   Palette,
@@ -26,15 +28,6 @@ import {
 /** Sharp icon props – miter/square instead of round for a more angular look */
 const iconProps = { size: 18, strokeLinejoin: 'miter' as const, strokeLinecap: 'square' as const };
 import { DefaultAvatar } from './DefaultAvatar';
-
-interface Notification {
-  id: string;
-  title: string;
-  body: string | null;
-  link: string | null;
-  read_at: string | null;
-  created_at: string;
-}
 
 interface NavItem {
   key: string;
@@ -102,33 +95,8 @@ export function Sidebar() {
   const role = user?.role ?? 'host';
 
   const [showNotifications, setShowNotifications] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const notifRef = useRef<HTMLDivElement>(null);
-
-  const fetchNotifications = useCallback(async () => {
-    if (!user?.id || user.id === 'dev-user') return;
-    const { data } = await supabase
-      .from('notifications')
-      .select('id, title, body, link, read_at, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(20);
-    setNotifications((data || []) as Notification[]);
-    const unread = (data || []).filter((n: Notification) => !n.read_at).length;
-    setUnreadCount(unread);
-  }, [user?.id]);
-
-  useEffect(() => {
-    fetchNotifications();
-    const sub = supabase
-      .channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications' }, () => fetchNotifications())
-      .subscribe();
-    return () => {
-      supabase.removeChannel(sub);
-    };
-  }, [fetchNotifications]);
+  const { notifications, unreadCount, markAsRead, clearAll } = useNotifications(user?.id);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -140,24 +108,13 @@ export function Sidebar() {
     return () => document.removeEventListener('click', handler);
   }, []);
 
-  const deleteNotification = async (id: string) => {
-    const notif = notifications.find((n) => n.id === id);
-    const wasUnread = notif && !notif.read_at;
-    await supabase.from('notifications').delete().eq('id', id);
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
-  };
-
-  const clearAllNotifications = async () => {
-    if (!user?.id || user.id === 'dev-user') return;
-    await supabase.from('notifications').delete().eq('user_id', user.id);
-    setNotifications([]);
-    setUnreadCount(0);
-  };
-
   const handleNotificationClick = (n: Notification) => {
-    deleteNotification(n.id);
+    // Mark as read (not delete) so it stays in history but loses unread styling
+    if (!n.read) {
+      markAsRead(n.id);
+    }
     setShowNotifications(false);
+
     if (n.link) {
       const currentHash = window.location.hash?.replace(/^#/, '') || '';
       const currentPath = currentHash.split('?')[0] || window.location.pathname.replace(/^\/app/, '');
@@ -165,13 +122,11 @@ export function Sidebar() {
       const isSamePage = currentPath === targetPath || currentPath.endsWith(targetPath);
 
       if (isSamePage) {
-        // Same page: try custom events for in-page navigation
         const url = new URL(n.link, window.location.origin);
         const itemId = url.searchParams.get('item');
         if (itemId) {
           window.dispatchEvent(new CustomEvent('open-moodboard-item', { detail: { itemId } }));
         } else {
-          // Force re-navigation even on same page (React Router will update query params)
           const targetLink = n.link;
           navigate(targetLink, { replace: true });
           setTimeout(() => navigate(targetLink), 50);
@@ -261,7 +216,7 @@ export function Sidebar() {
               {notifications.length > 0 && (
                 <button
                   type="button"
-                  onClick={clearAllNotifications}
+                  onClick={clearAll}
                   className="text-xs text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 >
                   {t('notifications.clearAll')}
@@ -281,15 +236,15 @@ export function Sidebar() {
                     type="button"
                     onClick={() => handleNotificationClick(n)}
                     className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 border-b last:border-b-0 ${
-                      !n.read_at
+                      !n.read
                         ? 'bg-blue-50/60 hover:bg-blue-50 border-blue-100/50 dark:bg-blue-950/20 dark:hover:bg-blue-950/30 dark:border-nokturo-700/50'
                         : 'hover:bg-nokturo-50 border-nokturo-100/50 dark:hover:bg-nokturo-800/50 dark:border-nokturo-700/50'
                     }`}
                   >
-                    <span className={`shrink-0 mt-1.5 w-2 h-2 rounded-full ${!n.read_at ? 'bg-red-500' : 'bg-nokturo-300 dark:bg-nokturo-600'}`} />
+                    <span className={`shrink-0 mt-1.5 w-2 h-2 rounded-full ${!n.read ? 'bg-red-500' : 'bg-nokturo-300 dark:bg-nokturo-600'}`} />
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm truncate ${!n.read_at ? 'text-nokturo-900 dark:text-nokturo-100 font-semibold' : 'text-nokturo-700 dark:text-nokturo-300 font-medium'}`}>{n.title}</p>
-                      {n.body && <p className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate mt-0.5">{n.body}</p>}
+                      <p className={`text-sm truncate ${!n.read ? 'text-nokturo-900 dark:text-nokturo-100 font-semibold' : 'text-nokturo-700 dark:text-nokturo-300 font-medium'}`}>{n.title}</p>
+                      {n.message && <p className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate mt-0.5">{n.message}</p>}
                     </div>
                   </button>
                 ))

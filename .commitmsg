@@ -1,0 +1,17 @@
+feat: Nokturo v3.0.0 - Notifications rebuild + Session stability
+
+Session stability:
+- Removed aggressive 30s health check that caused false session timeouts
+- Removed window focus handler that triggered sleep mode on alt-tab
+- Added PKCE auth flow and stable storage key for session persistence
+- Token refresh now preserves existing user data (no more avatar/name reset)
+
+Notifications complete rebuild:
+- New notifications table with proper schema (recipient_id, read boolean, dismissed)
+- Added deduplication - no more duplicate notifications for same mention
+- Clear All now dismisses instead of deleting (preserves history)
+- Click marks as read instead of deleting (notification stays, loses red dot)
+- Real-time subscription filtered per user (no more cross-user triggers)
+- Created useNotifications hook for clean state management
+- Created create-notification edge function with server-side dedup
+- Updated sendMentionNotifications for new schema with type mapping

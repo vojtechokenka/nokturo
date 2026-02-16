@@ -99,7 +99,6 @@ export default function App() {
 
   const sleepActive = useSleepModeStore((s) => s.isActive);
   const sleepReason = useSleepModeStore((s) => s.reason);
-  const activateSleep = useSleepModeStore((s) => s.activate);
   const deactivateSleep = useSleepModeStore((s) => s.deactivate);
 
   // Wake-up handler: refresh session + profile, then dismiss overlay
@@ -201,59 +200,9 @@ export default function App() {
     };
   }, [setUser, setAuthLoading, setInitialized]);
 
-  // Session health check – every 30 s while logged in
-  useEffect(() => {
-    if (!user) return;
-
-    const checkSessionHealth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error || !session) {
-          console.warn('⚠️ Session health check failed');
-          activateSleep('Your session expired');
-          return;
-        }
-
-        // Warn when session expires in < 5 min
-        const timeLeft = (session.expires_at ?? 0) - Math.floor(Date.now() / 1000);
-        if (timeLeft > 0 && timeLeft < 300) {
-          console.warn('⚠️ Session expiring soon, refreshing…');
-          const { error: refreshErr } = await supabase.auth.refreshSession();
-          if (refreshErr) {
-            activateSleep('Your session is expiring soon');
-          }
-        }
-      } catch {
-        console.error('Session health check error');
-        activateSleep('Connection lost');
-      }
-    };
-
-    const interval = setInterval(checkSessionHealth, 30_000);
-    return () => clearInterval(interval);
-  }, [user, activateSleep]);
-
-  // Re-check session when window regains focus
-  useEffect(() => {
-    if (!user) return;
-
-    const handleFocus = async () => {
-      console.log('🔍 Window focused, checking session…');
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error || !session) {
-          console.warn('⚠️ Session lost while inactive');
-          activateSleep('Session expired while inactive');
-        }
-      } catch {
-        console.error('Focus check error');
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, [user, activateSleep]);
+  // NOTE: Aggressive session health checks and window focus handlers were removed.
+  // Supabase autoRefreshToken handles token lifecycle automatically.
+  // The removed checks caused false session-expired triggers on alt-tab.
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center bg-nokturo-50 dark:bg-nokturo-900 text-nokturo-900 dark:text-nokturo-100">Loading...</div>;
