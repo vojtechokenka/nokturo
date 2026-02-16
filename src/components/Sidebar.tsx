@@ -155,7 +155,19 @@ export function Sidebar() {
   const handleNotificationClick = (n: Notification) => {
     markAsRead(n.id);
     setShowNotifications(false);
-    if (n.link) navigate(n.link);
+    if (n.link) {
+      // Force navigation even if already on the same page (e.g. moodboard → moodboard?item=...)
+      const currentPath = window.location.hash?.replace(/^#/, '').split('?')[0] || window.location.pathname;
+      const targetPath = n.link.split('?')[0];
+      if (currentPath === targetPath || currentPath.endsWith(targetPath)) {
+        // Same base path: navigate with replace to trigger re-render with new search params
+        navigate(n.link, { replace: true });
+        // Force reload for hash router
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      } else {
+        navigate(n.link);
+      }
+    }
   };
 
   const handleLogout = async () => {
@@ -204,20 +216,24 @@ export function Sidebar() {
 
       {/* Footer – user info (name, title), settings, logout */}
       <div className="px-4 py-4 flex items-center gap-2 relative bg-nokturo-200 dark:bg-nokturo-700" ref={notifRef}>
-        <button
-          type="button"
-          onClick={() => setShowNotifications((v) => !v)}
-          className="relative w-9 h-9 rounded-full overflow-hidden bg-nokturo-200 dark:bg-nokturo-600 flex items-center justify-center shrink-0 hover:ring-2 hover:ring-nokturo-400 dark:hover:ring-nokturo-500 transition-all focus:outline-none"
-        >
-          {user?.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
-          ) : (
-            <DefaultAvatar size={36} />
-          )}
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => setShowNotifications((v) => !v)}
+            className="relative w-9 h-9 rounded-full overflow-hidden bg-nokturo-200 dark:bg-nokturo-600 flex items-center justify-center hover:ring-2 hover:ring-nokturo-400 dark:hover:ring-nokturo-500 transition-all focus:outline-none"
+          >
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <DefaultAvatar size={36} />
+            )}
+          </button>
           {unreadCount > 0 && (
-            <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full ring-2 ring-nokturo-100/80" />
+            <span className="absolute -top-1 -right-1 z-10 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-nokturo-200 dark:ring-nokturo-700 pointer-events-none">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
           )}
-        </button>
+        </div>
         {showNotifications && (
           <div className="absolute bottom-full left-4 right-4 mb-2 bg-white dark:bg-nokturo-800 rounded-lg max-h-64 overflow-hidden flex flex-col z-50 shadow-lg dark:shadow-nokturo-900/50">
             <div className="flex items-center justify-between px-3 py-2 shrink-0">

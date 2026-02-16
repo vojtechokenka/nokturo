@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
@@ -71,12 +72,15 @@ interface UploadImage {
 // ── Component ─────────────────────────────────────────────────
 export default function MoodboardPage() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const notifItemHandled = useRef(false);
 
   // ── State ───────────────────────────────────────────────────
   const [items, setItems] = useState<MoodboardItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
 
   // Filter (multiselect: show items that have ANY of selected categories)
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -187,6 +191,79 @@ export default function MoodboardPage() {
   useEffect(() => {
     fetchItems();
   }, [fetchItems]);
+
+  // Fetch unread comment counts for all moodboard items
+  const fetchUnreadCounts = useCallback(async () => {
+    const userId = getUserIdForDb();
+    if (!userId) return;
+    try {
+      const { data: comments } = await supabase
+        .from('moodboard_comments')
+        .select('moodboard_item_id, created_at')
+        .neq('author_id', userId);
+      const { data: reads } = await supabase
+        .from('moodboard_comment_reads')
+        .select('moodboard_item_id, last_read_at')
+        .eq('user_id', userId);
+      if (!comments) return;
+      const readMap = new Map(
+        (reads || []).map((r: { moodboard_item_id: string; last_read_at: string }) => [
+          r.moodboard_item_id,
+          new Date(r.last_read_at),
+        ])
+      );
+      const counts: Record<string, number> = {};
+      for (const c of comments as { moodboard_item_id: string; created_at: string }[]) {
+        const readAt = readMap.get(c.moodboard_item_id);
+        if (!readAt || new Date(c.created_at) > readAt) {
+          counts[c.moodboard_item_id] = (counts[c.moodboard_item_id] || 0) + 1;
+        }
+      }
+      setUnreadCounts(counts);
+    } catch {
+      // Silently fail if moodboard_comment_reads table doesn't exist yet
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading && items.length > 0) fetchUnreadCounts();
+  }, [loading, items.length, fetchUnreadCounts]);
+
+  // Mark moodboard item comments as read when lightbox opens
+  const markItemAsRead = useCallback(async (itemId: string) => {
+    const userId = getUserIdForDb();
+    if (!userId) return;
+    try {
+      await supabase.from('moodboard_comment_reads').upsert(
+        { user_id: userId, moodboard_item_id: itemId, last_read_at: new Date().toISOString() },
+        { onConflict: 'user_id,moodboard_item_id' }
+      );
+      setUnreadCounts((prev) => {
+        const next = { ...prev };
+        delete next[itemId];
+        return next;
+      });
+    } catch {
+      // Silently fail if table doesn't exist yet
+    }
+  }, []);
+
+  // Auto-open lightbox when navigating from a notification with ?item=<id>
+  useEffect(() => {
+    if (notifItemHandled.current || loading || items.length === 0) return;
+    const itemId = searchParams.get('item');
+    if (itemId) {
+      notifItemHandled.current = true;
+      const idx = items.findIndex((i) => i.id === itemId);
+      if (idx >= 0) {
+        setLightboxIndex(idx);
+        setLightboxSubIndex(0);
+      }
+      const newParams = new URLSearchParams(searchParams);
+      newParams.delete('item');
+      setSearchParams(newParams, { replace: true });
+    }
+  }, [items, loading, searchParams, setSearchParams]);
 
   const fetchCategories = useCallback(async () => {
     const { data, error } = await supabase
@@ -524,7 +601,7 @@ export default function MoodboardPage() {
               type: 'moodboard_tag',
               title: t('notifications.moodboardTagTitle', { name: authorName }),
               body: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
-              link: '/prototyping/moodboard',
+              link: `/prototyping/moodboard?item=${insertedItem.id}`,
               moodboard_item_id: insertedItem.id,
               comment_id: comment.id,
               from_user_id: authorId,
@@ -744,11 +821,17 @@ export default function MoodboardPage() {
           'lg:columns-6'
         } gap-4 space-y-4`}
         >
-          {items.map((item, idx) => (
+          {[...items].sort((a, b) => {
+            const aUnread = unreadCounts[a.id] || 0;
+            const bUnread = unreadCounts[b.id] || 0;
+            if (aUnread > 0 && bUnread === 0) return -1;
+            if (aUnread === 0 && bUnread > 0) return 1;
+            return 0;
+          }).map((item) => (
             <div
               key={item.id}
               className="break-inside-avoid group rounded-lg overflow-hidden cursor-pointer"
-              onClick={() => { setLightboxIndex(idx); setLightboxSubIndex(0); }}
+              onClick={() => { const origIdx = items.findIndex((i) => i.id === item.id); setLightboxIndex(origIdx); setLightboxSubIndex(0); markItemAsRead(item.id); }}
             >
               <div className="relative">
                 <img
@@ -757,6 +840,20 @@ export default function MoodboardPage() {
                   className="w-full object-cover rounded-lg"
                   loading="lazy"
                 />
+                {/* Unread comments indicator */}
+                {unreadCounts[item.id] > 0 && (
+                  <div className="absolute top-2 right-2 z-[2] flex items-center gap-1">
+                    <span className="relative flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
+                    </span>
+                    {unreadCounts[item.id] > 1 && (
+                      <span className="text-xs font-bold text-white bg-red-500 rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
+                        {unreadCounts[item.id]}
+                      </span>
+                    )}
+                  </div>
+                )}
                 {/* Multi-image badge */}
                 {item.sub_images && item.sub_images.length > 0 && (
                   <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded z-[1]">

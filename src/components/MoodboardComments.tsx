@@ -229,7 +229,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
           type: 'moodboard_tag',
           title: t('notifications.moodboardTagTitle', { name: authorName }),
           body: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
-          link: `/prototyping/moodboard`,
+              link: `/prototyping/moodboard?item=${moodboardItemId}`,
           moodboard_item_id: moodboardItemId,
           comment_id: comment.id,
           from_user_id: authorId,

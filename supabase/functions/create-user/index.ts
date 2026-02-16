@@ -104,6 +104,8 @@ serve(async (req) => {
       ? body.password
       : generatePassword();
 
+    const fullName = [first_name, last_name].filter(Boolean).map((s: string) => s.trim()).join(' ') || '';
+
     const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
       email: email.trim().toLowerCase(),
       password,
@@ -111,6 +113,8 @@ serve(async (req) => {
       user_metadata: {
         first_name: (first_name || '').trim() || null,
         last_name: (last_name || '').trim() || null,
+        full_name: fullName || null,
+        role: userRole,
       },
     });
 
@@ -127,8 +131,6 @@ serve(async (req) => {
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const fullName = [first_name, last_name].filter(Boolean).map((s: string) => s.trim()).join(' ') || '';
 
     const { error: profileError } = await adminClient.from('profiles').upsert(
       {

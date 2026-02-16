@@ -129,16 +129,31 @@ export default function App() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       try {
         if (session?.user) {
-          const user = await buildUserFromSession(session, () => useAuthStore.getState().user);
-          setUser(user, session);
+          const existingUser = useAuthStore.getState().user;
+          // On token refresh, if we already have good user data, keep it
+          // Only rebuild if user ID changed or we have no data
+          if (event === 'TOKEN_REFRESHED' && existingUser && existingUser.id === session.user.id) {
+            // Silently update session without re-fetching profile
+            // This prevents avatar/name reset when profile fetch times out
+            setUser(existingUser, session);
+          } else {
+            const user = await buildUserFromSession(session, () => useAuthStore.getState().user);
+            setUser(user, session);
+          }
         } else {
           setUser(null, session);
         }
       } catch {
-        setUser(null, session);
+        // On error, preserve existing user if same session
+        const existingUser = useAuthStore.getState().user;
+        if (existingUser && session?.user && existingUser.id === session.user.id) {
+          setUser(existingUser, session);
+        } else {
+          setUser(null, session);
+        }
       }
       setAuthLoading(false);
       setLoading(false);

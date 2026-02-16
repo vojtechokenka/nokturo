@@ -1,6 +1,7 @@
 import { createHashRouter, createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from './layouts/AppLayout';
 import { AppGuard } from './components/AppGuard';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { isElectron } from './utils/platform';
 
 // Auth
@@ -88,7 +89,7 @@ const routes = [
           // Settings
           { path: 'settings/account', element: <AccountPage /> },
           { path: 'settings/security', element: <SecurityPage /> },
-          { path: 'settings/users', element: <UsersPage /> },
+          { path: 'settings/users', element: <ProtectedRoute allowedRoles={['founder']}><UsersPage /></ProtectedRoute> },
         ],
       },
     ],
