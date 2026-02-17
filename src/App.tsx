@@ -61,11 +61,11 @@ async function buildUserFromSession(
   const fetchProfile = () =>
     supabase
       .from('profiles')
-      .select('role, first_name, last_name, full_name, avatar_url, language, theme')
+      .select('*')
       .eq('id', session.user.id)
       .maybeSingle();
 
-  let profile: { role?: string; first_name?: string; last_name?: string; full_name?: string; avatar_url?: string; language?: string; theme?: string } | null = null;
+  let profile: Record<string, unknown> | null = null;
 
   // Try up to 2 times with short timeouts (3s each)
   for (let attempt = 0; attempt < 2; attempt++) {
