@@ -18,6 +18,8 @@ export interface User {
   lastName?: string;
   role: Role;
   avatarUrl?: string;
+  language?: 'en' | 'cs';
+  theme?: 'light' | 'dark';
 }
 
 interface AuthState {

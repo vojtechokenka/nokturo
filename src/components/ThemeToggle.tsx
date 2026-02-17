@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next';
 import { Sun, Moon } from 'lucide-react';
-import { useThemeStore } from '../stores/themeStore';
+import { useThemeStore, type Theme } from '../stores/themeStore';
+import { useAuthStore, getUserIdForDb } from '../stores/authStore';
+import { supabase } from '../lib/supabase';
 
 interface ThemeToggleProps {
   variant?: 'light' | 'dark';
@@ -13,7 +15,18 @@ interface ThemeToggleProps {
 export function ThemeToggle({ variant }: ThemeToggleProps) {
   const { t } = useTranslation();
   const theme = useThemeStore((s) => s.theme);
-  const setTheme = useThemeStore((s) => s.setTheme);
+  const storeSetTheme = useThemeStore((s) => s.setTheme);
+
+  const setTheme = (next: Theme) => {
+    storeSetTheme(next);
+    // Persist to DB profile
+    const userId = getUserIdForDb();
+    if (userId) {
+      supabase.from('profiles').update({ theme: next }).eq('id', userId).then();
+      const u = useAuthStore.getState().user;
+      if (u) useAuthStore.getState().setUser({ ...u, theme: next });
+    }
+  };
 
   const isDarkVariant = variant === 'dark' || (variant !== 'light' && theme === 'dark');
 

@@ -1,7 +1,9 @@
 import { useTranslation } from 'react-i18next';
 import { useThemeStore } from '../stores/themeStore';
+import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { LANGUAGE_KEY } from '../i18n';
 import { safeGetStorage } from '../lib/storage';
+import { supabase } from '../lib/supabase';
 
 interface LanguageToggleProps {
   variant?: 'light' | 'dark';
@@ -23,6 +25,13 @@ export function LanguageToggle({ variant }: LanguageToggleProps) {
       safeGetStorage('local').setItem(LANGUAGE_KEY, lang);
     } catch {
       // Storage unavailable – i18n change still applies for session
+    }
+    // Persist to DB profile
+    const userId = getUserIdForDb();
+    if (userId) {
+      supabase.from('profiles').update({ language: lang }).eq('id', userId).then();
+      const u = useAuthStore.getState().user;
+      if (u) useAuthStore.getState().setUser({ ...u, language: lang });
     }
   };
 

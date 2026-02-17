@@ -6,6 +6,7 @@ import { ThemeToggle } from '../../components/ThemeToggle';
 import { NavLink } from 'react-router-dom';
 import { Globe, Shield, ChevronRight, Loader2, Camera, X, UserPlus, Moon, Download, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
+import { useThemeStore } from '../../stores/themeStore';
 import { supabase } from '../../lib/supabase';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { resizeAvatarImage } from '../../lib/resizeImage';
@@ -13,7 +14,7 @@ import { INPUT_CLASS } from '../../lib/inputStyles';
 import { isElectron } from '../../utils/platform';
 
 export default function AccountPage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
 
@@ -46,7 +47,7 @@ export default function AccountPage() {
     const load = async () => {
       const { data } = await supabase
         .from('profiles')
-        .select('first_name, last_name, phone, avatar_url')
+        .select('first_name, last_name, phone, avatar_url, language, theme')
         .eq('id', userId)
         .single();
       if (data) {
@@ -87,6 +88,8 @@ export default function AccountPage() {
     setSaving(true);
     try {
       const fullName = [firstName.trim(), lastName.trim()].filter(Boolean).join(' ') || '';
+      const currentLang = (i18n.language?.split('-')[0] === 'cs' ? 'cs' : 'en') as 'en' | 'cs';
+      const currentTheme = useThemeStore.getState().theme;
       const profileData = {
         email: user?.email ?? '',
         full_name: fullName,
@@ -94,6 +97,8 @@ export default function AccountPage() {
         last_name: lastName.trim(),
         phone: phone.trim() || null,
         avatar_url: avatarUrl,
+        language: currentLang,
+        theme: currentTheme,
       };
 
       // Try UPDATE first (profile usually exists). If no rows, do INSERT (new user without profile).
@@ -140,6 +145,8 @@ export default function AccountPage() {
         lastName: lName || undefined,
         email: user?.email ?? '',
         avatarUrl: avatarUrl ?? undefined,
+        language: currentLang,
+        theme: currentTheme,
         ...(newRole && { role: newRole }),
       });
       showToast('success', t('settings.account.saved'));

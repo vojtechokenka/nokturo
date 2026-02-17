@@ -4,7 +4,10 @@ import { supabase } from './lib/supabase';
 import { router } from './router';
 import { useAuthStore } from './stores/authStore';
 import { useSleepModeStore } from './stores/sleepModeStore';
+import { useThemeStore } from './stores/themeStore';
 import { SleepMode } from './components/SleepMode';
+import i18n, { LANGUAGE_KEY } from './i18n';
+import { safeGetStorage } from './lib/storage';
 import type { Role } from './lib/rbac';
 
 const VALID_ROLES: Role[] = ['founder', 'engineer', 'viewer', 'client', 'host'];
@@ -33,6 +36,23 @@ function buildMinimalUser(session: { user: { id: string; email?: string | null; 
   };
 }
 
+/** Apply language & theme from DB profile to frontend stores + localStorage */
+function applyProfilePreferences(language: 'en' | 'cs', theme: 'light' | 'dark') {
+  // Language
+  if (i18n.language !== language) {
+    i18n.changeLanguage(language);
+  }
+  try {
+    safeGetStorage('local').setItem(LANGUAGE_KEY, language);
+  } catch { /* ignore */ }
+
+  // Theme
+  const currentTheme = useThemeStore.getState().theme;
+  if (currentTheme !== theme) {
+    useThemeStore.getState().setTheme(theme);
+  }
+}
+
 async function buildUserFromSession(
   session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } },
   /** When profile fetch fails, preserve role from existing user to avoid transient Founder→Client downgrade (e.g. during refreshSession) */
@@ -41,11 +61,11 @@ async function buildUserFromSession(
   const fetchProfile = () =>
     supabase
       .from('profiles')
-      .select('role, first_name, last_name, full_name, avatar_url')
+      .select('role, first_name, last_name, full_name, avatar_url, language, theme')
       .eq('id', session.user.id)
       .maybeSingle();
 
-  let profile: { role?: string; first_name?: string; last_name?: string; full_name?: string; avatar_url?: string } | null = null;
+  let profile: { role?: string; first_name?: string; last_name?: string; full_name?: string; avatar_url?: string; language?: string; theme?: string } | null = null;
 
   // Try up to 2 times with short timeouts (3s each)
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -79,6 +99,11 @@ async function buildUserFromSession(
   const nameParts = [firstName, lastName].filter(Boolean).join(' ');
   const displayName = nameParts || fullName || session.user.email || '';
 
+  const language = (profile?.language === 'cs' ? 'cs' : 'en') as 'en' | 'cs';
+  const theme = (profile?.theme === 'dark' ? 'dark' : 'light') as 'light' | 'dark';
+
+  applyProfilePreferences(language, theme);
+
   return {
     id: session.user.id,
     email: session.user.email ?? '',
@@ -87,6 +112,8 @@ async function buildUserFromSession(
     lastName,
     role,
     avatarUrl: profile?.avatar_url as string | undefined,
+    language,
+    theme,
   };
 }
 
