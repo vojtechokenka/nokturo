@@ -10,6 +10,7 @@
     "prototyping": "Prototypování",
     "moodboard": "Moodboard",
     "ideas": "N\u00e1pady",
+    "magazine": "Transparency Magazine",
     "production": "V\u00fdroba",
     "materialLibrary": "Knihovna materi\u00e1l\u016f",
     "componentsLibrary": "Knihovna komponent\u016f",
@@ -112,6 +113,10 @@
     "ideas": {
       "title": "N\u00e1pady",
       "description": "Rychl\u00e9 zachycen\u00ed textov\u00fdch a obrazov\u00fdch n\u00e1pad\u016f."
+    },
+    "magazine": {
+      "title": "Transparency Magazine",
+      "description": "\u010cl\u00e1nky o transparentnosti va\u0161\u00ed zna\u010dky."
     },
     "materialLibrary": {
       "title": "Knihovna materi\u00e1l\u016f",
@@ -803,6 +808,23 @@
       "seamFinishing": "Způsob zakončení švů",
       "hardware": "Hardware"
     }
+  },
+  "magazine": {
+    "addNew": "Přidat nový",
+    "noArticles": "Zatím žádné články",
+    "noHiddenArticles": "Žádné skryté články",
+    "addFirst": "Vytvořte svůj první článek.",
+    "untitled": "Bez názvu",
+    "hiddenArticles": "Skryté",
+    "hide": "Skrýt",
+    "unhide": "Zobrazit",
+    "deleteConfirm": "Opravdu chcete smazat tento článek? Tuto akci nelze vrátit.",
+    "thumbnail": "Náhledový obrázek",
+    "uploadThumbnail": "Nahrát náhledový obrázek",
+    "replaceThumbnail": "Nahradit",
+    "titlePlaceholder": "Název článku",
+    "titleRequired": "Název článku je povinný",
+    "notFound": "Článek nebyl nalezen"
   },
   "errors": {
     "pageNotLoaded": "Stránka se nenačetla.",

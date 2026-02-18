@@ -477,7 +477,7 @@ export default function AccountPage() {
         ) : (
           <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700">
             <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
-              Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">v{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'}</span>
+              Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'}</span>
               <span className="ml-2 text-nokturo-400 dark:text-nokturo-500">— web</span>
             </p>
           </div>
@@ -584,7 +584,7 @@ function AppUpdateSection() {
     <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700 space-y-3">
       <div className="flex items-center justify-between gap-4">
         <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
-          Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">v{appVersion}</span>
+          Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">{appVersion}</span>
         </p>
 
         {/* Action buttons based on status */}

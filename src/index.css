@@ -95,3 +95,27 @@ body {
 .animate-slide-in {
   animation: slide-in-right 0.25s ease-out;
 }
+
+/* Mobile sidebar slide-in */
+@keyframes sidebar-slide-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes sidebar-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+.animate-sidebar-in {
+  animation: sidebar-slide-in 0.25s ease-out;
+}
+.animate-sidebar-overlay {
+  animation: sidebar-overlay-in 0.2s ease-out;
+}

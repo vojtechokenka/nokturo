@@ -1017,7 +1017,7 @@ export default function MoodboardPage() {
                 onDrop={handleDrop}
               >
                 {/* Reorderable thumbnails grid */}
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {uploadImages.map((img, idx) => (
                     <div
                       key={img.id}

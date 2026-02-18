@@ -10,6 +10,7 @@
     "prototyping": "Prototyping",
     "moodboard": "Moodboard",
     "ideas": "Ideas",
+    "magazine": "Transparency Magazine",
     "production": "Production",
     "materialLibrary": "Material Library",
     "componentsLibrary": "Components Library",
@@ -112,6 +113,10 @@
     "ideas": {
       "title": "Ideas",
       "description": "Quick capture for text and image ideas."
+    },
+    "magazine": {
+      "title": "Transparency Magazine",
+      "description": "Articles about your brand's transparency journey."
     },
     "materialLibrary": {
       "title": "Material Library",
@@ -797,6 +802,23 @@
       "seamFinishing": "Seam finishing",
       "hardware": "Hardware"
     }
+  },
+  "magazine": {
+    "addNew": "Add new",
+    "noArticles": "No articles yet",
+    "noHiddenArticles": "No hidden articles",
+    "addFirst": "Create your first article.",
+    "untitled": "Untitled",
+    "hiddenArticles": "Hidden",
+    "hide": "Hide",
+    "unhide": "Show",
+    "deleteConfirm": "Are you sure you want to delete this article? This action cannot be undone.",
+    "thumbnail": "Thumbnail",
+    "uploadThumbnail": "Upload thumbnail image",
+    "replaceThumbnail": "Replace",
+    "titlePlaceholder": "Article title",
+    "titleRequired": "Article title is required",
+    "notFound": "Article not found"
   },
   "errors": {
     "pageNotLoaded": "Page could not be loaded.",

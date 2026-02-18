@@ -233,23 +233,23 @@ export default function ChatPage() {
       titleKey="pages.internalChat.title"
       descriptionKey="pages.internalChat.description"
     >
-      <div className="flex bg-white border border-nokturo-200 rounded-lg overflow-hidden " style={{ height: 'calc(100vh - 220px)' }}>
-        {/* ── Sidebar — Room list ───────────────────────────── */}
-        <div className="w-56 shrink-0 border-r border-nokturo-200 bg-nokturo-50 flex flex-col">
-          <div className="px-4 py-3 border-b border-nokturo-200">
+      <div className="flex flex-col sm:flex-row bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 220px)' }}>
+        {/* ── Room tabs (horizontal on mobile, vertical sidebar on sm+) ── */}
+        <div className="sm:w-56 shrink-0 sm:border-r border-b sm:border-b-0 border-nokturo-200 dark:border-nokturo-700 bg-nokturo-50 dark:bg-nokturo-800 flex sm:flex-col">
+          <div className="hidden sm:block px-4 py-3 border-b border-nokturo-200 dark:border-nokturo-700">
             <h4 className="text-heading-5 font-extralight text-nokturo-500 uppercase tracking-wider">
               {t('nav.communication')}
             </h4>
           </div>
-          <div className="flex-1 overflow-y-auto py-1">
+          <div className="flex sm:flex-col sm:flex-1 overflow-x-auto sm:overflow-y-auto py-1 sm:py-1 px-2 sm:px-0 gap-1 sm:gap-0">
             {rooms.map((room) => (
               <button
                 key={room.id}
                 onClick={() => setActiveRoomId(room.id)}
-                className={`w-full flex items-center gap-2 px-4 py-2.5 text-sm transition-colors ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 text-sm transition-colors whitespace-nowrap rounded sm:rounded-none sm:w-full ${
                   activeRoomId === room.id
-                    ? 'bg-nokturo-200 text-nokturo-900'
-                    : 'text-nokturo-600 hover:bg-nokturo-50 hover:text-nokturo-800'
+                    ? 'bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100'
+                    : 'text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 hover:text-nokturo-800 dark:hover:text-nokturo-200'
                 }`}
               >
                 <Hash className="w-4 h-4 shrink-0 text-nokturo-500" />

@@ -301,7 +301,8 @@ export default function SuppliersPage() {
           </p>
         </div>
       ) : (
-        <div className="w-full min-w-0 grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3">
+        <div className="w-full min-w-0 overflow-x-auto">
+        <div className="min-w-[600px] grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3">
           {/* Header row – single border-b for continuous divider */}
           <div className="col-span-4">
             <div className="grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3 py-2 pl-4 text-[11px] font-medium text-nokturo-500 uppercase tracking-widest">
@@ -368,6 +369,7 @@ export default function SuppliersPage() {
               <span />
             </button>
           ))}
+        </div>
         </div>
       )}
 

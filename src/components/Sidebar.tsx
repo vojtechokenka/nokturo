@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../stores/authStore';
+import { useSidebarStore } from '../stores/sidebarStore';
 import { canAccessSection, canAccessModule } from '../lib/rbac';
 import type { Module } from '../lib/rbac';
 import { supabase } from '../lib/supabase';
@@ -12,6 +13,7 @@ import {
   Palette,
   Image,
   Lightbulb,
+  BookOpen,
   Scissors,
   LayoutGrid,
   Tag,
@@ -62,6 +64,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { key: 'moodboard', path: '/prototyping/moodboard', icon: <Image {...iconProps} />, labelKey: 'nav.moodboard', rbacModule: 'prototyping.moodboard' },
       { key: 'ideas', path: '/prototyping/ideas', icon: <Lightbulb {...iconProps} />, labelKey: 'nav.ideas', rbacModule: 'prototyping.ideas' },
+      { key: 'magazine', path: '/prototyping/magazine', icon: <BookOpen {...iconProps} />, labelKey: 'nav.magazine', rbacModule: 'prototyping.magazine' },
     ],
   },
   {
@@ -91,12 +94,18 @@ const NAV_SECTIONS: NavSection[] = [
 export function Sidebar() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const role = user?.role ?? 'host';
+  const closeMobileSidebar = useSidebarStore((s) => s.close);
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notifRef = useRef<HTMLDivElement>(null);
   const { notifications, unreadCount, markAsRead, clearAll } = useNotifications(user?.id);
+
+  useEffect(() => {
+    closeMobileSidebar();
+  }, [location.pathname]);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -202,7 +211,7 @@ export function Sidebar() {
           )}
         </div>
         {showNotifications && (
-          <div className="absolute bottom-full left-3 mb-2 w-[360px] rounded-xl max-h-80 overflow-hidden flex flex-col z-50 bg-white border border-nokturo-200 shadow-2xl shadow-nokturo-900/10 dark:bg-nokturo-900 dark:border-nokturo-600 dark:shadow-black/50">
+          <div className="absolute bottom-full left-3 mb-2 w-[calc(100vw-2rem)] max-w-[360px] rounded-xl max-h-80 overflow-hidden flex flex-col z-50 bg-white border border-nokturo-200 shadow-2xl shadow-nokturo-900/10 dark:bg-nokturo-900 dark:border-nokturo-600 dark:shadow-black/50">
             <div className="flex items-center justify-between px-4 py-3 border-b border-nokturo-100 dark:border-nokturo-700 shrink-0">
               <div className="flex items-center gap-2">
                 <Bell className="w-4 h-4 text-nokturo-700 dark:text-nokturo-300" />

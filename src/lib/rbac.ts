@@ -16,6 +16,7 @@ export type Module =
   | 'brand.identity'
   | 'prototyping.moodboard'
   | 'prototyping.ideas'
+  | 'prototyping.magazine'
   | 'production.materials'
   | 'production.components'
   | 'production.labels'
@@ -39,6 +40,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
     'brand.identity':          { read: true, write: true, comment: true, delete: true },
     'prototyping.moodboard':   { read: true, write: true, comment: true, delete: true },
     'prototyping.ideas':       { read: true, write: true, comment: true, delete: true },
+    'prototyping.magazine':    { read: true, write: true, comment: true, delete: true },
     'production.materials':    { read: true, write: true, comment: true, delete: true },
     'production.components':   { read: true, write: true, comment: true, delete: true },
     'production.labels':      { read: true, write: true, comment: true, delete: true },
@@ -56,6 +58,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
     'brand.identity':          { read: true,  write: false, comment: true,  delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: true,  delete: false },
     'prototyping.ideas':       { read: true,  write: false, comment: true,  delete: false },
+    'prototyping.magazine':    { read: true,  write: false, comment: true,  delete: false },
     'production.materials':    { read: true,  write: false, comment: true,  delete: false },
     'production.components':   { read: true,  write: false, comment: true,  delete: false },
     'production.labels':      { read: true,  write: false, comment: true,  delete: false },
@@ -73,6 +76,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
     'brand.identity':          { read: true,  write: false, comment: false, delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: false, delete: false },
     'prototyping.ideas':       { read: true,  write: false, comment: false, delete: false },
+    'prototyping.magazine':    { read: true,  write: false, comment: false, delete: false },
     'production.materials':    { read: true,  write: false, comment: false, delete: false },
     'production.components':   { read: true,  write: false, comment: false, delete: false },
     'production.labels':      { read: true,  write: false, comment: false, delete: false },
@@ -90,6 +94,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
     'brand.identity':          { read: true,  write: false, comment: true,  delete: false },
     'prototyping.moodboard':   { read: false, write: false, comment: false, delete: false },
     'prototyping.ideas':       { read: false, write: false, comment: false, delete: false },
+    'prototyping.magazine':    { read: false, write: false, comment: false, delete: false },
     'production.materials':    { read: false, write: false, comment: false, delete: false },
     'production.components':   { read: false, write: false, comment: false, delete: false },
     'production.labels':      { read: false, write: false, comment: false, delete: false },
@@ -107,6 +112,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
     'brand.identity':          { read: true,  write: false, comment: false, delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: false, delete: false },
     'prototyping.ideas':       { read: false, write: false, comment: false, delete: false },
+    'prototyping.magazine':    { read: false, write: false, comment: false, delete: false },
     'production.materials':    { read: false, write: false, comment: false, delete: false },
     'production.components':   { read: false, write: false, comment: false, delete: false },
     'production.labels':      { read: false, write: false, comment: false, delete: false },

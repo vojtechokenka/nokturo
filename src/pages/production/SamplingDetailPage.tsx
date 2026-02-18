@@ -236,7 +236,7 @@ export default function SamplingDetailPage() {
           <header className="mb-12">
             <div className="flex flex-wrap items-start gap-4">
               <div className="flex-1 min-w-0">
-                <h1 className="font-headline text-[48px] leading-[1.2] font-extralight text-nokturo-900 dark:text-nokturo-100">{product.name}</h1>
+                <h1 className="font-headline text-[32px] sm:text-[48px] leading-[1.2] font-extralight text-nokturo-900 dark:text-nokturo-100">{product.name}</h1>
                 {product.sku && (
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">SKU: {product.sku}</p>
                 )}
@@ -252,7 +252,7 @@ export default function SamplingDetailPage() {
                     </span>
                   )}
                 </div>
-                <div className="flex items-stretch gap-6 mt-10 w-fit">
+                <div className="flex items-stretch gap-4 sm:gap-6 mt-6 sm:mt-10 w-fit">
                   <div>
                     <p className="text-[11px] text-nokturo-500 dark:text-nokturo-400 uppercase tracking-wider">{t('products.category')}</p>
                     <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 mt-0.5">

@@ -335,7 +335,8 @@ export default function AccountingPage() {
           <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">{t('accounting.addFirst')}</p>
         </div>
       ) : (
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <table className="w-full border-collapse min-w-[640px]">
           <thead>
             <tr>
               <th className="py-2 pl-4 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.colStatus')}</th>
@@ -356,6 +357,7 @@ export default function AccountingPage() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {deleteTarget && (

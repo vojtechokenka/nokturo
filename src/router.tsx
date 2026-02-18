@@ -22,6 +22,9 @@ import IdentityPage from './pages/brand/IdentityPage';
 // Prototyping
 import MoodboardPage from './pages/prototyping/MoodboardPage';
 import IdeasPage from './pages/prototyping/IdeasPage';
+import MagazinePage from './pages/prototyping/MagazinePage';
+import MagazineArticlePage from './pages/prototyping/MagazineArticlePage';
+import MagazineEditorPage from './pages/prototyping/MagazineEditorPage';
 
 // Production
 import MaterialsPage from './pages/production/MaterialsPage';
@@ -67,6 +70,10 @@ const routes = [
           // Prototyping
           { path: 'prototyping/moodboard', element: <MoodboardPage /> },
           { path: 'prototyping/ideas', element: <IdeasPage /> },
+          { path: 'prototyping/magazine', element: <MagazinePage /> },
+          { path: 'prototyping/magazine/new', element: <MagazineEditorPage /> },
+          { path: 'prototyping/magazine/:id', element: <MagazineArticlePage /> },
+          { path: 'prototyping/magazine/:id/edit', element: <MagazineEditorPage /> },
 
           // Production
           { path: 'production/materials', element: <MaterialsPage /> },
