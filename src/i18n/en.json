@@ -696,6 +696,8 @@
     "searchPlaceholder": "Search ideas...",
     "unknownAuthor": "Unknown",
     "dragToReorder": "Drag to reorder",
+    "filterAll": "All",
+    "noFilterResults": "No ideas match the selected filter",
     "category": "Category",
     "categories": {
       "general": "General",

@@ -702,6 +702,8 @@
     "searchPlaceholder": "Hledat n\u00e1pady...",
     "unknownAuthor": "Nezn\u00e1m\u00fd",
     "dragToReorder": "P\u0159et\u00e1hn\u011bte pro zm\u011bnu po\u0159ad\u00ed",
+    "filterAll": "V\u0161e",
+    "noFilterResults": "\u017d\u00e1dn\u00e9 n\u00e1pady neodpov\u00eddaj\u00ed vybran\u00e9mu filtru",
     "category": "Kategorie",
     "categories": {
       "general": "Obecn\u00e9",

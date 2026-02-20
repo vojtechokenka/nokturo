@@ -118,6 +118,7 @@ export default function IdeasPage() {
 
   // Categories (Notion-style)
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
 
   // Quick-capture modal
   const [showModal, setShowModal] = useState(false);
@@ -151,9 +152,18 @@ export default function IdeasPage() {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragDropIndex, setDragDropIndex] = useState<number | null>(null);
 
+  // Filter
+  const isFiltering = filterCategories.length > 0;
+  const filteredIdeas = isFiltering
+    ? ideas.filter(idea => {
+        const cats = idea.categories ?? (idea.category ? [idea.category] : []);
+        return filterCategories.some(fc => cats.includes(fc));
+      })
+    : ideas;
+
   // Lightbox (klik na fotku)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
-  const ideasWithImages = ideas.filter((i) => i.image_url);
+  const ideasWithImages = filteredIdeas.filter((i) => i.image_url);
 
   // ── Fetch ───────────────────────────────────────────────────
   const fetchIdeas = useCallback(async () => {
@@ -229,9 +239,19 @@ export default function IdeasPage() {
           if (!newOptions.some((n) => n.id === o.id)) {
             const { error: delErr } = await supabase.from('idea_categories').delete().eq('id', o.id);
             if (delErr) throw delErr;
+
+            const affected = ideas.filter(idea =>
+              (idea.categories ?? []).includes(o.name)
+            );
+            for (const idea of affected) {
+              const cleaned = (idea.categories ?? []).filter(c => c !== o.name);
+              await supabase.from('ideas').update({ categories: cleaned }).eq('id', idea.id);
+            }
           }
         }
+        setFilterCategories(prev => prev.filter(fc => newOptions.some(n => n.name === fc)));
         await fetchCategories();
+        await fetchIdeas();
       } catch (err: unknown) {
         setCategories(categories);
         const msg = err && typeof err === 'object' && 'message' in err
@@ -240,7 +260,7 @@ export default function IdeasPage() {
         setError(msg);
       }
     },
-    [categories, fetchCategories]
+    [categories, ideas, fetchCategories, fetchIdeas]
   );
 
   // ── Modal helpers ───────────────────────────────────────────
@@ -256,10 +276,12 @@ export default function IdeasPage() {
   };
 
   const openEdit = (idea: Idea) => {
+    const validNames = new Set(categories.map(c => c.name));
+    const ideaCats = idea.categories ?? (idea.category ? [idea.category] : []);
     setEditingIdea(idea);
     setFormTitle(idea.title);
     setFormContent(idea.content || '');
-    setFormCategories(idea.categories ?? (idea.category ? [idea.category] : []));
+    setFormCategories(ideaCats.filter(c => validNames.has(c)));
     setFormImage(null);
     setFormImagePreview(idea.image_url || '');
     setError('');
@@ -514,6 +536,41 @@ export default function IdeasPage() {
         </button>
       </div>
 
+      {/* ── Tag filter ──────────────────────────────────────── */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => setFilterCategories([])}
+            className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${
+              !isFiltering
+                ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+            }`}
+          >
+            {t('ideas.filterAll')}
+          </button>
+          {categories.map(cat => {
+            const active = filterCategories.includes(cat.name);
+            const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => setFilterCategories(prev =>
+                  active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
+                )}
+                className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${colorCls} ${
+                  active
+                    ? 'ring-2 ring-offset-1 ring-nokturo-900 dark:ring-white ring-offset-white dark:ring-offset-nokturo-900'
+                    : 'opacity-50 hover:opacity-80'
+                }`}
+              >
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -525,6 +582,11 @@ export default function IdeasPage() {
           <p className="text-nokturo-600 font-medium">{t('ideas.noIdeas')}</p>
           <p className="text-nokturo-500 text-sm mt-1">{t('ideas.addFirst')}</p>
         </div>
+      ) : filteredIdeas.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <Lightbulb className="w-12 h-12 text-nokturo-600 mb-4" />
+          <p className="text-nokturo-600 font-medium">{t('ideas.noFilterResults')}</p>
+        </div>
       ) : (
         <div
           className="min-h-[400px] columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6"
@@ -534,7 +596,7 @@ export default function IdeasPage() {
               }
             }}
           >
-          {ideas.map((idea, idx) => {
+          {filteredIdeas.map((idea, idx) => {
             const cats = idea.categories ?? (idea.category ? [idea.category] : []);
             const firstCatName = cats[0];
             const cat = firstCatName ? categories.find((c) => c.name === firstCatName) : null;
@@ -553,7 +615,7 @@ export default function IdeasPage() {
                   <div className="absolute -top-1 left-0 right-0 h-1 bg-nokturo-100 rounded-full z-10" aria-hidden />
                 )}
               <div
-                draggable
+                draggable={!isFiltering}
                 onDragStart={(e) => {
                   setDraggedId(idea.id);
                   e.dataTransfer.effectAllowed = 'move';
@@ -615,7 +677,8 @@ export default function IdeasPage() {
                 {/* Body */}
                 <div className="p-4 rounded bg-amber-200/80">
                   {(() => {
-                    const cats = idea.categories ?? (idea.category ? [idea.category] : []);
+                    const validNames = new Set(categories.map(c => c.name));
+                    const cats = (idea.categories ?? (idea.category ? [idea.category] : [])).filter(c => validNames.has(c));
                     return cats.length > 0 ? (
                       <div className="flex flex-wrap gap-1 mb-1.5">
                         {cats.map((c) => {
@@ -633,7 +696,7 @@ export default function IdeasPage() {
                       </div>
                     ) : null;
                   })()}
-                  <h3 className="text-heading-5 font-extralight leading-tight [color:inherit]">
+                  <h3 className="text-heading-5 font-normal leading-tight [color:inherit]">
                     {idea.title}
                   </h3>
 
