@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
@@ -71,6 +71,41 @@ const CATEGORY_BG: Record<string, string> = {
   yellow: 'bg-amber-100',
 };
 
+function renderNoteContent(content: string): React.ReactNode {
+  const lines = content.split('\n');
+  const result: React.ReactNode[] = [];
+  let listItems: string[] = [];
+  let key = 0;
+
+  const flushList = () => {
+    if (!listItems.length) return;
+    result.push(
+      <ul key={key++} className="list-disc pl-5 space-y-0.5">
+        {listItems.map((text, i) => <li key={i}>{text}</li>)}
+      </ul>
+    );
+    listItems = [];
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.startsWith('• ') || line.startsWith('- ')) {
+      listItems.push(line.slice(2));
+    } else {
+      flushList();
+      result.push(
+        <span key={key++}>
+          {line}
+          {i < lines.length - 1 && <br />}
+        </span>
+      );
+    }
+  }
+  flushList();
+
+  return <>{result}</>;
+}
+
 // ── Component ─────────────────────────────────────────────────
 export default function IdeasPage() {
   const { t } = useTranslation();
@@ -95,6 +130,9 @@ export default function IdeasPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const contentTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const justAutoFormattedRef = useRef<number | null>(null);
+  const pendingCursorRef = useRef<number | null>(null);
 
   // Delete
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -273,6 +311,14 @@ export default function IdeasPage() {
     return () => document.removeEventListener('paste', handlePaste);
   }, [handlePaste]);
 
+  useLayoutEffect(() => {
+    if (pendingCursorRef.current !== null && contentTextareaRef.current) {
+      contentTextareaRef.current.selectionStart = pendingCursorRef.current;
+      contentTextareaRef.current.selectionEnd = pendingCursorRef.current;
+      pendingCursorRef.current = null;
+    }
+  }, [formContent]);
+
   // ── Save ────────────────────────────────────────────────────
   const handleSave = async () => {
     setSaving(true);
@@ -362,7 +408,93 @@ export default function IdeasPage() {
     setDeleteTarget(null);
   };
 
-  // ── Input class ─────────────────────────────────────────────
+  // ── Content textarea auto-format ────────────────────────────
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    const cursorPos = e.target.selectionStart;
+
+    const beforeCursor = value.slice(0, cursorPos);
+    const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+    const lineContent = value.slice(lineStart, cursorPos);
+
+    if (lineContent === '- ') {
+      const newValue = value.slice(0, lineStart) + '• ' + value.slice(lineStart + 2);
+      setFormContent(newValue);
+      justAutoFormattedRef.current = lineStart;
+      pendingCursorRef.current = lineStart + 2;
+      return;
+    }
+
+    justAutoFormattedRef.current = null;
+    setFormContent(value);
+  };
+
+  const handleContentKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Backspace') {
+      const textarea = e.currentTarget;
+      const cursorPos = textarea.selectionStart;
+
+      if (cursorPos !== textarea.selectionEnd) {
+        justAutoFormattedRef.current = null;
+        return;
+      }
+
+      const value = formContent;
+
+      if (justAutoFormattedRef.current !== null) {
+        e.preventDefault();
+        const lineStart = justAutoFormattedRef.current;
+        const newValue = value.slice(0, lineStart) + '- ' + value.slice(lineStart + 2);
+        setFormContent(newValue);
+        justAutoFormattedRef.current = null;
+        pendingCursorRef.current = lineStart + 2;
+        return;
+      }
+
+      const beforeCursor = value.slice(0, cursorPos);
+      const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+      const posInLine = cursorPos - lineStart;
+      const linePrefix = value.slice(lineStart, lineStart + 2);
+
+      if (posInLine > 0 && posInLine <= 2 && (linePrefix === '• ' || linePrefix === '- ')) {
+        e.preventDefault();
+        const newValue = value.slice(0, lineStart) + value.slice(lineStart + 2);
+        setFormContent(newValue);
+        pendingCursorRef.current = lineStart;
+        return;
+      }
+    } else {
+      justAutoFormattedRef.current = null;
+
+      if (e.key === 'Enter') {
+        const textarea = e.currentTarget;
+        const cursorPos = textarea.selectionStart;
+        const value = formContent;
+
+        const beforeCursor = value.slice(0, cursorPos);
+        const lineStart = beforeCursor.lastIndexOf('\n') + 1;
+        const lineEndIdx = value.indexOf('\n', lineStart);
+        const fullLine = value.slice(lineStart, lineEndIdx === -1 ? undefined : lineEndIdx);
+
+        if (fullLine === '• ' || fullLine === '- ') {
+          e.preventDefault();
+          const newValue = value.slice(0, lineStart) + value.slice(lineStart + fullLine.length);
+          setFormContent(newValue);
+          pendingCursorRef.current = lineStart;
+          return;
+        }
+
+        if (fullLine.startsWith('• ') || fullLine.startsWith('- ')) {
+          e.preventDefault();
+          const afterCursor = value.slice(cursorPos);
+          const newValue = value.slice(0, cursorPos) + '\n• ' + afterCursor;
+          setFormContent(newValue);
+          pendingCursorRef.current = cursorPos + 3;
+          return;
+        }
+      }
+    }
+  };
 
   // ── Render ──────────────────────────────────────────────────
   return (
@@ -506,9 +638,9 @@ export default function IdeasPage() {
                   </h3>
 
                   {idea.content && (
-                    <p className="text-sm mt-2 line-clamp-4 leading-relaxed opacity-100 [color:inherit]">
-                      {idea.content}
-                    </p>
+                    <div className="text-sm mt-2 leading-relaxed opacity-100 [color:inherit]">
+                      {renderNoteContent(idea.content)}
+                    </div>
                   )}
 
                   {/* Footer – author vlevo dole jako u zpráv v komunikaci */}
@@ -686,8 +818,10 @@ export default function IdeasPage() {
                   {t('ideas.content')}
                 </label>
                 <textarea
+                  ref={contentTextareaRef}
                   value={formContent}
-                  onChange={(e) => setFormContent(e.target.value)}
+                  onChange={handleContentChange}
+                  onKeyDown={handleContentKeyDown}
                   placeholder={t('ideas.contentPlaceholder')}
                   rows={4}
                   className={`${inputClass} resize-none`}

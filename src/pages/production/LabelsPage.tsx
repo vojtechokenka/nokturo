@@ -345,17 +345,17 @@ export default function LabelsPage() {
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/40 backdrop-blur-sm">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 mb-2">
+          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
+            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">
               {t('common.confirm')}
             </h3>
-            <p className="text-nokturo-600 text-sm mb-4">
+            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
               {t('labels.deleteConfirm')}
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 hover:text-nokturo-800 transition-colors"
+                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
               >
                 {t('common.cancel')}
               </button>
