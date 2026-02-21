@@ -523,7 +523,13 @@ function BlockRenderer({
                 <button
                   key={lvl}
                   type="button"
-                  onClick={() => onUpdate(block.id, { level: lvl })}
+                  onClick={() => {
+                    if (block.level === lvl) {
+                      onUpdate(block.id, { type: 'paragraph', size: 'normal', content: block.text });
+                    } else {
+                      onUpdate(block.id, { level: lvl });
+                    }
+                  }}
                   className={`px-2 py-0.5 rounded text-xs font-medium ${
                     block.level === lvl
                       ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
@@ -1205,7 +1211,13 @@ export function RichTextBlockEditor({
   const updateBlock = useCallback(
     (id: string, data: Partial<RichTextBlock>) => {
       onChange(
-        blocks.map((b) => (b.id === id ? { ...b, ...data } : b)) as RichTextBlock[],
+        blocks.map((b) => {
+          if (b.id !== id) return b;
+          if (data.type && data.type !== b.type) {
+            return { id: b.id, ...data } as RichTextBlock;
+          }
+          return { ...b, ...data } as RichTextBlock;
+        }),
       );
     },
     [blocks, onChange],

@@ -464,7 +464,33 @@ export function RichTextArea({
       restoreSelection();
       const active = getActiveBlock(editorRef.current);
       const tag = `H${level}`;
-      document.execCommand('formatBlock', false, active === tag ? 'p' : `h${level}`);
+
+      if (active === tag) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0).cloneRange();
+          let node: Node | null = sel.anchorNode;
+          if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+          while (node && node !== editorRef.current) {
+            if ((node as Element).tagName === tag) {
+              const p = document.createElement('p');
+              while (node.firstChild) p.appendChild(node.firstChild);
+              node.parentNode!.replaceChild(p, node);
+              try {
+                sel.removeAllRanges();
+                sel.addRange(range);
+              } catch {
+                placeCursorIn(p, false);
+              }
+              break;
+            }
+            node = node.parentNode;
+          }
+        }
+      } else {
+        document.execCommand('formatBlock', false, `h${level}`);
+      }
+
       saveSelection();
       emitChange();
     },
