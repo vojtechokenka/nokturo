@@ -40,6 +40,15 @@ function isOverdue(deadline: string | null): boolean {
   return new Date(deadline) < today;
 }
 
+function isRecentlyOverdue(deadline: string | null): boolean {
+  if (!deadline) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dl = new Date(deadline);
+  const daysPast = (today.getTime() - dl.getTime()) / 86_400_000;
+  return daysPast > 0 && daysPast <= URGENT_DAYS;
+}
+
 function daysUntilPermanentDelete(deletedAt: string | null): number {
   if (!deletedAt) return DELETE_RETENTION_DAYS;
   const deleted = new Date(deletedAt).getTime();
@@ -470,6 +479,7 @@ export default function TasksPage() {
         <div className="space-y-2">
           {displayed.map((task) => {
             const overdue = task.status === 'active' && isOverdue(task.deadline);
+            const recentlyOverdue = task.status === 'active' && isRecentlyOverdue(task.deadline);
             const urgent = task.status === 'active' && isUrgent(task.deadline) && !overdue;
             const isCompleted = task.status === 'completed';
             const isDeleted = task.status === 'deleted';
@@ -478,7 +488,7 @@ export default function TasksPage() {
             return (
               <div
                 key={task.id}
-                className={`group flex items-start gap-3 p-4 rounded-xl transition-colors cursor-pointer ${
+                className={`group flex items-center gap-3 p-4 rounded-xl transition-colors cursor-pointer ${
                   isDeleted
                     ? 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20'
                     : isCompleted
@@ -495,7 +505,7 @@ export default function TasksPage() {
                       e.stopPropagation();
                       isCompleted ? reopenTask(task.id) : markCompleted(task.id);
                     }}
-                    className={`mt-0.5 shrink-0 w-4 h-4 rounded-[3px] flex items-center justify-center transition-colors ${
+                    className={`shrink-0 w-4 h-4 rounded-[3px] flex items-center justify-center transition-colors ${
                       isCompleted
                         ? 'bg-green-600 dark:bg-green-500 text-white'
                         : 'bg-nokturo-200/60 dark:bg-nokturo-700/60 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
@@ -507,101 +517,91 @@ export default function TasksPage() {
                 )}
 
                 {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                <div className="flex-1 min-w-0 flex items-center gap-3 flex-wrap">
+                  <span
+                    className={`text-sm font-medium truncate ${
+                      isCompleted
+                        ? 'line-through text-nokturo-400 dark:text-nokturo-500'
+                        : isDeleted
+                          ? 'text-nokturo-400 dark:text-nokturo-500'
+                          : 'text-nokturo-900 dark:text-nokturo-100'
+                    }`}
+                  >
+                    {task.title}
+                  </span>
+
+                  {/* Deadline badge */}
+                  {task.deadline && !isDeleted && (
                     <span
-                      className={`text-sm font-medium truncate ${
-                        isCompleted
-                          ? 'line-through text-nokturo-400 dark:text-nokturo-500'
-                          : isDeleted
-                            ? 'text-nokturo-400 dark:text-nokturo-500'
-                            : 'text-nokturo-900 dark:text-nokturo-100'
+                      className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full shrink-0 ${
+                        recentlyOverdue
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                          : overdue || urgent
+                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                            : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
                       }`}
                     >
-                      {task.title}
+                      {recentlyOverdue ? (
+                        <AlertTriangle className="w-3 h-3" />
+                      ) : overdue || urgent ? (
+                        <Clock className="w-3 h-3" />
+                      ) : (
+                        <Calendar className="w-3 h-3" />
+                      )}
+                      {overdue && `${t('tasks.overdue')}: `}
+                      {formatDeadline(task.deadline)}
                     </span>
-                  </div>
-
-                  {task.description && !isDeleted && (
-                    <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5 line-clamp-1">
-                      {task.description.replace(/<[^>]*>/g, '')}
-                    </p>
                   )}
 
-                  <div className="flex items-center gap-3 mt-2 flex-wrap">
-                    {/* Deadline badge */}
-                    {task.deadline && !isDeleted && (
-                      <span
-                        className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
-                          overdue
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                            : urgent
-                              ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
-                              : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
-                        }`}
-                      >
-                        {overdue ? (
-                          <AlertTriangle className="w-3 h-3" />
-                        ) : urgent ? (
-                          <Clock className="w-3 h-3" />
+                  {/* Assignees */}
+                  {task.assignees && task.assignees.length > 0 && !isDeleted && (
+                    <div className="flex items-center -space-x-1 shrink-0">
+                      {task.assignees.slice(0, 3).map((a) => {
+                        const p = profileMap[a.user_id];
+                        return p?.avatar_url ? (
+                          <img
+                            key={a.user_id}
+                            src={p.avatar_url}
+                            alt={profileName(a.user_id)}
+                            title={profileName(a.user_id)}
+                            className="w-5 h-5 rounded-full object-cover border border-white dark:border-nokturo-800"
+                          />
                         ) : (
-                          <Calendar className="w-3 h-3" />
-                        )}
-                        {overdue && `${t('tasks.overdue')}: `}
-                        {formatDeadline(task.deadline)}
-                      </span>
-                    )}
-
-                    {/* Assignees */}
-                    {task.assignees && task.assignees.length > 0 && !isDeleted && (
-                      <div className="flex items-center -space-x-1">
-                        {task.assignees.slice(0, 3).map((a) => {
-                          const p = profileMap[a.user_id];
-                          return p?.avatar_url ? (
-                            <img
-                              key={a.user_id}
-                              src={p.avatar_url}
-                              alt={profileName(a.user_id)}
-                              title={profileName(a.user_id)}
-                              className="w-5 h-5 rounded-full object-cover border border-white dark:border-nokturo-800"
-                            />
-                          ) : (
-                            <span
-                              key={a.user_id}
-                              title={profileName(a.user_id)}
-                              className="w-5 h-5 rounded-full bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center text-[9px] text-white font-medium border border-white dark:border-nokturo-800"
-                            >
-                              {(profileMap[a.user_id]?.first_name?.[0] || '?').toUpperCase()}
-                            </span>
-                          );
-                        })}
-                        {task.assignees.length > 3 && (
-                          <span className="text-[10px] text-nokturo-500 ml-1.5">
-                            +{task.assignees.length - 3}
+                          <span
+                            key={a.user_id}
+                            title={profileName(a.user_id)}
+                            className="w-5 h-5 rounded-full bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center text-[9px] text-white font-medium border border-white dark:border-nokturo-800"
+                          >
+                            {(profileMap[a.user_id]?.first_name?.[0] || '?').toUpperCase()}
                           </span>
-                        )}
-                      </div>
-                    )}
+                        );
+                      })}
+                      {task.assignees.length > 3 && (
+                        <span className="text-[10px] text-nokturo-500 ml-1.5">
+                          +{task.assignees.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
 
-                    {/* Completed date */}
-                    {isCompleted && task.completed_at && (
-                      <span className="text-xs text-green-600 dark:text-green-400">
-                        {t('tasks.completedOn')}{' '}
-                        {new Date(task.completed_at).toLocaleDateString(
-                          user?.language === 'cs' ? 'cs-CZ' : 'en-US',
-                          { day: 'numeric', month: 'short' }
-                        )}
-                      </span>
-                    )}
+                  {/* Completed date */}
+                  {isCompleted && task.completed_at && (
+                    <span className="text-xs text-green-600 dark:text-green-400 shrink-0">
+                      {t('tasks.completedOn')}{' '}
+                      {new Date(task.completed_at).toLocaleDateString(
+                        user?.language === 'cs' ? 'cs-CZ' : 'en-US',
+                        { day: 'numeric', month: 'short' }
+                      )}
+                    </span>
+                  )}
 
-                    {/* Deleted countdown */}
-                    {isDeleted && (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
-                        <Clock className="w-3 h-3" />
-                        {t('tasks.autoDeleteIn')} {daysLeft} {daysLeft === 1 ? t('tasks.day') : t('tasks.days')}
-                      </span>
-                    )}
-                  </div>
+                  {/* Deleted countdown */}
+                  {isDeleted && (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
+                      <Clock className="w-3 h-3" />
+                      {t('tasks.autoDeleteIn')} {daysLeft} {daysLeft === 1 ? t('tasks.day') : t('tasks.days')}
+                    </span>
+                  )}
                 </div>
 
                 {/* Actions */}

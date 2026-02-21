@@ -49,6 +49,14 @@ export function TaskDetailSlideOver({
     return new Date(task.deadline) < today;
   })();
 
+  const isRecentlyOverdue = (() => {
+    if (!task.deadline || task.status !== 'active') return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const daysPast = (today.getTime() - new Date(task.deadline).getTime()) / 86_400_000;
+    return daysPast > 0 && daysPast <= 7;
+  })();
+
   const isUrgent = (() => {
     if (!task.deadline || task.status !== 'active' || isOverdue) return false;
     const diff = new Date(task.deadline).getTime() - Date.now();
@@ -163,16 +171,16 @@ export function TaskDetailSlideOver({
               </label>
               <span
                 className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
-                  isOverdue
+                  isRecentlyOverdue
                     ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                    : isUrgent
+                    : isOverdue || isUrgent
                       ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
                       : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
                 }`}
               >
-                {isOverdue ? (
+                {isRecentlyOverdue ? (
                   <AlertTriangle className="w-3 h-3" />
-                ) : isUrgent ? (
+                ) : isOverdue || isUrgent ? (
                   <Clock className="w-3 h-3" />
                 ) : (
                   <Calendar className="w-3 h-3" />

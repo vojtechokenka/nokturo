@@ -186,3 +186,77 @@ body {
   background: #ef4444;
   color: #fff;
 }
+
+/* RichTextArea – checklist */
+.rta-checklist {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin: 4px 0;
+}
+.rta-checklist li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 3px 0;
+}
+.rta-checklist li input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: 1.5px solid #a3a3a3;
+  border-radius: 3px;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: all 0.15s;
+  position: relative;
+  background: transparent;
+}
+.rta-checklist li input[type="checkbox"]:checked {
+  background: #171717;
+  border-color: #171717;
+}
+.rta-checklist li input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.dark .rta-checklist li input[type="checkbox"] {
+  border-color: #737373;
+}
+.dark .rta-checklist li input[type="checkbox"]:checked {
+  background: #fff;
+  border-color: #fff;
+}
+.dark .rta-checklist li input[type="checkbox"]:checked::after {
+  border-color: #171717;
+}
+.rta-checklist li.checked > span {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+.rta-checklist li > span {
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+
+/* RichTextArea – divider */
+.rta-divider,
+.rta-editor hr {
+  border: none;
+  height: 1px;
+  background: #d4d4d4;
+  margin: 12px 0;
+}
+.dark .rta-divider,
+.dark .rta-editor hr {
+  background: #525252;
+}

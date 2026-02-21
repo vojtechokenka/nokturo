@@ -4,11 +4,10 @@ import {
   Italic,
   List,
   ListOrdered,
+  ListChecks,
+  Minus,
   Link2,
   ImageIcon,
-  Maximize2,
-  Minimize2,
-  X,
   Loader2,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -170,13 +169,39 @@ export function RichTextArea({
     }
   }, []);
 
+  const normalizeChecklists = useCallback(() => {
+    if (!editorRef.current) return;
+    const lists = editorRef.current.querySelectorAll('.rta-checklist');
+    lists.forEach((ul) => {
+      ul.querySelectorAll('li').forEach((li) => {
+        const hasCheckbox = li.querySelector('input[type="checkbox"]');
+        const hasSpan = li.querySelector('span');
+        if (!hasCheckbox) {
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          li.insertBefore(cb, li.firstChild);
+        }
+        if (!hasSpan) {
+          const span = document.createElement('span');
+          while (li.childNodes.length > 1) {
+            const node = li.childNodes[1];
+            span.appendChild(node);
+          }
+          if (!span.textContent) span.innerHTML = '\u200B';
+          li.appendChild(span);
+        }
+      });
+    });
+  }, []);
+
   const emitChange = useCallback(() => {
     if (!editorRef.current) return;
+    normalizeChecklists();
     isInternalChange.current = true;
     const html = editorRef.current.innerHTML;
     onChange(html === '<br>' ? '' : html);
     forceUpdate((n) => n + 1);
-  }, [onChange]);
+  }, [onChange, normalizeChecklists]);
 
   const handleInput = useCallback(() => {
     saveSelection();
@@ -199,6 +224,87 @@ export function RichTextArea({
         e.preventDefault();
         saveSelection();
         setLinkPopoverOpen(true);
+      }
+
+      if (e.key === 'Enter') {
+        const sel = window.getSelection();
+        let node: Node | null = sel?.anchorNode ?? null;
+        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        const li = (node as Element | null)?.closest?.('.rta-checklist li');
+        if (li) {
+          e.preventDefault();
+          const span = li.querySelector('span');
+          const text = span?.textContent?.replace(/\u200B/g, '').trim() || '';
+
+          if (!text) {
+            const ul = li.closest('.rta-checklist')!;
+            li.remove();
+            const p = document.createElement('p');
+            p.innerHTML = '<br>';
+            if (ul.children.length === 0) {
+              ul.replaceWith(p);
+            } else {
+              ul.after(p);
+            }
+            const range = document.createRange();
+            range.selectNodeContents(p);
+            range.collapse(false);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+          } else {
+            const newLi = document.createElement('li');
+            newLi.innerHTML = '<input type="checkbox" /><span>\u200B</span>';
+            li.after(newLi);
+            const newSpan = newLi.querySelector('span')!;
+            const range = document.createRange();
+            range.selectNodeContents(newSpan);
+            range.collapse(false);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+          }
+          saveSelection();
+          emitChange();
+        }
+      }
+
+      if (e.key === 'Backspace') {
+        const sel = window.getSelection();
+        let node: Node | null = sel?.anchorNode ?? null;
+        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        const li = (node as Element | null)?.closest?.('.rta-checklist li');
+        if (li) {
+          const span = li.querySelector('span');
+          const text = span?.textContent?.replace(/\u200B/g, '').trim() || '';
+          const ul = li.closest('.rta-checklist')!;
+
+          if (!text) {
+            e.preventDefault();
+            const prevLi = li.previousElementSibling as HTMLElement | null;
+            li.remove();
+
+            if (ul.children.length === 0) {
+              const p = document.createElement('p');
+              p.innerHTML = '<br>';
+              ul.replaceWith(p);
+              const range = document.createRange();
+              range.selectNodeContents(p);
+              range.collapse(false);
+              sel?.removeAllRanges();
+              sel?.addRange(range);
+            } else if (prevLi) {
+              const prevSpan = prevLi.querySelector('span');
+              if (prevSpan) {
+                const range = document.createRange();
+                range.selectNodeContents(prevSpan);
+                range.collapse(false);
+                sel?.removeAllRanges();
+                sel?.addRange(range);
+              }
+            }
+            saveSelection();
+            emitChange();
+          }
+        }
       }
     },
     [emitChange, saveSelection],
@@ -235,6 +341,35 @@ export function RichTextArea({
     },
     [restoreSelection, saveSelection, emitChange],
   );
+
+  const insertChecklist = useCallback(() => {
+    restoreSelection();
+    const html =
+      '<ul class="rta-checklist">' +
+      '<li><input type="checkbox" /><span>&#8203;</span></li>' +
+      '</ul><p><br></p>';
+    document.execCommand('insertHTML', false, html);
+    // place cursor in the first item
+    const items = editorRef.current?.querySelectorAll('.rta-checklist li span');
+    if (items && items.length > 0) {
+      const last = items[items.length - 1];
+      const range = document.createRange();
+      range.selectNodeContents(last);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+    saveSelection();
+    emitChange();
+  }, [restoreSelection, saveSelection, emitChange]);
+
+  const insertDivider = useCallback(() => {
+    restoreSelection();
+    document.execCommand('insertHTML', false, '<hr class="rta-divider" /><p><br></p>');
+    saveSelection();
+    emitChange();
+  }, [restoreSelection, saveSelection, emitChange]);
 
   const insertLink = useCallback(
     (url: string, text: string) => {
@@ -282,6 +417,16 @@ export function RichTextArea({
   const handleEditorClick = useCallback(
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
+
+      if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
+        const checkbox = target as HTMLInputElement;
+        const li = checkbox.closest('li');
+        if (li) {
+          li.classList.toggle('checked', checkbox.checked);
+          emitChange();
+        }
+        return;
+      }
 
       if (target.matches('[data-fit]')) {
         e.preventDefault();
@@ -361,6 +506,13 @@ export function RichTextArea({
         >
           <ListOrdered className="w-3.5 h-3.5" />
         </ToolbarButton>
+        <ToolbarButton
+          active={false}
+          onClick={insertChecklist}
+          title="To-do list"
+        >
+          <ListChecks className="w-3.5 h-3.5" />
+        </ToolbarButton>
 
         <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
 
@@ -403,6 +555,17 @@ export function RichTextArea({
             )}
           </ToolbarButton>
         )}
+
+        <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
+
+        {/* Divider */}
+        <ToolbarButton
+          active={false}
+          onClick={insertDivider}
+          title={t('richText.divider') || 'Divider'}
+        >
+          <Minus className="w-3.5 h-3.5" />
+        </ToolbarButton>
 
         {/* Link popover */}
         {linkPopoverOpen && (
