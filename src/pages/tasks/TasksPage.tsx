@@ -185,6 +185,19 @@ export default function TasksPage() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
+  const fetchCommentCounts = useCallback(async (taskIds: string[]) => {
+    if (taskIds.length === 0) { setCommentCounts({}); return; }
+    const { data } = await supabase
+      .from('task_comments')
+      .select('task_id')
+      .in('task_id', taskIds);
+    const counts: Record<string, number> = {};
+    (data || []).forEach((r: { task_id: string }) => {
+      counts[r.task_id] = (counts[r.task_id] || 0) + 1;
+    });
+    setCommentCounts(counts);
+  }, []);
+
   const fetchTasks = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
@@ -235,19 +248,6 @@ export default function TasksPage() {
     fetchCommentCounts(taskIds);
     setLoading(false);
   }, [userId, fetchCommentCounts]);
-
-  const fetchCommentCounts = useCallback(async (taskIds: string[]) => {
-    if (taskIds.length === 0) { setCommentCounts({}); return; }
-    const { data } = await supabase
-      .from('task_comments')
-      .select('task_id')
-      .in('task_id', taskIds);
-    const counts: Record<string, number> = {};
-    (data || []).forEach((r: { task_id: string }) => {
-      counts[r.task_id] = (counts[r.task_id] || 0) + 1;
-    });
-    setCommentCounts(counts);
-  }, []);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
