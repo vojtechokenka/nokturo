@@ -20,6 +20,7 @@ import {
   Trash2,
   CheckCircle2,
   Undo2,
+  MessageSquare,
 } from 'lucide-react';
 
 type Tab = 'active' | 'completed' | 'deleted';
@@ -174,6 +175,7 @@ export default function TasksPage() {
 
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [profileMap, setProfileMap] = useState<Record<string, TaskProfile>>({});
+  const [commentCounts, setCommentCounts] = useState<Record<string, number>>({});
 
   const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToasts((prev) => [...prev, { id: crypto.randomUUID(), message, type }]);
@@ -230,8 +232,22 @@ export default function TasksPage() {
     }));
 
     setTasks(enriched);
+    fetchCommentCounts(taskIds);
     setLoading(false);
-  }, [userId]);
+  }, [userId, fetchCommentCounts]);
+
+  const fetchCommentCounts = useCallback(async (taskIds: string[]) => {
+    if (taskIds.length === 0) { setCommentCounts({}); return; }
+    const { data } = await supabase
+      .from('task_comments')
+      .select('task_id')
+      .in('task_id', taskIds);
+    const counts: Record<string, number> = {};
+    (data || []).forEach((r: { task_id: string }) => {
+      counts[r.task_id] = (counts[r.task_id] || 0) + 1;
+    });
+    setCommentCounts(counts);
+  }, []);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
@@ -343,6 +359,7 @@ export default function TasksPage() {
   };
 
   const permanentDeleteTask = async (taskId: string) => {
+    await supabase.from('task_comments').delete().eq('task_id', taskId);
     await supabase.from('task_assignees').delete().eq('task_id', taskId);
     await supabase.from('tasks').delete().eq('id', taskId);
     addToast(t('tasks.deleteForever'));
@@ -441,6 +458,7 @@ export default function TasksPage() {
               onClick={async () => {
                 if (!window.confirm(t('tasks.deleteAllConfirm'))) return;
                 for (const task of deletedTasks) {
+                  await supabase.from('task_comments').delete().eq('task_id', task.id);
                   await supabase.from('task_assignees').delete().eq('task_id', task.id);
                   await supabase.from('tasks').delete().eq('id', task.id);
                 }
@@ -592,6 +610,14 @@ export default function TasksPage() {
                         user?.language === 'cs' ? 'cs-CZ' : 'en-US',
                         { day: 'numeric', month: 'short' }
                       )}
+                    </span>
+                  )}
+
+                  {/* Comment count */}
+                  {!isDeleted && (commentCounts[task.id] || 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-400 shrink-0">
+                      <MessageSquare className="w-3 h-3" />
+                      {commentCounts[task.id]}
                     </span>
                   )}
 

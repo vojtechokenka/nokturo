@@ -246,6 +246,10 @@ body {
   flex: 1;
   min-width: 0;
   outline: none;
+  word-break: break-word;
+}
+.rta-checklist li > input[type="checkbox"] {
+  user-select: none;
 }
 
 /* RichTextArea – divider */

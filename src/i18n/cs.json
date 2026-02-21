@@ -882,7 +882,9 @@
     },
     "createdBy": "Vytvořil/a",
     "deleteAll": "Smazat vše",
-    "deleteAllConfirm": "Opravdu chcete trvale smazat všechny smazané úkoly? Tuto akci nelze vrátit."
+    "deleteAllConfirm": "Opravdu chcete trvale smazat všechny smazané úkoly? Tuto akci nelze vrátit.",
+    "comments": "Komentáře",
+    "commentsBeFirst": "Začněte konverzaci o tomto úkolu."
   },
   "notifications": {
     "title": "Oznámení",

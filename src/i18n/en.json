@@ -876,7 +876,9 @@
     },
     "createdBy": "Created by",
     "deleteAll": "Delete all",
-    "deleteAllConfirm": "Are you sure you want to permanently delete all deleted tasks? This cannot be undone."
+    "deleteAllConfirm": "Are you sure you want to permanently delete all deleted tasks? This cannot be undone.",
+    "comments": "Comments",
+    "commentsBeFirst": "Start the conversation about this task."
   },
   "notifications": {
     "title": "Notifications",

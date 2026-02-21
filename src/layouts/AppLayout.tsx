@@ -13,9 +13,8 @@ export function AppLayout() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const toggleSidebar = useSidebarStore((s) => s.toggle);
-  const closeSidebar = useSidebarStore((s) => s.close);
   const toggleCollapsed = useSidebarStore((s) => s.toggleCollapsed);
-
+  const closeSidebar = useSidebarStore((s) => s.close);
   if (isLoading) {
     return (
       <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 items-center justify-center">

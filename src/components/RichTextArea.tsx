@@ -66,6 +66,41 @@ function getActiveBlock(editor: HTMLElement | null): string | null {
   return null;
 }
 
+/** Returns the text content of a checklist <span>, stripping zero-width spaces */
+function checklistItemText(li: Element): string {
+  const span = li.querySelector(':scope > span');
+  return span?.textContent?.replace(/\u200B/g, '').trim() || '';
+}
+
+/** True when the caret sits at offset 0 inside (or before) the <span> of a checklist li */
+function isCursorAtSpanStart(li: Element): boolean {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return true;
+  const span = li.querySelector(':scope > span');
+  if (!span) return true;
+  if (!span.contains(sel.anchorNode)) return true;
+  if (sel.anchorNode === span) return sel.anchorOffset === 0;
+  if (sel.anchorNode?.nodeType === Node.TEXT_NODE) {
+    if (sel.anchorOffset > 0) return false;
+    let n: Node | null = sel.anchorNode;
+    while (n && n !== span) {
+      if (n.previousSibling) return false;
+      n = n.parentNode;
+    }
+    return true;
+  }
+  return false;
+}
+
+function placeCursorIn(node: Node, atEnd = false) {
+  const sel = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(node);
+  range.collapse(!atEnd);
+  sel?.removeAllRanges();
+  sel?.addRange(range);
+}
+
 function LinkPopover({
   onInsert,
   onClose,
@@ -171,32 +206,30 @@ export function RichTextArea({
 
   const normalizeChecklists = useCallback(() => {
     if (!editorRef.current) return;
-    const lists = editorRef.current.querySelectorAll('.rta-checklist');
-    lists.forEach((ul) => {
-      ul.querySelectorAll('li').forEach((li) => {
-        const hasCheckbox = li.querySelector('input[type="checkbox"]');
-        const hasSpan = li.querySelector('span');
-        if (!hasCheckbox) {
-          const cb = document.createElement('input');
-          cb.type = 'checkbox';
-          li.insertBefore(cb, li.firstChild);
+    editorRef.current.querySelectorAll('.rta-checklist li').forEach((li) => {
+      if (!li.querySelector(':scope > input[type="checkbox"]')) {
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        li.insertBefore(cb, li.firstChild);
+      }
+      if (!li.querySelector(':scope > span')) {
+        const span = document.createElement('span');
+        const cb = li.querySelector(':scope > input[type="checkbox"]')!;
+        while (cb.nextSibling) {
+          span.appendChild(cb.nextSibling);
         }
-        if (!hasSpan) {
-          const span = document.createElement('span');
-          while (li.childNodes.length > 1) {
-            const node = li.childNodes[1];
-            span.appendChild(node);
-          }
-          if (!span.textContent) span.innerHTML = '\u200B';
-          li.appendChild(span);
-        }
-      });
+        if (!span.textContent) span.innerHTML = '\u200B';
+        li.appendChild(span);
+      }
     });
   }, []);
 
   const emitChange = useCallback(() => {
     if (!editorRef.current) return;
-    normalizeChecklists();
+    // only normalize existing checklists, don't re-create deleted ones
+    if (editorRef.current.querySelector('.rta-checklist')) {
+      normalizeChecklists();
+    }
     isInternalChange.current = true;
     const html = editorRef.current.innerHTML;
     onChange(html === '<br>' ? '' : html);
@@ -208,101 +241,197 @@ export function RichTextArea({
     emitChange();
   }, [saveSelection, emitChange]);
 
+  /* ---------- keyboard ---------- */
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
+      /* --- shortcuts --- */
       if (e.key === 'b' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         document.execCommand('bold', false);
         emitChange();
+        return;
       }
       if (e.key === 'i' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         document.execCommand('italic', false);
         emitChange();
+        return;
       }
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         saveSelection();
         setLinkPopoverOpen(true);
+        return;
       }
 
-      if (e.key === 'Enter') {
-        const sel = window.getSelection();
-        let node: Node | null = sel?.anchorNode ?? null;
-        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
-        const li = (node as Element | null)?.closest?.('.rta-checklist li');
-        if (li) {
-          e.preventDefault();
-          const span = li.querySelector('span');
-          const text = span?.textContent?.replace(/\u200B/g, '').trim() || '';
+      /* --- resolve current checklist context --- */
+      const sel = window.getSelection();
+      let anchorEl: Node | null = sel?.anchorNode ?? null;
+      if (anchorEl?.nodeType === Node.TEXT_NODE) anchorEl = anchorEl.parentElement;
+      const li = (anchorEl as Element | null)?.closest?.('.rta-checklist li');
 
-          if (!text) {
-            const ul = li.closest('.rta-checklist')!;
-            li.remove();
+      /* ====== ENTER ====== */
+      if (e.key === 'Enter' && li) {
+        e.preventDefault();
+        const span = li.querySelector(':scope > span');
+        const text = checklistItemText(li);
+        const ul = li.closest('.rta-checklist')!;
+
+        // Empty item → exit the checklist
+        if (!text) {
+          li.remove();
+          const p = document.createElement('p');
+          p.innerHTML = '<br>';
+          if (ul.children.length === 0) {
+            ul.replaceWith(p);
+          } else {
+            ul.after(p);
+          }
+          placeCursorIn(p);
+          saveSelection();
+          emitChange();
+          return;
+        }
+
+        // Cursor at the very start of the span (or before checkbox) → insert empty item BEFORE
+        if (isCursorAtSpanStart(li)) {
+          const newLi = document.createElement('li');
+          newLi.innerHTML = '<input type="checkbox" /><span>\u200B</span>';
+          li.before(newLi);
+          // keep cursor on current item's span
+          if (span) placeCursorIn(span, false);
+          saveSelection();
+          emitChange();
+          return;
+        }
+
+        // Cursor in the middle or end → split text at cursor
+        if (span && sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const afterRange = document.createRange();
+          afterRange.setStart(range.startContainer, range.startOffset);
+          afterRange.setEndAfter(span.lastChild || span);
+          const fragment = afterRange.extractContents();
+
+          const newLi = document.createElement('li');
+          const newSpan = document.createElement('span');
+          newSpan.appendChild(fragment);
+          if (!newSpan.textContent?.replace(/\u200B/g, '').trim()) {
+            newSpan.innerHTML = '\u200B';
+          }
+          newLi.innerHTML = '<input type="checkbox" />';
+          newLi.appendChild(newSpan);
+          li.after(newLi);
+
+          // if current span became empty, put a zero-width space
+          if (!span.textContent?.replace(/\u200B/g, '').trim()) {
+            span.innerHTML = '\u200B';
+          }
+
+          placeCursorIn(newSpan, false);
+        }
+
+        saveSelection();
+        emitChange();
+        return;
+      }
+
+      /* ====== BACKSPACE ====== */
+      if (e.key === 'Backspace' && li) {
+        const span = li.querySelector(':scope > span');
+        const text = checklistItemText(li);
+        const ul = li.closest('.rta-checklist')!;
+        const atStart = isCursorAtSpanStart(li);
+
+        // Empty item → remove it
+        if (!text) {
+          e.preventDefault();
+          const prevLi = li.previousElementSibling as HTMLElement | null;
+          li.remove();
+
+          if (ul.children.length === 0) {
             const p = document.createElement('p');
             p.innerHTML = '<br>';
-            if (ul.children.length === 0) {
-              ul.replaceWith(p);
-            } else {
-              ul.after(p);
-            }
-            const range = document.createRange();
-            range.selectNodeContents(p);
-            range.collapse(false);
-            sel?.removeAllRanges();
-            sel?.addRange(range);
-          } else {
-            const newLi = document.createElement('li');
-            newLi.innerHTML = '<input type="checkbox" /><span>\u200B</span>';
-            li.after(newLi);
-            const newSpan = newLi.querySelector('span')!;
-            const range = document.createRange();
-            range.selectNodeContents(newSpan);
-            range.collapse(false);
-            sel?.removeAllRanges();
-            sel?.addRange(range);
+            ul.replaceWith(p);
+            placeCursorIn(p);
+          } else if (prevLi) {
+            const prevSpan = prevLi.querySelector(':scope > span');
+            if (prevSpan) placeCursorIn(prevSpan, true);
           }
           saveSelection();
           emitChange();
+          return;
+        }
+
+        // Cursor at start of text + has text → convert to paragraph or merge up
+        if (atStart) {
+          e.preventDefault();
+          const prevLi = li.previousElementSibling as HTMLElement | null;
+
+          if (prevLi) {
+            // Merge current text into previous item's span
+            const prevSpan = prevLi.querySelector(':scope > span');
+            if (prevSpan && span) {
+              // mark merge point to place cursor there
+              const cursorMark = document.createTextNode('');
+              prevSpan.appendChild(cursorMark);
+              while (span.firstChild) {
+                prevSpan.appendChild(span.firstChild);
+              }
+              li.remove();
+              // place cursor at merge point
+              const r = document.createRange();
+              r.setStartBefore(cursorMark);
+              r.collapse(true);
+              sel?.removeAllRanges();
+              sel?.addRange(r);
+              cursorMark.remove();
+            }
+          } else {
+            // First item → convert to paragraph, keep text
+            const p = document.createElement('p');
+            if (span) {
+              while (span.firstChild) p.appendChild(span.firstChild);
+            }
+            if (!p.textContent) p.innerHTML = '<br>';
+            li.remove();
+            if (ul.children.length === 0) {
+              ul.replaceWith(p);
+            } else {
+              ul.before(p);
+            }
+            placeCursorIn(p, false);
+          }
+          saveSelection();
+          emitChange();
+          return;
         }
       }
 
-      if (e.key === 'Backspace') {
-        const sel = window.getSelection();
-        let node: Node | null = sel?.anchorNode ?? null;
-        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
-        const li = (node as Element | null)?.closest?.('.rta-checklist li');
-        if (li) {
-          const span = li.querySelector('span');
-          const text = span?.textContent?.replace(/\u200B/g, '').trim() || '';
-          const ul = li.closest('.rta-checklist')!;
+      /* ====== DELETE (forward) ====== */
+      if (e.key === 'Delete' && li) {
+        const span = li.querySelector(':scope > span');
+        const nextLi = li.nextElementSibling as HTMLElement | null;
 
-          if (!text) {
+        // Check if cursor is at end of span
+        if (span && sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const testRange = document.createRange();
+          testRange.selectNodeContents(span);
+          testRange.setStart(range.endContainer, range.endOffset);
+          const afterText = testRange.toString().replace(/\u200B/g, '');
+
+          if (!afterText && nextLi) {
             e.preventDefault();
-            const prevLi = li.previousElementSibling as HTMLElement | null;
-            li.remove();
-
-            if (ul.children.length === 0) {
-              const p = document.createElement('p');
-              p.innerHTML = '<br>';
-              ul.replaceWith(p);
-              const range = document.createRange();
-              range.selectNodeContents(p);
-              range.collapse(false);
-              sel?.removeAllRanges();
-              sel?.addRange(range);
-            } else if (prevLi) {
-              const prevSpan = prevLi.querySelector('span');
-              if (prevSpan) {
-                const range = document.createRange();
-                range.selectNodeContents(prevSpan);
-                range.collapse(false);
-                sel?.removeAllRanges();
-                sel?.addRange(range);
-              }
+            const nextSpan = nextLi.querySelector(':scope > span');
+            if (nextSpan) {
+              while (nextSpan.firstChild) span.appendChild(nextSpan.firstChild);
             }
+            nextLi.remove();
             saveSelection();
             emitChange();
+            return;
           }
         }
       }
@@ -349,16 +478,9 @@ export function RichTextArea({
       '<li><input type="checkbox" /><span>&#8203;</span></li>' +
       '</ul><p><br></p>';
     document.execCommand('insertHTML', false, html);
-    // place cursor in the first item
     const items = editorRef.current?.querySelectorAll('.rta-checklist li span');
     if (items && items.length > 0) {
-      const last = items[items.length - 1];
-      const range = document.createRange();
-      range.selectNodeContents(last);
-      range.collapse(false);
-      const sel = window.getSelection();
-      sel?.removeAllRanges();
-      sel?.addRange(range);
+      placeCursorIn(items[items.length - 1], false);
     }
     saveSelection();
     emitChange();
@@ -418,6 +540,7 @@ export function RichTextArea({
     (e: React.MouseEvent) => {
       const target = e.target as HTMLElement;
 
+      // Checkbox toggle
       if (target.tagName === 'INPUT' && target.getAttribute('type') === 'checkbox') {
         const checkbox = target as HTMLInputElement;
         const li = checkbox.closest('li');
@@ -428,6 +551,18 @@ export function RichTextArea({
         return;
       }
 
+      // Click on <li> itself (not on span) → redirect cursor into span
+      if (target.closest('.rta-checklist li')) {
+        const li = target.closest('.rta-checklist li')!;
+        const span = li.querySelector(':scope > span');
+        if (span && target !== span && !span.contains(target)) {
+          e.preventDefault();
+          placeCursorIn(span, true);
+          return;
+        }
+      }
+
+      // Image controls
       if (target.matches('[data-fit]')) {
         e.preventDefault();
         const fit = target.getAttribute('data-fit');
@@ -600,7 +735,7 @@ export function RichTextArea({
           onKeyDown={handleKeyDown}
           onClick={handleEditorClick}
           onPaste={handlePaste}
-          className="rta-editor px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none overflow-y-auto [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline"
+          className="rta-editor px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none overflow-y-auto [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul:not(.rta-checklist)]:list-disc [&_ul:not(.rta-checklist)]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline"
           style={{ minHeight }}
         />
       </div>

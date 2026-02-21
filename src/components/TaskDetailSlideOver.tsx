@@ -5,14 +5,17 @@ import {
   MoreVertical,
   Pencil,
   Trash2,
+  Check,
   CheckCircle2,
   RotateCcw,
   Calendar,
   Clock,
   AlertTriangle,
   User,
+  MessageSquare,
 } from 'lucide-react';
 import type { Task, TaskProfile } from './TaskSlideOver';
+import { TaskComments } from './TaskComments';
 
 interface TaskDetailSlideOverProps {
   open: boolean;
@@ -37,6 +40,7 @@ export function TaskDetailSlideOver({
 }: TaskDetailSlideOverProps) {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(true);
 
   if (!open || !task) return null;
 
@@ -83,13 +87,52 @@ export function TaskDetailSlideOver({
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 flex animate-slide-in" style={{ maxWidth: 'calc(100vw - 60px)' }}>
+        {/* Comments panel */}
+        {commentsOpen && (
+          <div className="hidden md:flex w-80 lg:w-96 bg-nokturo-50 dark:bg-nokturo-900 border-l border-nokturo-200 dark:border-nokturo-700 flex-col shrink-0">
+            <TaskComments taskId={task.id} />
+          </div>
+        )}
+
+        {/* Task detail panel */}
+        <div className="w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight truncate min-w-0">
-            {task.title}
-          </h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0 gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={() => task.status === 'completed' ? onReopen(task.id) : onMarkCompleted(task.id)}
+              className={`shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors ${
+                task.status === 'completed'
+                  ? 'bg-green-600 dark:bg-green-500 text-white'
+                  : 'border-[1.5px] border-nokturo-300 dark:border-nokturo-500 hover:border-green-500 dark:hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+              }`}
+              title={task.status === 'completed' ? t('tasks.reopen') : t('tasks.markCompleted')}
+            >
+              {task.status === 'completed' && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+            </button>
+            <h3 className={`text-heading-5 font-extralight tracking-tight truncate min-w-0 ${
+              task.status === 'completed'
+                ? 'line-through text-nokturo-400 dark:text-nokturo-500'
+                : 'text-nokturo-900 dark:text-nokturo-100'
+            }`}>
+              {task.title}
+            </h3>
+          </div>
           <div className="flex items-center gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => setCommentsOpen((p) => !p)}
+              className={`hidden md:flex p-2 rounded-lg transition-colors ${
+                commentsOpen
+                  ? 'text-nokturo-800 dark:text-nokturo-200 bg-nokturo-100 dark:bg-nokturo-700'
+                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
+              }`}
+              title={t('tasks.comments')}
+            >
+              <MessageSquare className="w-4 h-4" />
+            </button>
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((p) => !p)}
@@ -100,37 +143,37 @@ export function TaskDetailSlideOver({
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[180px] z-20">
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 w-max z-20">
                     <button
                       onClick={() => { onEdit(task); setMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <Pencil className="w-3.5 h-3.5 shrink-0" />
                       {t('common.edit')}
                     </button>
                     {task.status === 'active' ? (
                       <button
                         onClick={() => { onMarkCompleted(task.id); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                         {t('tasks.markCompleted')}
                       </button>
                     ) : (
                       <button
                         onClick={() => { onReopen(task.id); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                       >
-                        <RotateCcw className="w-3.5 h-3.5" />
+                        <RotateCcw className="w-3.5 h-3.5 shrink-0" />
                         {t('tasks.reopen')}
                       </button>
                     )}
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(task.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5 shrink-0" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -261,6 +304,7 @@ export function TaskDetailSlideOver({
               />
             </div>
           )}
+        </div>
         </div>
       </div>
     </>
