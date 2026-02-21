@@ -858,12 +858,12 @@ export default function MoodboardPage() {
           galleryColumns === 4 ? 'lg:columns-4' :
           galleryColumns === 5 ? 'lg:columns-5' :
           'lg:columns-6'
-        } gap-4 space-y-4`}
+        } gap-4`}
         >
           {sortedItems.map((item) => (
             <div
               key={item.id}
-              className="break-inside-avoid group relative ml-4 cursor-pointer"
+              className="break-inside-avoid group relative mb-4 cursor-pointer"
               onClick={() => { const origIdx = items.findIndex((i) => i.id === item.id); setLightboxIndex(origIdx); setLightboxSubIndex(0); markItemAsRead(item.id); }}
             >
               {/* Unread comments indicator – left of image */}

@@ -1,18 +1,21 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, Link } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { NotificationCenter } from '../components/NotificationCenter';
 import { useAuthStore } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
-import { Loader2, Menu } from 'lucide-react';
+import { Loader2, Menu, PanelLeft, ClipboardList } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 export function AppLayout() {
+  const { t } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const toggleSidebar = useSidebarStore((s) => s.toggle);
   const closeSidebar = useSidebarStore((s) => s.close);
+  const toggleCollapsed = useSidebarStore((s) => s.toggleCollapsed);
 
-  // Show spinner while Supabase restores the session
   if (isLoading) {
     return (
       <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 items-center justify-center">
@@ -21,19 +24,18 @@ export function AppLayout() {
     );
   }
 
-  // Not signed in → send to login
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 
   return (
     <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 text-nokturo-900 dark:text-nokturo-100">
-      {/* Desktop sidebar – always visible at md+ */}
-      <div className="hidden md:block">
+      {/* Desktop sidebar */}
+      <div className="hidden md:flex shrink-0">
         <Sidebar />
       </div>
 
-      {/* Mobile sidebar overlay – only below md */}
+      {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
@@ -47,7 +49,7 @@ export function AppLayout() {
       )}
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Mobile top bar */}
         <div className="flex items-center h-14 px-4 border-b border-nokturo-200 dark:border-nokturo-700 bg-nokturo-100 dark:bg-nokturo-800 md:hidden shrink-0">
           <button
@@ -66,6 +68,28 @@ export function AppLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto bg-nokturo-50 dark:bg-nokturo-900">
+          {/* Sticky top bar */}
+          <div className="sticky top-0 z-30 bg-nokturo-200 dark:bg-nokturo-700">
+            <div className="flex items-center gap-2 px-4 sm:px-6 h-[52px]">
+              <button
+                type="button"
+                onClick={toggleCollapsed}
+                className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-300/50 dark:hover:bg-nokturo-600 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
+                title={t('common.toggleSidebar')}
+              >
+                <PanelLeft className="w-[18px] h-[18px]" strokeLinejoin="miter" strokeLinecap="square" />
+              </button>
+              <div className="flex-1" />
+              <NotificationCenter />
+              <Link
+                to="/tasks"
+                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-nokturo-700 dark:text-nokturo-200 bg-white dark:bg-nokturo-800 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 rounded-lg shadow-sm transition-colors"
+              >
+                <ClipboardList className="w-4 h-4" />
+                {t('tasks.myTasks')}
+              </Link>
+            </div>
+          </div>
           <ErrorBoundary>
             <Outlet />
           </ErrorBoundary>

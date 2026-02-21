@@ -560,8 +560,8 @@ export default function IdeasPage() {
                 )}
                 className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${colorCls} ${
                   active
-                    ? 'ring-2 ring-offset-1 ring-nokturo-900 dark:ring-white ring-offset-white dark:ring-offset-nokturo-900'
-                    : 'opacity-50 hover:opacity-80'
+                    ? ''
+                    : 'opacity-40 hover:opacity-70'
                 }`}
               >
                 {cat.name}
@@ -600,7 +600,7 @@ export default function IdeasPage() {
             const cats = idea.categories ?? (idea.category ? [idea.category] : []);
             const firstCatName = cats[0];
             const cat = firstCatName ? categories.find((c) => c.name === firstCatName) : null;
-            const colorClass = cat ? CATEGORY_BG[cat.color] ?? CATEGORY_BG.gray : CATEGORY_BG.gray;
+            const colorClass = 'bg-amber-200';
             const isDragging = draggedId === idea.id;
             const showDropBefore = dragDropIndex === idx;
             const showDropAfter = dragDropIndex === idx + 1;
@@ -696,7 +696,7 @@ export default function IdeasPage() {
                       </div>
                     ) : null;
                   })()}
-                  <h3 className="text-heading-5 font-normal leading-tight [color:inherit]">
+                  <h3 className="text-heading-5 font-semibold leading-tight [color:inherit]">
                     {idea.title}
                   </h3>
 

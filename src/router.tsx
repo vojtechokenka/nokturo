@@ -44,6 +44,9 @@ import AccountingPage from './pages/business/AccountingPage';
 import ChatPage from './pages/communication/ChatPage';
 import CommentsPage from './pages/communication/CommentsPage';
 
+// Tasks
+import TasksPage from './pages/tasks/TasksPage';
+
 const routes = [
   {
     path: '/',
@@ -93,6 +96,9 @@ const routes = [
           { path: 'communication/chat', element: <ChatPage /> },
           { path: 'communication/comments', element: <CommentsPage /> },
 
+          // Tasks
+          { path: 'tasks', element: <TasksPage /> },
+
           // Settings
           { path: 'settings/account', element: <AccountPage /> },
           { path: 'settings/security', element: <SecurityPage /> },
@@ -107,8 +113,11 @@ const routerOpts = { future: { v7_startTransition: true } };
 
 /**
  * Electron → HashRouter  (file:// protocol, URLs like /#/brand/strategy)
- * Web      → BrowserRouter with /app basename (URLs like /app/brand/strategy)
+ * Web dev  → BrowserRouter at / (Vite serves from root)
+ * Web prod → BrowserRouter with /app basename (deployed at /app/)
  */
+const webBasename = import.meta.env.DEV ? '/' : '/app';
+
 export const router = isElectron()
   ? createHashRouter(routes, routerOpts)
-  : createBrowserRouter(routes, { ...routerOpts, basename: '/app' });
+  : createBrowserRouter(routes, { ...routerOpts, basename: webBasename });

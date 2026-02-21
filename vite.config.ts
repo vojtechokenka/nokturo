@@ -2,8 +2,11 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
-// Načti .env pro build (na Vercelu .env neexistuje — env je v process.env)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const envFile = path.resolve(__dirname, '.env');
 const env = fs.existsSync(envFile)
   ? Object.fromEntries(
@@ -16,8 +19,8 @@ const env = fs.existsSync(envFile)
     )
   : {};
 
-// Načti verzi z package.json (CJS require funguje v Vite config)
-const packageVersion = require('./package.json').version;
+const packageJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
+const packageVersion = packageJson.version;
 
 export default defineConfig({
   plugins: [react()],

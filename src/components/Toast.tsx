@@ -6,6 +6,8 @@ export interface ToastData {
   id: string;
   message: string;
   type: 'success' | 'error' | 'info';
+  actionLabel?: string;
+  onAction?: () => void;
 }
 
 // ── Single toast item ────────────────────────────────────────────
@@ -58,6 +60,17 @@ function ToastItem({ toast, onClose }: { toast: ToastData; onClose: (id: string)
     >
       {icon}
       <span className={`text-sm ${styles.text}`}>{toast.message}</span>
+      {toast.actionLabel && toast.onAction && (
+        <button
+          onClick={() => {
+            toast.onAction!();
+            dismiss();
+          }}
+          className={`ml-1 text-sm font-medium ${styles.text} underline underline-offset-2 hover:opacity-80 transition-opacity`}
+        >
+          {toast.actionLabel}
+        </button>
+      )}
       <button
         onClick={dismiss}
         className={`ml-2 ${styles.text} opacity-70 hover:opacity-100 transition-all`}

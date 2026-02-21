@@ -17,7 +17,7 @@ export interface SimpleDropdownProps {
 }
 
 const triggerBaseClass =
-  'w-full flex items-center justify-between gap-2 px-3 rounded-lg bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors cursor-pointer border-0 focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900 appearance-none text-left';
+  'w-full flex items-center justify-between gap-2 px-3 rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-nokturo-500/30 appearance-none text-left';
 
 export function SimpleDropdown({
   value,

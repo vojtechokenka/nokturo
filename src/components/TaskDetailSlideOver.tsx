@@ -1,0 +1,260 @@
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import {
+  X,
+  MoreVertical,
+  Pencil,
+  Trash2,
+  CheckCircle2,
+  RotateCcw,
+  Calendar,
+  Clock,
+  AlertTriangle,
+  User,
+} from 'lucide-react';
+import type { Task, TaskProfile } from './TaskSlideOver';
+
+interface TaskDetailSlideOverProps {
+  open: boolean;
+  task: Task | null;
+  profileMap: Record<string, TaskProfile>;
+  onClose: () => void;
+  onEdit: (task: Task) => void;
+  onMarkCompleted: (id: string) => void;
+  onReopen: (id: string) => void;
+  onDelete?: (id: string) => void;
+}
+
+export function TaskDetailSlideOver({
+  open,
+  task,
+  profileMap,
+  onClose,
+  onEdit,
+  onMarkCompleted,
+  onReopen,
+  onDelete,
+}: TaskDetailSlideOverProps) {
+  const { t, i18n } = useTranslation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  if (!open || !task) return null;
+
+  const locale = i18n.language === 'cs' ? 'cs-CZ' : 'en-US';
+
+  const isOverdue = (() => {
+    if (!task.deadline || task.status !== 'active') return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return new Date(task.deadline) < today;
+  })();
+
+  const isUrgent = (() => {
+    if (!task.deadline || task.status !== 'active' || isOverdue) return false;
+    const diff = new Date(task.deadline).getTime() - Date.now();
+    return diff <= 7 * 86_400_000;
+  })();
+
+  const profileName = (uid: string) => {
+    const p = profileMap[uid];
+    if (!p) return '?';
+    return [p.first_name, p.last_name].filter(Boolean).join(' ') || p.full_name || '?';
+  };
+
+  const formatDate = (d: string | null) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString(locale, {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  };
+
+  const creatorProfile = task.created_by ? profileMap[task.created_by] : null;
+
+  return (
+    <>
+      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
+          <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight truncate min-w-0">
+            {task.title}
+          </h3>
+          <div className="flex items-center gap-1 shrink-0">
+            <div className="relative">
+              <button
+                onClick={() => setMenuOpen((p) => !p)}
+                className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+              >
+                <MoreVertical className="w-5 h-5" />
+              </button>
+              {menuOpen && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[180px] z-20">
+                    <button
+                      onClick={() => { onEdit(task); setMenuOpen(false); }}
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      {t('common.edit')}
+                    </button>
+                    {task.status === 'active' ? (
+                      <button
+                        onClick={() => { onMarkCompleted(task.id); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        {t('tasks.markCompleted')}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { onReopen(task.id); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        {t('tasks.reopen')}
+                      </button>
+                    )}
+                    {onDelete && (
+                      <button
+                        onClick={() => { onDelete(task.id); onClose(); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        {t('common.delete')}
+                      </button>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+            <button
+              onClick={onClose}
+              className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+          {/* Status */}
+          <div>
+            <span
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
+                task.status === 'completed'
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+                  : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
+              }`}
+            >
+              {task.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5" />}
+              {t(`tasks.${task.status}`)}
+            </span>
+          </div>
+
+          {/* Deadline */}
+          {task.deadline && (
+            <div>
+              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-1">
+                {t('tasks.deadline')}
+              </label>
+              <span
+                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                  isOverdue
+                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+                    : isUrgent
+                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
+                }`}
+              >
+                {isOverdue ? (
+                  <AlertTriangle className="w-3 h-3" />
+                ) : isUrgent ? (
+                  <Clock className="w-3 h-3" />
+                ) : (
+                  <Calendar className="w-3 h-3" />
+                )}
+                {isOverdue && `${t('tasks.overdue')}: `}
+                {formatDate(task.deadline)}
+              </span>
+            </div>
+          )}
+
+          {/* Assignees */}
+          {task.assignees && task.assignees.length > 0 && (
+            <div>
+              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-2">
+                {t('tasks.assignees')}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {task.assignees.map((a) => {
+                  const p = profileMap[a.user_id];
+                  return (
+                    <div
+                      key={a.user_id}
+                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-nokturo-100 dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-300"
+                    >
+                      {p?.avatar_url ? (
+                        <img src={p.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
+                      ) : (
+                        <span className="w-5 h-5 rounded-full bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center text-[10px] text-white font-medium">
+                          {(p?.first_name?.[0] || '?').toUpperCase()}
+                        </span>
+                      )}
+                      {profileName(a.user_id)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Created by */}
+          {creatorProfile && (
+            <div>
+              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-1">
+                {t('tasks.createdBy')}
+              </label>
+              <div className="inline-flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-300">
+                {creatorProfile.avatar_url ? (
+                  <img src={creatorProfile.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
+                ) : (
+                  <User className="w-4 h-4 text-nokturo-400" />
+                )}
+                {profileName(task.created_by!)}
+              </div>
+            </div>
+          )}
+
+          {/* Completed date */}
+          {task.status === 'completed' && task.completed_at && (
+            <div>
+              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-1">
+                {t('tasks.completedOn')}
+              </label>
+              <span className="text-sm text-nokturo-700 dark:text-nokturo-300">
+                {formatDate(task.completed_at)}
+              </span>
+            </div>
+          )}
+
+          {/* Description */}
+          {task.description && (
+            <div>
+              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-2">
+                {t('tasks.description')}
+              </label>
+              <div
+                className="text-sm text-nokturo-800 dark:text-nokturo-200 leading-relaxed [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline"
+                dangerouslySetInnerHTML={{ __html: task.description }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
