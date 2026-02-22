@@ -21,6 +21,8 @@ export function getDefaultTocItems(t: TFunction): TocItem[] {
   }));
 }
 
+export type HeadingFontFamily = 'headline' | 'body';
+
 interface RichTextBlockViewerProps {
   blocks: RichTextBlock[];
   className?: string;
@@ -29,6 +31,8 @@ interface RichTextBlockViewerProps {
   tocTitle?: string;
   /** Výchozí položky TOC, když v obsahu nejsou žádné nadpisy */
   defaultTocItems?: TocItem[];
+  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
+  headingFont?: HeadingFontFamily;
 }
 
 export function extractHeadings(blocks: RichTextBlock[]): TocItem[] {
@@ -41,7 +45,7 @@ export function extractHeadings(blocks: RichTextBlock[]): TocItem[] {
   return headings;
 }
 
-export function RichTextBlockViewer({ blocks, className = '', showToc = true, tocTitle, defaultTocItems }: RichTextBlockViewerProps) {
+export function RichTextBlockViewer({ blocks, className = '', showToc = true, tocTitle, defaultTocItems, headingFont = 'headline' }: RichTextBlockViewerProps) {
   const { t } = useTranslation();
   const tocItems = extractHeadings(blocks);
   const effectiveTocItems = tocItems.length > 0 ? tocItems : (defaultTocItems ?? []);
@@ -58,7 +62,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   const content = (
     <article className="font-body">
       {blocks.map((block) => (
-        <BlockView key={block.id} block={block} />
+        <BlockView key={block.id} block={block} headingFont={headingFont} />
       ))}
       {useDefaultToc &&
         defaultTocItems!.map((item, idx) => (
@@ -82,26 +86,18 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   return <div className={className}>{content}</div>;
 }
 
-function BlockView({ block }: { block: RichTextBlock }) {
+function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; headingFont?: HeadingFontFamily }) {
   switch (block.type) {
     case 'heading':
       if (!block.text.trim()) return null;
       const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
+      const isHeadline = headingFont === 'headline';
+      const hFont = isHeadline ? 'font-headline' : 'font-body';
       const headingClass = {
-        1: 'font-headline text-[48px] font-extralight text-nokturo-900 dark:text-nokturo-100 mt-16 mb-4 scroll-mt-6 leading-[1.1]',
-        2: 'font-headline text-[40px] font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4 scroll-mt-6 leading-[1.2]',
-        3: 'font-body text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 mt-8 mb-3 scroll-mt-6',
+        1: `${hFont} text-[${isHeadline ? '48' : '36'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 mt-8 mb-4 scroll-mt-6 leading-[1.1]`,
+        2: `${hFont} text-[${isHeadline ? '40' : '24'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 mt-12 mb-4 scroll-mt-6 leading-[1.2]`,
+        3: `${hFont} text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 mt-8 mb-3 scroll-mt-6`,
       }[block.level];
-      if (block.level === 2) {
-        return (
-          <>
-            <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
-            <Tag id={block.id} className={headingClass}>
-              {block.text}
-            </Tag>
-          </>
-        );
-      }
       return (
         <Tag id={block.id} className={headingClass}>
           {block.text}
@@ -122,7 +118,7 @@ function BlockView({ block }: { block: RichTextBlock }) {
     case 'quote':
       if (!block.text.trim()) return null;
       return (
-        <blockquote className="font-body pl-4 text-nokturo-600 dark:text-nokturo-400 italic my-6 py-1">
+        <blockquote className="font-headline italic font-light text-[24px] leading-snug text-nokturo-700 dark:text-nokturo-300 my-6 px-5 py-4 border-l-4 border-nokturo-300 dark:border-nokturo-600 bg-nokturo-100 dark:bg-nokturo-800/50 rounded-r-lg">
           {block.text}
         </blockquote>
       );

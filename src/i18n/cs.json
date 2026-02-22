@@ -5,7 +5,7 @@
   },
   "nav": {
     "brand": "Zna\u010dka",
-    "strategy": "Strategie značky",
+    "strategy": "About Nokturo",
     "identity": "Identita značky",
     "prototyping": "Prototypování",
     "moodboard": "Moodboard",
@@ -102,7 +102,7 @@
   },
   "pages": {
     "strategy": {
-      "title": "Strategie zna\u010dky",
+      "title": "About Nokturo",
       "description": "Definujte positioning zna\u010dky, c\u00edlovou skupinu a strategick\u00fd pl\u00e1n."
     },
     "identity": {
@@ -897,6 +897,12 @@
     "deadline7d": "Termín za 7 dní",
     "deadline48h": "Termín za 48 hodin",
     "deadline24h": "Termín za 24 hodin"
+  },
+  "headerImage": {
+    "addCover": "Přidat cover",
+    "change": "Změnit cover",
+    "remove": "Odstranit",
+    "dropHere": "Přetáhněte obrázek sem"
   },
   "errors": {
     "pageNotLoaded": "Stránka se nenačetla.",

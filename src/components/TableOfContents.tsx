@@ -1,10 +1,5 @@
-/**
- * Sdílený Table of Contents – jednotný styl a chování pro RichTextBlockViewer i CommentableRichTextViewer
- * Chevron na konci řádku (součást odkazu). Defaultně zabalené; při hoveru na H1/H2 se rozbalí děti.
- */
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface TocItem {
   id: string;
@@ -22,53 +17,8 @@ interface TableOfContentsProps {
   alignWithFirstHeading?: boolean;
 }
 
-/** H2 s H3 children */
-interface H2WithChildren {
-  item: TocItem;
-  children: TocItem[];
-}
-
-/** H1 s H2 children */
-interface H1WithChildren {
-  item: TocItem;
-  children: H2WithChildren[];
-}
-
-/** Top-level: H1 nebo orphan H2 */
-type TopLevel = H1WithChildren | H2WithChildren;
-
-/** Build tree: H1 -> H2 children -> H3 children. H3 přímo pod H1 (bez H2) → virtuální H2. */
-function buildTree(items: TocItem[]): TopLevel[] {
-  const result: TopLevel[] = [];
-  let currentH1: H1WithChildren | null = null;
-  let currentH2: H2WithChildren | null = null;
-
-  for (const item of items) {
-    if (item.level === 1) {
-      currentH2 = null;
-      currentH1 = { item, children: [] };
-      result.push(currentH1);
-    } else if (item.level === 2) {
-      currentH2 = { item, children: [] };
-      if (currentH1) currentH1.children.push(currentH2);
-      else result.push(currentH2);
-    } else if (item.level === 3) {
-      if (currentH2) {
-        currentH2.children.push(item);
-      } else if (currentH1) {
-        // H3 přímo pod H1 (bez H2) → virtuální H2, zobrazí se jako řádek pod H1
-        currentH1.children.push({ item, children: [] });
-      }
-    }
-  }
-  return result;
-}
-
 export function TableOfContents({ items, title, className = '', alignWithHeader, alignWithFirstHeading }: TableOfContentsProps) {
   const { t } = useTranslation();
-  const tree = buildTree(items);
-  const [expandedH1, setExpandedH1] = useState<Set<string>>(() => new Set());
-  const [expandedH2, setExpandedH2] = useState<Set<string>>(() => new Set());
   const [currentId, setCurrentId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -79,8 +29,7 @@ export function TableOfContents({ items, title, className = '', alignWithHeader,
       (entries) => {
         for (const e of entries) {
           if (e.isIntersecting) {
-            const rect = e.boundingClientRect;
-            visible.set(e.target.id, rect.top);
+            visible.set(e.target.id, e.boundingClientRect.top);
           } else {
             visible.delete(e.target.id);
           }
@@ -99,175 +48,42 @@ export function TableOfContents({ items, title, className = '', alignWithHeader,
     return () => observer.disconnect();
   }, [items]);
 
-  const linkClass = (id: string, base: string) =>
-    `${base} ${currentId === id ? 'bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100' : ''}`;
-
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const toggleH1 = (id: string) => {
-    setExpandedH1((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const toggleH2 = (id: string) => {
-    setExpandedH2((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
   return (
-    <aside className={`w-[280px] shrink-0 ${alignWithHeader ? 'mt-[160px]' : ''} ${alignWithFirstHeading ? 'pt-16' : ''} ${className}`}>
+    <aside className={`w-[240px] shrink-0 self-stretch ${alignWithHeader ? 'mt-[160px]' : ''} ${alignWithFirstHeading ? 'pt-8' : ''} ${className}`}>
       <nav
-        className="sticky top-[24px] rounded-lg bg-white dark:bg-nokturo-800 p-4 font-body"
+        className="sticky top-[76px] font-body bg-nokturo-100 dark:bg-[#1f1f1f]"
         aria-label={t('richText.tableOfContents')}
       >
-        <ul className="space-y-0.5 text-sm">
-          {tree.map((node) => {
-            const item = node.item;
-            const isH1 = item.level === 1;
-            const h2Children = isH1 ? (node as H1WithChildren).children : [];
-            const h3Children = !isH1 ? (node as H2WithChildren).children : [];
+        <ul className="space-y-0.5 text-[13px] leading-snug border-l border-nokturo-200 dark:border-nokturo-700">
+          {items.map((item) => {
+            const isActive = currentId === item.id;
+            const indent = { 1: 'pl-3', 2: 'pl-5', 3: 'pl-7' }[item.level];
+            const weight = item.level === 1 ? 'font-medium' : item.level === 2 ? 'font-normal' : 'font-normal text-[12px]';
+
+            const fadeStyle: React.CSSProperties = {
+              maskImage: 'linear-gradient(to right, black calc(100% - 48px), transparent)',
+              WebkitMaskImage: 'linear-gradient(to right, black calc(100% - 48px), transparent)',
+            };
 
             return (
-              <li
-                key={item.id}
-                onMouseEnter={
-                  isH1 && h2Children.length > 0
-                    ? () => setExpandedH1((prev) => new Set(prev).add(item.id))
-                    : !isH1 && h3Children.length > 0
-                      ? () => setExpandedH2((prev) => new Set(prev).add(item.id))
-                      : undefined
-                }
-                onMouseLeave={
-                  isH1 && h2Children.length > 0
-                    ? () => setExpandedH1((prev) => { const next = new Set(prev); next.delete(item.id); return next; })
-                    : !isH1 && h3Children.length > 0
-                      ? () => setExpandedH2((prev) => { const next = new Set(prev); next.delete(item.id); return next; })
-                      : undefined
-                }
-              >
-                {/* H1 nebo orphan H2 řádek – chevron na konci řádku, součást odkazu */}
+              <li key={item.id}>
                 <a
                   href={`#${item.id}`}
-                  onClick={(e) => handleLinkClick(e, item.id)}
-                  className={linkClass(item.id, 'flex items-center gap-1 min-w-0 py-1 px-1.5 rounded text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 transition-colors group')}
+                  onClick={(e) => handleClick(e, item.id)}
+                  className={`block py-1.5 pr-2 ${indent} -ml-px border-l-2 transition-colors overflow-hidden whitespace-nowrap ${
+                    isActive
+                      ? 'border-nokturo-800 dark:border-nokturo-200 text-nokturo-900 dark:text-nokturo-100'
+                      : 'border-transparent text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:border-nokturo-300 dark:hover:border-nokturo-500'
+                  } ${weight}`}
+                  style={fadeStyle}
                 >
-                  <span className="flex-1 min-w-0 truncate">{item.text}</span>
-                  {isH1 && h2Children.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleH1(item.id);
-                      }}
-                      className="shrink-0 p-0.5 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300 group-hover:text-nokturo-600 dark:group-hover:text-nokturo-400 transition-colors"
-                      aria-expanded={expandedH1.has(item.id)}
-                    >
-                      {expandedH1.has(item.id) ? (
-                        <ChevronUp className="w-3 h-3" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3" />
-                      )}
-                    </button>
-                  )}
-                  {!isH1 && h3Children.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleH2(item.id);
-                      }}
-                      className="shrink-0 p-0.5 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300 group-hover:text-nokturo-600 dark:group-hover:text-nokturo-400 transition-colors"
-                      aria-expanded={expandedH2.has(item.id)}
-                    >
-                      {expandedH2.has(item.id) ? (
-                        <ChevronUp className="w-3 h-3" />
-                      ) : (
-                        <ChevronDown className="w-3 h-3" />
-                      )}
-                    </button>
-                  )}
+                  {item.text}
                 </a>
-                {/* H2 children – zobrazí se při kliku na chevron */}
-                {isH1 && h2Children.length > 0 && expandedH1.has(item.id) && (
-                  <ul className="mt-0.5 space-y-0.5 border-l border-nokturo-200 dark:border-nokturo-600 pl-3 ml-4">
-                    {h2Children.map(({ item: h2, children: h3s }) => (
-                      <li
-                        key={h2.id}
-                        onMouseEnter={h3s.length > 0 ? () => setExpandedH2((prev) => new Set(prev).add(h2.id)) : undefined}
-                        onMouseLeave={h3s.length > 0 ? () => setExpandedH2((prev) => { const next = new Set(prev); next.delete(h2.id); return next; }) : undefined}
-                      >
-                        <a
-                          href={`#${h2.id}`}
-                          onClick={(e) => handleLinkClick(e, h2.id)}
-                          className={linkClass(h2.id, 'flex items-center gap-1 min-w-0 py-1 px-1.5 rounded text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 transition-colors font-medium group')}
-                        >
-                          <span className="flex-1 min-w-0 truncate">{h2.text}</span>
-                          {h3s.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                toggleH2(h2.id);
-                              }}
-                              className="shrink-0 p-0.5 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300 group-hover:text-nokturo-600 dark:group-hover:text-nokturo-400 transition-colors"
-                              aria-expanded={expandedH2.has(h2.id)}
-                            >
-                              {expandedH2.has(h2.id) ? (
-                                <ChevronUp className="w-3 h-3" />
-                              ) : (
-                                <ChevronDown className="w-3 h-3" />
-                              )}
-                            </button>
-                          )}
-                        </a>
-                        {h3s.length > 0 && expandedH2.has(h2.id) && (
-                          <ul className="mt-0.5 space-y-0.5 border-l border-nokturo-200 dark:border-nokturo-600 pl-2 ml-4">
-                            {h3s.map((h3) => (
-                              <li key={h3.id}>
-                                <a
-                                  href={`#${h3.id}`}
-                                  onClick={(e) => handleLinkClick(e, h3.id)}
-                                  className={linkClass(h3.id, 'block py-0.5 px-1.5 rounded text-nokturo-500 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 truncate transition-colors text-xs font-normal')}
-                                >
-                                  {h3.text}
-                                </a>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {!isH1 && h3Children.length > 0 && expandedH2.has(item.id) && (
-                  <ul className="mt-0.5 space-y-0.5 border-l border-nokturo-200 dark:border-nokturo-600 pl-3 ml-4">
-                    {h3Children.map((h3) => (
-                      <li key={h3.id}>
-                        <a
-                          href={`#${h3.id}`}
-                          onClick={(e) => handleLinkClick(e, h3.id)}
-                          className={linkClass(h3.id, 'block py-0.5 px-1.5 rounded text-nokturo-500 hover:text-nokturo-700 hover:bg-nokturo-50 truncate transition-colors text-xs font-normal')}
-                        >
-                          {h3.text}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </li>
             );
           })}

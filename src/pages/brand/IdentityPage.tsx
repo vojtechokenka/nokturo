@@ -6,7 +6,7 @@ import { PageShell } from '../../components/PageShell';
 import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTextBlockEditor';
 import { RichTextBlockViewer, getDefaultTocItems } from '../../components/RichTextBlockViewer';
 import { ToastContainer, type ToastData } from '../../components/Toast';
-import { Loader2, Eye, Pencil, MoreVertical, Save } from 'lucide-react';
+import { Loader2, Pencil, Save } from 'lucide-react';
 
 const DOC_ID = '00000000-0000-0000-0000-000000000002';
 
@@ -17,7 +17,6 @@ export default function IdentityPage() {
   const [saving, setSaving] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  const [pageMenuOpen, setPageMenuOpen] = useState(false);
 
   const fetchContent = useCallback(async () => {
     setLoading(true);
@@ -62,6 +61,7 @@ export default function IdentityPage() {
       setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
     } else {
       setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
+      setMode('view');
     }
   }, [blocks, t]);
 
@@ -99,37 +99,12 @@ export default function IdentityPage() {
         </div>
       ) : (
         <div className={mode === 'view' ? 'max-w-5xl mx-auto' : 'max-w-3xl'}>
-          {mode === 'view' && (
-            <div className="flex justify-end mb-4">
-              <div className="relative">
-                <button
-                  onClick={() => setPageMenuOpen((p) => !p)}
-                  className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-                {pageMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setPageMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
-                      <button
-                        onClick={() => { setMode('edit'); setPageMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        {t('richText.editMode')}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
           {mode === 'view' ? (
             <RichTextBlockViewer
               blocks={blocks}
               tocTitle={t('pages.identity.title')}
               defaultTocItems={getDefaultTocItems(t)}
+              headingFont="body"
             />
           ) : (
             <RichTextBlockEditor
@@ -137,29 +112,31 @@ export default function IdentityPage() {
               onChange={setBlocks}
               onUploadImage={handleUploadImage}
               onToast={addToast}
+              headingFont="body"
             />
           )}
-          {mode === 'edit' && (
-            <div className="fixed bottom-6 right-6 flex items-center gap-2 z-40">
+          <div className="fixed bottom-6 right-6 z-40">
+            {mode === 'edit' ? (
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 disabled:opacity-60 shadow-sm"
               >
-                {saving && <Loader2 size={16} className="animate-spin" />}
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {t('common.save')}
               </button>
+            ) : (
               <button
                 type="button"
-                onClick={() => setMode('view')}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-transparent border border-nokturo-300 dark:border-nokturo-600 text-nokturo-700 dark:text-nokturo-300 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-800 hover:border-nokturo-400 dark:hover:border-nokturo-500 transition-colors"
+                onClick={() => setMode('edit')}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 shadow-sm"
               >
-                <Eye className="w-4 h-4" />
-                {t('richText.viewMode')}
+                <Pencil size={16} />
+                {t('common.edit')}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </PageShell>

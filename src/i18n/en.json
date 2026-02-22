@@ -5,7 +5,7 @@
   },
   "nav": {
     "brand": "Brand",
-    "strategy": "Brand Strategy",
+    "strategy": "About Nokturo",
     "identity": "Brand Identity",
     "prototyping": "Prototyping",
     "moodboard": "Moodboard",
@@ -102,7 +102,7 @@
   },
   "pages": {
     "strategy": {
-      "title": "Brand Strategy",
+      "title": "About Nokturo",
       "description": "Define your brand positioning, target audience, and strategic roadmap."
     },
     "identity": {
@@ -891,6 +891,12 @@
     "deadline7d": "Due in 7 days",
     "deadline48h": "Due in 48 hours",
     "deadline24h": "Due in 24 hours"
+  },
+  "headerImage": {
+    "addCover": "Add cover",
+    "change": "Change cover",
+    "remove": "Remove",
+    "dropHere": "Drop image here"
   },
   "errors": {
     "pageNotLoaded": "Page could not be loaded.",

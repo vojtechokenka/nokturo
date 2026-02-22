@@ -1,25 +1,48 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { getUserIdForDb } from '../../stores/authStore';
 import { PageShell } from '../../components/PageShell';
+import { PageHeaderImage } from '../../components/PageHeaderImage';
 import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTextBlockEditor';
 import { RichTextBlockViewer, getDefaultTocItems } from '../../components/RichTextBlockViewer';
 import { PageStructurePanel } from '../../components/PageStructurePanel';
 import { ToastContainer, type ToastData } from '../../components/Toast';
-import { Loader2, Eye, Pencil, MoreVertical, Save } from 'lucide-react';
+import { Loader2, Pencil, Save } from 'lucide-react';
 
 const DEFAULT_TITLE = 'Strategie značky';
+
+interface DocContent {
+  blocks: RichTextBlock[];
+  headerImage?: string | null;
+}
+
+function parseContent(raw: unknown): DocContent {
+  if (Array.isArray(raw)) return { blocks: raw, headerImage: null };
+  if (raw && typeof raw === 'object' && 'blocks' in raw) {
+    const obj = raw as Record<string, unknown>;
+    return {
+      blocks: Array.isArray(obj.blocks) ? obj.blocks as RichTextBlock[] : [],
+      headerImage: typeof obj.headerImage === 'string' ? obj.headerImage : null,
+    };
+  }
+  return { blocks: [], headerImage: null };
+}
 
 export default function StrategyPage() {
   const { t } = useTranslation();
   const [docId, setDocId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<RichTextBlock[]>([]);
+  const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [mode, setMode] = useState<'view' | 'edit'>('view');
-  const [pageMenuOpen, setPageMenuOpen] = useState(false);
+
+  const blocksRef = useRef(blocks);
+  blocksRef.current = blocks;
+  const docIdRef = useRef(docId);
+  docIdRef.current = docId;
 
   const fetchContent = useCallback(async () => {
     setLoading(true);
@@ -31,16 +54,13 @@ export default function StrategyPage() {
 
     if (!error && data) {
       setDocId(data.id);
-      try {
-        const c = data.content;
-        const parsed = Array.isArray(c) ? c : [];
-        setBlocks(parsed);
-      } catch {
-        setBlocks([]);
-      }
+      const parsed = parseContent(data.content);
+      setBlocks(parsed.blocks);
+      setHeaderImage(parsed.headerImage);
     } else {
       setDocId(null);
       setBlocks([]);
+      setHeaderImage(null);
     }
     setLoading(false);
   }, []);
@@ -51,28 +71,24 @@ export default function StrategyPage() {
 
   const handleSave = useCallback(async () => {
     setSaving(true);
-    const payload = {
-      title: DEFAULT_TITLE,
-      content: blocks,
-      created_by: getUserIdForDb(),
-      updated_at: new Date().toISOString(),
-    };
+    const content: DocContent = { blocks, headerImage };
 
     if (docId) {
       const { error } = await supabase
         .from('brand_strategy')
-        .update({ content: payload.content, updated_at: payload.updated_at })
+        .update({ content, updated_at: new Date().toISOString() })
         .eq('id', docId);
       setSaving(false);
       if (error) {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
       } else {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
+        setMode('view');
       }
     } else {
       const { data, error } = await supabase
         .from('brand_strategy')
-        .insert({ ...payload, content: blocks })
+        .insert({ title: DEFAULT_TITLE, content, created_by: getUserIdForDb(), updated_at: new Date().toISOString() })
         .select('id')
         .single();
       setSaving(false);
@@ -81,9 +97,37 @@ export default function StrategyPage() {
       } else if (data) {
         setDocId(data.id);
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
+        setMode('view');
       }
     }
-  }, [docId, blocks, t]);
+  }, [docId, blocks, headerImage, t]);
+
+  const handleHeaderImageChange = useCallback(async (url: string | null) => {
+    setHeaderImage(url);
+    const content: DocContent = { blocks: blocksRef.current, headerImage: url };
+    const id = docIdRef.current;
+
+    if (id) {
+      const { error } = await supabase
+        .from('brand_strategy')
+        .update({ content, updated_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) {
+        setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('brand_strategy')
+        .insert({ title: DEFAULT_TITLE, content, created_by: getUserIdForDb(), updated_at: new Date().toISOString() })
+        .select('id')
+        .single();
+      if (error) {
+        setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
+      } else if (data) {
+        setDocId(data.id);
+      }
+    }
+  }, []);
 
   const handleUploadImage = useCallback(async (file: File): Promise<string> => {
     const ext = file.name.split('.').pop() || 'png';
@@ -111,6 +155,13 @@ export default function StrategyPage() {
     <PageShell
       titleKey="pages.strategy.title"
       descriptionKey="pages.strategy.description"
+      headerSlot={
+        <PageHeaderImage
+          imageUrl={headerImage}
+          onUpload={handleUploadImage}
+          onChange={handleHeaderImageChange}
+        />
+      }
     >
       <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
       {loading ? (
@@ -119,37 +170,12 @@ export default function StrategyPage() {
         </div>
       ) : (
         <div className={mode === 'view' ? 'max-w-5xl mx-auto' : 'flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl'}>
-          {mode === 'view' && (
-            <div className="flex justify-end mb-4 w-full">
-              <div className="relative">
-                <button
-                  onClick={() => setPageMenuOpen((p) => !p)}
-                  className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
-                >
-                  <MoreVertical className="w-5 h-5" />
-                </button>
-                {pageMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setPageMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
-                      <button
-                        onClick={() => { setMode('edit'); setPageMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        {t('richText.editMode')}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
           {mode === 'view' ? (
             <RichTextBlockViewer
               blocks={blocks}
               tocTitle={t('pages.strategy.title')}
               defaultTocItems={getDefaultTocItems(t)}
+              headingFont="headline"
             />
           ) : (
             <>
@@ -159,6 +185,7 @@ export default function StrategyPage() {
                   onChange={setBlocks}
                   onUploadImage={handleUploadImage}
                   onToast={addToast}
+                  headingFont="headline"
                 />
               </div>
               <PageStructurePanel
@@ -168,27 +195,28 @@ export default function StrategyPage() {
               />
             </>
           )}
-          {mode === 'edit' && (
-            <div className="fixed bottom-6 right-6 flex items-center gap-2 z-40">
+          <div className="fixed bottom-6 right-6 z-40">
+            {mode === 'edit' ? (
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={saving}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 disabled:opacity-60 shadow-sm"
               >
-                {saving && <Loader2 size={16} className="animate-spin" />}
+                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
                 {t('common.save')}
               </button>
+            ) : (
               <button
                 type="button"
-                onClick={() => setMode('view')}
-                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-transparent border border-nokturo-300 dark:border-nokturo-600 text-nokturo-700 dark:text-nokturo-300 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-800 hover:border-nokturo-400 dark:hover:border-nokturo-500 transition-colors"
+                onClick={() => setMode('edit')}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 shadow-sm"
               >
-                <Eye className="w-4 h-4" />
-                {t('richText.viewMode')}
+                <Pencil size={16} />
+                {t('common.edit')}
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
     </PageShell>

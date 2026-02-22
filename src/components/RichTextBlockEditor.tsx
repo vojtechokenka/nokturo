@@ -430,6 +430,7 @@ function BlockRenderer({
   onToast,
   isDragging,
   isDragOver,
+  headingFont,
 }: {
   block: RichTextBlock;
   index: number;
@@ -444,6 +445,7 @@ function BlockRenderer({
   isDragging?: boolean;
   isDragOver?: boolean;
   onToast: (t: ToastData) => void;
+  headingFont?: HeadingFontFamily;
 }) {
   const { t } = useTranslation();
   const paraRef = useRef<HTMLDivElement>(null);
@@ -540,33 +542,24 @@ function BlockRenderer({
                 </button>
               ))}
             </div>
-            {block.level === 1 && (
-              <input
-                type="text"
-                value={block.text}
-                onChange={(e) => onUpdate(block.id, { text: e.target.value })}
-                placeholder={t('richText.headingPlaceholder')}
-                className="font-headline w-full text-[48px] font-extralight text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1]"
-              />
-            )}
-            {block.level === 2 && (
-              <input
-                type="text"
-                value={block.text}
-                onChange={(e) => onUpdate(block.id, { text: e.target.value })}
-                placeholder={t('richText.headingPlaceholder')}
-                className="font-headline w-full text-[40px] font-extralight text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2]"
-              />
-            )}
-            {block.level === 3 && (
-              <input
-                type="text"
-                value={block.text}
-                onChange={(e) => onUpdate(block.id, { text: e.target.value })}
-                placeholder={t('richText.headingPlaceholder')}
-                className="font-body w-full text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500"
-              />
-            )}
+            {(() => {
+              const isHeadline = headingFont !== 'body';
+              const hf = isHeadline ? 'font-headline' : 'font-body';
+              const levelClass = {
+                1: `${hf} w-full text-[${isHeadline ? '48' : '36'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1]`,
+                2: `${hf} w-full text-[${isHeadline ? '40' : '24'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2]`,
+                3: `${hf} w-full text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500`,
+              }[block.level];
+              return (
+                <input
+                  type="text"
+                  value={block.text}
+                  onChange={(e) => onUpdate(block.id, { text: e.target.value })}
+                  placeholder={t('richText.headingPlaceholder')}
+                  className={levelClass}
+                />
+              );
+            })()}
           </div>
         )}
 
@@ -1187,6 +1180,8 @@ function BlockRenderer({
 }
 
 // ── Main editor ──────────────────────────────────────────────────
+export type HeadingFontFamily = 'headline' | 'body';
+
 export interface RichTextBlockEditorProps {
   value: RichTextBlock[];
   onChange: (blocks: RichTextBlock[]) => void;
@@ -1196,6 +1191,8 @@ export interface RichTextBlockEditorProps {
   showHeadingSizes?: boolean;
   /** Optional: show paragraph size selector */
   showParagraphSizes?: boolean;
+  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
+  headingFont?: HeadingFontFamily;
 }
 
 export function RichTextBlockEditor({
@@ -1203,6 +1200,7 @@ export function RichTextBlockEditor({
   onChange,
   onUploadImage,
   onToast,
+  headingFont = 'headline',
 }: RichTextBlockEditorProps) {
   const { t } = useTranslation();
   const [addMenuAtIndex, setAddMenuAtIndex] = useState<number | null>(null);
@@ -1307,6 +1305,7 @@ export function RichTextBlockEditor({
                 isDragOver={dragOverIndex === index}
                 onUploadImage={onUploadImage}
                 onToast={onToast}
+                headingFont={headingFont}
               />
               <div className="relative flex justify-center py-1">
                 <button
