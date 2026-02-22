@@ -616,8 +616,7 @@
     "overview": {
       "ordersComing": "Přicházející objednávky",
       "spent": "Utraceno",
-      "monthlyPay": "Měsíční platby",
-      "yearlyPay": "Roční platby"
+      "spentThisMonth": "Utraceno tento měsíc"
     },
     "tabs": {
       "orders": "Objednávky",
@@ -645,7 +644,14 @@
     "noSubscriptions": "Žádná předplatná nenalezena",
     "addFirst": "Přidejte své první předplatné",
     "deleteConfirm": "Opravdu chcete smazat toto předplatné?",
-    "saved": "Předplatné úspěšně uloženo"
+    "saved": "Předplatné úspěšně uloženo",
+    "overview": {
+      "monthlyPay": "Měsíční platby",
+      "yearlyPay": "Roční platby",
+      "totalYearly": "Celkem ročně",
+      "avgYearly": "Průměr ročně",
+      "nextPayment": "Příští platba"
+    }
   },
   "costing": {
     "totalProducts": "Celkem produkt\u016f",

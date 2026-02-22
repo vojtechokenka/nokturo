@@ -259,12 +259,30 @@ export default function AccountingPage() {
   const spentCzk = orders
     .filter((o) => (o.order_status === 'delivered' || o.order_status === 'ordered') && o.order_value != null)
     .reduce((sum, o) => sum + convertToCzk(o.order_value!, o.order_currency || 'EUR'), 0);
-  const monthlyPayCzk = orders
-    .filter((o) => o.monthly_payment && o.monthly_value != null)
-    .reduce((sum, o) => sum + convertToCzk(o.monthly_value!, o.order_currency || 'EUR'), 0);
-  const yearlyPayCzk = orders
-    .filter((o) => o.yearly_payment && o.yearly_value != null)
-    .reduce((sum, o) => sum + convertToCzk(o.yearly_value!, o.order_currency || 'EUR'), 0);
+  const now = new Date();
+  const thisMonth = now.getMonth();
+  const thisYear = now.getFullYear();
+  const spentThisMonthCzk = orders
+    .filter((o) => {
+      if ((o.order_status !== 'delivered' && o.order_status !== 'ordered') || o.order_value == null) return false;
+      const d = new Date(o.created_at);
+      return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+    })
+    .reduce((sum, o) => sum + convertToCzk(o.order_value!, o.order_currency || 'EUR'), 0);
+
+  // Subscription overview stats (active only)
+  const activeSubs = subscriptions.filter((s) => s.status === 'active');
+  const subMonthlyPayCzk = activeSubs
+    .filter((s) => s.billing_cycle === 'monthly' && s.amount != null)
+    .reduce((sum, s) => sum + convertToCzk(s.amount!, s.currency || 'EUR'), 0);
+  const subYearlyPayCzk = activeSubs
+    .filter((s) => s.billing_cycle === 'yearly' && s.amount != null)
+    .reduce((sum, s) => sum + convertToCzk(s.amount!, s.currency || 'EUR'), 0);
+  const subTotalYearlyCzk = subMonthlyPayCzk * 12 + subYearlyPayCzk;
+  const subAvgYearlyCzk = activeSubs.length > 0 ? subTotalYearlyCzk / activeSubs.length : 0;
+  const nextPaymentSub = activeSubs
+    .filter((s) => s.next_billing_date)
+    .sort((a, b) => new Date(a.next_billing_date!).getTime() - new Date(b.next_billing_date!).getTime())[0];
 
   const closeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -299,7 +317,7 @@ export default function AccountingPage() {
 
       {pageTab === 'orders' && (<>
       {/* Overview stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
           <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('accounting.overview.ordersComing')}
@@ -316,18 +334,10 @@ export default function AccountingPage() {
         </div>
         <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
           <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('accounting.overview.monthlyPay')}
+            {t('accounting.overview.spentThisMonth')}
           </p>
           <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
-            {monthlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-        </div>
-        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('accounting.overview.yearlyPay')}
-          </p>
-          <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
-            {yearlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+            {spentThisMonthCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
           </p>
         </div>
       </div>
@@ -503,6 +513,54 @@ export default function AccountingPage() {
 
       {/* ── Subscriptions Tab ────────────────────────────── */}
       {pageTab === 'subscriptions' && (<>
+      {/* Subscription overview stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+            {t('subscriptions.overview.monthlyPay')}
+          </p>
+          <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
+            {subMonthlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+          </p>
+        </div>
+        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+            {t('subscriptions.overview.yearlyPay')}
+          </p>
+          <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
+            {subYearlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+          </p>
+        </div>
+        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+            {t('subscriptions.overview.totalYearly')}
+          </p>
+          <p className="text-xl font-medium text-emerald-600">
+            {subTotalYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+          </p>
+          <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5">
+            {t('subscriptions.overview.avgYearly')}: {subAvgYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+          </p>
+        </div>
+        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+            {t('subscriptions.overview.nextPayment')}
+          </p>
+          {nextPaymentSub ? (
+            <>
+              <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
+                {formatNextBilling(nextPaymentSub.next_billing_date)}
+              </p>
+              <p className="text-sm text-nokturo-600 dark:text-nokturo-400 truncate" title={nextPaymentSub.name}>
+                {nextPaymentSub.name} — {convertToCzk(nextPaymentSub.amount ?? 0, nextPaymentSub.currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+              </p>
+            </>
+          ) : (
+            <p className="text-nokturo-500 dark:text-nokturo-400">—</p>
+          )}
+        </div>
+      </div>
+
         <div className="flex items-center justify-end mb-6">
           <button
             onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
@@ -554,7 +612,7 @@ export default function AccountingPage() {
                       {t(`subscriptions.${sub.billing_cycle}`)}
                     </td>
                     <td className="py-3 pr-6 text-sm font-medium text-nokturo-900 dark:text-nokturo-100 text-right whitespace-nowrap">
-                      {sub.amount?.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sub.currency}
+                      {convertToCzk(sub.amount ?? 0, sub.currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                     </td>
                     <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300 whitespace-nowrap">
                       {formatNextBilling(sub.next_billing_date)}

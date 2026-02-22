@@ -616,8 +616,7 @@
     "overview": {
       "ordersComing": "Orders coming",
       "spent": "Spent",
-      "monthlyPay": "Monthly pay",
-      "yearlyPay": "Yearly pay"
+      "spentThisMonth": "Spent this month"
     },
     "tabs": {
       "orders": "Orders",
@@ -645,7 +644,14 @@
     "noSubscriptions": "No subscriptions found",
     "addFirst": "Add your first subscription to get started",
     "deleteConfirm": "Are you sure you want to delete this subscription?",
-    "saved": "Subscription saved successfully"
+    "saved": "Subscription saved successfully",
+    "overview": {
+      "monthlyPay": "Monthly pay",
+      "yearlyPay": "Yearly pay",
+      "totalYearly": "Total yearly",
+      "avgYearly": "Avg. yearly",
+      "nextPayment": "Next payment"
+    }
   },
   "costing": {
     "totalProducts": "Total Products",
