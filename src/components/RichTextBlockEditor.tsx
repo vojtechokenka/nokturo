@@ -7,6 +7,8 @@ import { useTranslation } from 'react-i18next';
 import {
   Type,
   AlignLeft,
+  AlignCenter,
+  AlignRight,
   Quote,
   Image as ImageIcon,
   LayoutGrid,
@@ -19,6 +21,8 @@ import {
   Bold,
   Italic,
   List,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import type { ToastData } from './Toast';
 import { INPUT_CLASS } from '../lib/inputStyles';
@@ -26,18 +30,29 @@ import { INPUT_CLASS } from '../lib/inputStyles';
 // ── Block types ─────────────────────────────────────────────────
 export type HeadingLevel = 1 | 2 | 3;
 export type ParagraphSize = 'normal' | 'large' | 'small';
+export type ParagraphAlign = 'left' | 'center' | 'right';
 export type GalleryColumns = 2 | 3 | 4;
 
 export type RichTextBlock =
   | { id: string; type: 'heading'; level: HeadingLevel; text: string }
-  | { id: string; type: 'paragraph'; size: ParagraphSize; content: string }
+  | { id: string; type: 'paragraph'; size: ParagraphSize; align?: ParagraphAlign; content: string }
   | { id: string; type: 'quote'; text: string }
-  | { id: string; type: 'image'; url: string; alt?: string; fit?: 'fill' | 'hug' }
+  | { id: string; type: 'image'; url: string; alt?: string; fit?: 'fill' | 'hug'; caption?: string }
   | {
       id: string;
       type: 'gallery';
       columns: GalleryColumns;
-      images: { url: string; alt?: string }[];
+      images: { url: string; alt?: string; caption?: string }[];
+    }
+  | {
+      id: string;
+      type: 'imageGrid';
+      columns: number;
+      gapRow: number;
+      gapCol: number;
+      gapLocked?: boolean;
+      aspectRatio?: '5:4' | '1:1' | '3:2' | '16:9';
+      images: { url: string; alt?: string; caption?: string }[];
     }
   | {
       id: string;
@@ -46,7 +61,7 @@ export type RichTextBlock =
       rows: number;
       headerRowCount: number;
       headerColumnCount: number;
-      cells: { type: 'text' | 'image'; content: string }[];
+      cells: { type: 'text' | 'image'; content: string; caption?: string }[];
     }
   | { id: string; type: 'link'; url: string; text: string }
   | { id: string; type: 'divider' }
@@ -54,6 +69,11 @@ export type RichTextBlock =
 
 function generateId() {
   return `block_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+export function getAspectClass(ratio: '5:4' | '1:1' | '3:2' | '16:9' | undefined): string {
+  const r = ratio ?? '1:1';
+  return r === '1:1' ? 'aspect-square' : r === '5:4' ? 'aspect-[5/4]' : r === '3:2' ? 'aspect-[3/2]' : 'aspect-video';
 }
 
 // ── List marker patterns: "- ", "1. ", "a) ", etc. ─────────────────
@@ -372,6 +392,19 @@ function AddBlockMenu({
     },
     {
       icon: <Grid3X3 size={16} />,
+      labelKey: 'richText.imageGrid',
+      block: {
+        id: generateId(),
+        type: 'imageGrid',
+        columns: 3,
+        gapRow: 8,
+        gapCol: 8,
+        aspectRatio: '1:1',
+        images: [],
+      },
+    },
+    {
+      icon: <Grid3X3 size={16} />,
       labelKey: 'richText.grid',
       block: {
         id: generateId(),
@@ -599,13 +632,32 @@ function BlockRenderer({
                   </button>
                 ))}
               </div>
+              <div className="flex gap-1">
+                {(['left', 'center', 'right'] as const).map((al) => (
+                  <button
+                    key={al}
+                    type="button"
+                    onClick={() => onUpdate(block.id, { align: al })}
+                    className={`p-0.5 rounded ${
+                      (block.align ?? 'left') === al
+                        ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                    }`}
+                    title={t(`richText.align${al === 'left' ? 'Left' : al === 'center' ? 'Center' : 'Right'}`)}
+                  >
+                    {al === 'left' ? <AlignLeft size={14} /> : al === 'center' ? <AlignCenter size={14} /> : <AlignRight size={14} />}
+                  </button>
+                ))}
+              </div>
             </div>
-            <EditableParagraph
-              ref={paraRef}
-              content={block.content}
-              size={block.size}
-              onSave={(html) => onUpdate(block.id, { content: html })}
-            />
+            <div className={(block.align ?? 'left') === 'center' ? 'text-center' : (block.align ?? 'left') === 'right' ? 'text-right' : 'text-left'}>
+              <EditableParagraph
+                ref={paraRef}
+                content={block.content}
+                size={block.size}
+                onSave={(html) => onUpdate(block.id, { content: html })}
+              />
+            </div>
           </div>
         )}
 
@@ -741,6 +793,13 @@ function BlockRenderer({
                   </button>
                 </div>
                 </div>
+                <input
+                  type="text"
+                  value={block.caption ?? ''}
+                  onChange={(e) => onUpdate(block.id, { caption: e.target.value })}
+                  placeholder={t('richText.captionPlaceholder')}
+                  className="mt-1.5 w-full text-xs text-nokturo-700 dark:text-nokturo-300 px-2 py-1.5 rounded bg-white dark:bg-nokturo-800 placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500 focus:ring-1 focus:ring-nokturo-400 dark:focus:ring-nokturo-500 focus:outline-none"
+                />
               </>
             ) : (
               <label className="flex flex-col items-center justify-center w-full h-32 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors">
@@ -772,20 +831,22 @@ function BlockRenderer({
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.columns')}:</span>
-              {([2, 3, 4] as const).map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => onUpdate(block.id, { columns: c })}
-                  className={`px-2 py-1 rounded text-sm ${
-                    block.columns === c
-                      ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                  }`}
-                >
-                  {c}
-                </button>
-              ))}
+              <div className="flex items-center gap-1">
+                {([2, 3, 4] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => onUpdate(block.id, { columns: c })}
+                    className={`size-7 flex items-center justify-center rounded text-sm ${
+                      block.columns === c
+                        ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
             </div>
             <div
               className="grid gap-2"
@@ -794,11 +855,24 @@ function BlockRenderer({
               }}
             >
               {block.images.map((img, i) => (
-                <div key={i} className="relative aspect-square overflow-hidden group/gal">
-                  <img
-                    src={img.url}
-                    alt={img.alt || ''}
-                    className="w-full h-full object-cover"
+                <div key={i} className="relative group/gal">
+                  <div className="aspect-square overflow-hidden">
+                    <img
+                      src={img.url}
+                      alt={img.alt || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={img.caption ?? ''}
+                    onChange={(e) => {
+                      const next = [...block.images];
+                      next[i] = { ...next[i], caption: e.target.value };
+                      onUpdate(block.id, { images: next });
+                    }}
+                    placeholder={t('richText.captionPlaceholder')}
+                    className="mt-1 w-full text-xs text-nokturo-700 dark:text-nokturo-300 px-2 py-1.5 rounded bg-white dark:bg-nokturo-800 placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500 focus:ring-1 focus:ring-nokturo-400 dark:focus:ring-nokturo-500 focus:outline-none"
                   />
                   <button
                     type="button"
@@ -813,6 +887,154 @@ function BlockRenderer({
                 </div>
               ))}
               <label className="aspect-square flex flex-col items-center justify-center cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors">
+                <Plus size={20} className="text-nokturo-400 dark:text-nokturo-500" />
+                <span className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5">{t('richText.addToGallery')}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      try {
+                        const url = await onUploadImage(f);
+                        onUpdate(block.id, {
+                          images: [...block.images, { url }],
+                        });
+                        onToast({ type: 'success', message: t('moodboard.imageAdded') });
+                      } catch {
+                        onToast({ type: 'error', message: t('richText.uploadError') });
+                      }
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+        )}
+
+        {block.type === 'imageGrid' && (
+          <div className="mb-4">
+            <div className="flex items-center gap-4 mb-2 flex-wrap">
+              <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.columns')}:</span>
+              <div className="flex items-center gap-1">
+                {([2, 3, 4] as const).map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => onUpdate(block.id, { columns: c })}
+                    className={`size-7 flex items-center justify-center rounded text-sm ${
+                      block.columns === c
+                        ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                    }`}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+              <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.aspectRatio')}:</span>
+              <select
+                value={block.aspectRatio ?? '1:1'}
+                onChange={(e) => onUpdate(block.id, { aspectRatio: e.target.value as '5:4' | '1:1' | '3:2' | '16:9' })}
+                className="px-2 py-0.5 text-sm rounded border border-nokturo-200 dark:border-nokturo-600 bg-white dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100"
+              >
+                <option value="5:4">{t('richText.aspectRatio54')}</option>
+                <option value="1:1">{t('richText.aspectRatio11')}</option>
+                <option value="3:2">{t('richText.aspectRatio32')}</option>
+                <option value="16:9">{t('richText.aspectRatio169')}</option>
+              </select>
+              <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.gapRow')} (px):</span>
+              <input
+                type="number"
+                min={0}
+                value={block.gapRow ?? 8}
+                onChange={(e) => {
+                  const v = Math.max(0, parseInt(e.target.value, 10) || 0);
+                  const update: { gapRow: number; gapCol?: number } = { gapRow: v };
+                  if (block.gapLocked ?? true) update.gapCol = v;
+                  onUpdate(block.id, update);
+                }}
+                className="w-14 px-2 py-0.5 text-sm rounded border border-nokturo-200 dark:border-nokturo-600 bg-white dark:bg-nokturo-800"
+              />
+              <button
+                type="button"
+                onClick={() => onUpdate(block.id, { gapLocked: !(block.gapLocked ?? true) })}
+                className={`p-0.5 rounded ${
+                  (block.gapLocked ?? true)
+                    ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
+                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                }`}
+                title={t((block.gapLocked ?? true) ? 'richText.gapLocked' : 'richText.gapUnlocked')}
+              >
+                {(block.gapLocked ?? true) ? <Lock size={14} /> : <Unlock size={14} />}
+              </button>
+              <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.gapCol')} (px):</span>
+              <div className="relative">
+                <input
+                  type="number"
+                  min={0}
+                  value={block.gapCol ?? 8}
+                  onChange={(e) => {
+                    const v = Math.max(0, parseInt(e.target.value, 10) || 0);
+                    const update: { gapCol: number; gapRow?: number } = { gapCol: v };
+                    if (block.gapLocked ?? true) update.gapRow = v;
+                    onUpdate(block.id, update);
+                  }}
+                  disabled={block.gapLocked ?? true}
+                  className="w-14 px-2 py-0.5 text-sm rounded border border-nokturo-200 dark:border-nokturo-600 bg-white dark:bg-nokturo-800 disabled:opacity-100"
+                />
+                {(block.gapLocked ?? true) && (
+                  <div
+                    className="absolute inset-0 cursor-not-allowed rounded pointer-events-auto bg-white/60 dark:bg-nokturo-800/60"
+                    aria-hidden
+                  />
+                )}
+              </div>
+            </div>
+            <div
+              className="grid"
+              style={{
+                gridTemplateColumns: `repeat(${block.columns}, 1fr)`,
+                gap: `${block.gapRow ?? 8}px ${block.gapCol ?? 8}px`,
+              }}
+            >
+              {block.images.map((img, i) => (
+                <div key={i} className="relative group/imgrid">
+                  <div className={`overflow-hidden ${getAspectClass(block.aspectRatio)}`}>
+                    <img
+                      src={img.url}
+                      alt={img.alt || ''}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={img.caption ?? ''}
+                    onChange={(e) => {
+                      const next = [...block.images];
+                      next[i] = { ...next[i], caption: e.target.value };
+                      onUpdate(block.id, { images: next });
+                    }}
+                    placeholder={t('richText.captionPlaceholder')}
+                    className="mt-1 w-full text-xs text-nokturo-700 dark:text-nokturo-300 px-2 py-1.5 rounded bg-white dark:bg-nokturo-800 placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500 focus:ring-1 focus:ring-nokturo-400 dark:focus:ring-nokturo-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = block.images.filter((_, j) => j !== i);
+                      onUpdate(block.id, { images: next });
+                    }}
+                    className="absolute top-1 right-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover/imgrid:opacity-100"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+              <label
+                className={`flex flex-col items-center justify-center cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors border border-dashed border-nokturo-300 dark:border-nokturo-600 rounded ${getAspectClass(block.aspectRatio)}`}
+                style={{ minHeight: 80 }}
+              >
                 <Plus size={20} className="text-nokturo-400 dark:text-nokturo-500" />
                 <span className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5">{t('richText.addToGallery')}</span>
                 <input
@@ -1043,7 +1265,7 @@ function BlockRenderer({
                                           try {
                                             const url = await onUploadImage(f);
                                             const next = [...normalizedCells];
-                                            next[i] = { type: 'image', content: url };
+                                            next[i] = { type: 'image', content: url, caption: cell.caption };
                                             onUpdate(block.id, { cells: next });
                                             onToast({ type: 'success', message: t('moodboard.imageAdded') });
                                           } catch {
@@ -1078,6 +1300,19 @@ function BlockRenderer({
                                     }}
                                   />
                                 </label>
+                              )}
+                              {cell.content && (
+                                <input
+                                  type="text"
+                                  value={cell.caption ?? ''}
+                                  onChange={(e) => {
+                                    const next = [...normalizedCells];
+                                    next[i] = { ...cell, caption: e.target.value };
+                                    onUpdate(block.id, { cells: next });
+                                  }}
+                                  placeholder={t('richText.captionPlaceholder')}
+                                  className="mt-0.5 w-full text-[10px] text-nokturo-700 dark:text-nokturo-300 px-1.5 py-0.5 rounded bg-white dark:bg-nokturo-800 placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500 focus:ring-1 focus:ring-nokturo-400 dark:focus:ring-nokturo-500 focus:outline-none"
+                                />
                               )}
                             </div>
                           )}
@@ -1288,7 +1523,6 @@ export function RichTextBlockEditor({
             </button>
             {addMenuAtIndex === 0 && (
               <div className="absolute left-0 top-full mt-1 z-50">
-                <div className="text-xs text-nokturo-500 dark:text-nokturo-400 mb-1">{t('richText.chooseBlock')}</div>
                 <AddBlockMenu
                   onAdd={handleAddFromMenu}
                   onClose={() => setAddMenuAtIndex(null)}
@@ -1328,7 +1562,6 @@ export function RichTextBlockEditor({
                 </button>
                 {addMenuAtIndex === index + 1 && (
                   <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50">
-                    <div className="text-xs text-nokturo-500 dark:text-nokturo-400 mb-1 text-center">{t('richText.chooseBlock')}</div>
                     <AddBlockMenu
                       onAdd={handleAddFromMenu}
                       onClose={() => setAddMenuAtIndex(null)}

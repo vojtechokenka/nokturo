@@ -5,6 +5,7 @@ import { getUserIdForDb } from '../../stores/authStore';
 import { PageShell } from '../../components/PageShell';
 import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTextBlockEditor';
 import { RichTextBlockViewer, getDefaultTocItems } from '../../components/RichTextBlockViewer';
+import { PageStructurePanel } from '../../components/PageStructurePanel';
 import { ToastContainer, type ToastData } from '../../components/Toast';
 import { Loader2, Pencil, Save } from 'lucide-react';
 
@@ -98,7 +99,7 @@ export default function IdentityPage() {
           <Loader2 size={24} className="animate-spin text-nokturo-500" />
         </div>
       ) : (
-        <div className={mode === 'view' ? 'max-w-5xl mx-auto' : 'max-w-3xl'}>
+        <div className={mode === 'view' ? 'max-w-5xl mx-auto' : 'flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl'}>
           {mode === 'view' ? (
             <RichTextBlockViewer
               blocks={blocks}
@@ -107,13 +108,22 @@ export default function IdentityPage() {
               headingFont="body"
             />
           ) : (
-            <RichTextBlockEditor
-              value={blocks}
-              onChange={setBlocks}
-              onUploadImage={handleUploadImage}
-              onToast={addToast}
-              headingFont="body"
-            />
+            <>
+              <div className="min-w-0 flex-1 max-w-3xl">
+                <RichTextBlockEditor
+                  value={blocks}
+                  onChange={setBlocks}
+                  onUploadImage={handleUploadImage}
+                  onToast={addToast}
+                  headingFont="body"
+                />
+              </div>
+              <PageStructurePanel
+                blocks={blocks}
+                onChange={setBlocks}
+                className="hidden lg:block"
+              />
+            </>
           )}
           <div className="fixed bottom-6 right-6 z-40">
             {mode === 'edit' ? (

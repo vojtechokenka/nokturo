@@ -40,6 +40,8 @@ function getBlockLabel(block: RichTextBlock, t: (k: string) => string): string {
       return block.url ? t('richText.image') : `(${t('richText.image')})`;
     case 'gallery':
       return `${t('richText.gallery')} (${block.images?.length || 0})`;
+    case 'imageGrid':
+      return `${t('richText.imageGrid')} (${block.images?.length || 0})`;
     case 'grid': {
       const cols = Math.max(1, block.columns ?? 1);
       const rows = Math.max(1, block.rows ?? 1);
@@ -69,6 +71,8 @@ function getBlockIcon(block: RichTextBlock) {
       return <ImageIcon size={14} className="shrink-0 text-nokturo-500 dark:text-nokturo-400" />;
     case 'gallery':
       return <LayoutGrid size={14} className="shrink-0 text-nokturo-500 dark:text-nokturo-400" />;
+    case 'imageGrid':
+      return <Grid3X3 size={14} className="shrink-0 text-nokturo-500 dark:text-nokturo-400" />;
     case 'grid':
       return <Grid3X3 size={14} className="shrink-0 text-nokturo-500 dark:text-nokturo-400" />;
     case 'link':

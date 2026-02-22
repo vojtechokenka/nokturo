@@ -5,6 +5,7 @@
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { RichTextBlock } from './RichTextBlockEditor';
+import { getAspectClass } from './RichTextBlockEditor';
 import { TableOfContents, type TocItem } from './TableOfContents';
 
 /** Výchozí TOC – Způsob zakončení švů, Hardware – používá se na Brand Identity a Strategy */
@@ -117,10 +118,10 @@ function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; 
     case 'paragraph':
       if (!block.content?.trim()) return null;
       const sizeClass = block.size === 'large' ? 'text-lg text-nokturo-900 dark:text-nokturo-100' : block.size === 'small' ? 'text-sm text-nokturo-900/60 dark:text-nokturo-100/60' : 'text-base text-nokturo-900/80 dark:text-nokturo-100/80';
-      const paraTextClass = '';
+      const alignClass = block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left';
       return (
         <div
-          className={`font-body ${sizeClass} ${paraTextClass} leading-relaxed mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-0.5 [&_a]:text-nokturo-800 dark:[&_a]:text-nokturo-200 [&_a]:underline [&_a]:hover:text-nokturo-900 dark:[&_a]:hover:text-nokturo-100`}
+          className={`font-body ${sizeClass} ${alignClass} leading-relaxed mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-0.5 [&_a]:text-nokturo-800 dark:[&_a]:text-nokturo-200 [&_a]:underline [&_a]:hover:text-nokturo-900 dark:[&_a]:hover:text-nokturo-100`}
           dangerouslySetInnerHTML={{ __html: block.content }}
         />
       );
@@ -154,6 +155,11 @@ function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; 
             alt={block.alt || ''}
             className={imgFit === 'fill' ? 'w-full object-cover' : 'w-auto max-w-full h-auto'}
           />
+          {block.caption?.trim() && (
+            <figcaption className="mt-1.5 text-xs text-nokturo-500 dark:text-nokturo-400 text-center">
+              {block.caption}
+            </figcaption>
+          )}
         </figure>
       );
 
@@ -165,12 +171,48 @@ function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; 
           style={{ gridTemplateColumns: `repeat(${block.columns}, 1fr)` }}
         >
           {block.images.map((img, i) => (
-            <img
-              key={i}
-              src={img.url}
-              alt={img.alt || ''}
-              className="w-full aspect-square object-cover"
-            />
+            <figure key={i}>
+              <img
+                src={img.url}
+                alt={img.alt || ''}
+                className="w-full aspect-square object-cover"
+              />
+              {img.caption?.trim() && (
+                <figcaption className="mt-1 text-xs text-nokturo-500 dark:text-nokturo-400 text-center">
+                  {img.caption}
+                </figcaption>
+              )}
+            </figure>
+          ))}
+        </div>
+      );
+
+    case 'imageGrid':
+      if (!block.images?.length) return null;
+      const gapR = block.gapRow ?? 8;
+      const gapC = block.gapCol ?? 8;
+      return (
+        <div
+          className="my-8"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(${block.columns}, 1fr)`,
+            gap: `${gapR}px ${gapC}px`,
+          }}
+        >
+          {block.images.map((img, i) => (
+            <figure key={i}>
+              <img
+                src={img.url}
+                alt={img.alt || ''}
+                className={`w-full ${getAspectClass(block.aspectRatio)} object-cover`}
+              />
+              {img.caption?.trim() && (
+                <figcaption className="mt-1 text-xs text-nokturo-500 dark:text-nokturo-400 text-center">
+                  {img.caption}
+                </figcaption>
+              )}
+            </figure>
           ))}
         </div>
       );
@@ -221,7 +263,14 @@ function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; 
                     <span className="whitespace-pre-wrap [&_a]:underline [&_a]:text-blue-600 dark:[&_a]:text-blue-400" dangerouslySetInnerHTML={{ __html: cell.content }} />
                   ) : null
                 ) : cell.content ? (
-                  <img src={cell.content} alt="" className="w-full max-h-24 object-cover" />
+                  <figure>
+                    <img src={cell.content} alt="" className="w-full max-h-24 object-cover" />
+                    {cell.caption?.trim() && (
+                      <figcaption className="mt-0.5 text-[10px] text-nokturo-500 dark:text-nokturo-400 text-center">
+                        {cell.caption}
+                      </figcaption>
+                    )}
+                  </figure>
                 ) : null}
               </div>
             );
