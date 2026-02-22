@@ -68,7 +68,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
         defaultTocItems!.map((item, idx) => (
           <section key={item.id} id={item.id} className="mb-12 scroll-mt-6">
             <div className={`${idx === 0 ? 'mt-16' : 'mt-10'} border-t border-nokturo-300 dark:border-nokturo-600 mb-6`} aria-hidden />
-            <h2 className="font-headline text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4">{item.text}</h2>
+            <h2 className="font-headline text-heading-4 font-normal text-nokturo-900 dark:text-nokturo-100 mb-4">{item.text}</h2>
           </section>
         ))}
     </article>
@@ -93,10 +93,20 @@ function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; 
       const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
       const isHeadline = headingFont === 'headline';
       const hFont = isHeadline ? 'font-headline' : 'font-body';
+      const hSizeClass =
+        block.level === 1
+          ? isHeadline
+            ? 'text-[48px]'
+            : 'text-[30px]'
+          : block.level === 2
+            ? isHeadline
+              ? 'text-[40px]'
+              : 'text-[24px]'
+            : 'text-[20px]';
       const headingClass = {
-        1: `${hFont} text-[${isHeadline ? '48' : '36'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 mt-8 mb-4 scroll-mt-6 leading-[1.1]`,
-        2: `${hFont} text-[${isHeadline ? '40' : '24'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 mt-12 mb-4 scroll-mt-6 leading-[1.2]`,
-        3: `${hFont} text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 mt-8 mb-3 scroll-mt-6`,
+        1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-4 scroll-mt-6 leading-[1.1]`,
+        2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-12 mb-4 scroll-mt-6 leading-[1.2]`,
+        3: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-3 scroll-mt-6`,
       }[block.level];
       return (
         <Tag id={block.id} className={headingClass}>

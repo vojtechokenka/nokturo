@@ -329,7 +329,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-5 py-3 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
+      <div className="px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
         <h4 className="text-sm font-medium text-nokturo-700 dark:text-nokturo-300 flex items-center gap-2">
           <MessageSquare className="w-4 h-4" />
           {t('tasks.comments')}

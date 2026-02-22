@@ -97,6 +97,21 @@ export function TaskDetailSlideOver({
 
         {/* Task detail panel */}
         <div className="w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col">
+        {/* Comments toggle – separate row */}
+        <div className="hidden md:flex items-center justify-end px-6 py-2 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
+          <button
+            type="button"
+            onClick={() => setCommentsOpen((p) => !p)}
+            className={`p-2 rounded-lg transition-colors ${
+              commentsOpen
+                ? 'text-nokturo-800 dark:text-nokturo-200 bg-nokturo-100 dark:bg-nokturo-700'
+                : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
+            }`}
+            title={t('tasks.comments')}
+          >
+            <MessageSquare className="w-4 h-4" />
+          </button>
+        </div>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -121,18 +136,6 @@ export function TaskDetailSlideOver({
             </h3>
           </div>
           <div className="flex items-center gap-1 shrink-0">
-            <button
-              type="button"
-              onClick={() => setCommentsOpen((p) => !p)}
-              className={`hidden md:flex p-2 rounded-lg transition-colors ${
-                commentsOpen
-                  ? 'text-nokturo-800 dark:text-nokturo-200 bg-nokturo-100 dark:bg-nokturo-700'
-                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
-              }`}
-              title={t('tasks.comments')}
-            >
-              <MessageSquare className="w-4 h-4" />
-            </button>
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((p) => !p)}

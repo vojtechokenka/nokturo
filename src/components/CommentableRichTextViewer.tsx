@@ -134,9 +134,9 @@ function CommentableBlockView({
   if (block.type === 'heading' && block.text?.trim()) {
     const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
     const headingClass = {
-      1: 'font-headline text-[48px] font-extralight text-nokturo-900 dark:text-nokturo-100 mt-16 mb-4 scroll-mt-6 leading-[1.1]',
-      2: 'font-headline text-[40px] font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4 scroll-mt-6 leading-[1.2]',
-      3: 'font-body text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 mt-8 mb-3 scroll-mt-6',
+      1: 'font-headline text-[48px] font-normal text-nokturo-900 dark:text-nokturo-100 mt-16 mb-4 scroll-mt-6 leading-[1.1]',
+      2: 'font-headline text-[40px] font-normal text-nokturo-900 dark:text-nokturo-100 mb-4 scroll-mt-6 leading-[1.2]',
+      3: 'font-body text-[20px] font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-3 scroll-mt-6',
     }[block.level];
     const text = block.text;
     const display = isPendingBlock

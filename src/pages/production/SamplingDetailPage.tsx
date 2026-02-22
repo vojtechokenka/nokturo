@@ -236,7 +236,7 @@ export default function SamplingDetailPage() {
           <header className="mb-12">
             <div className="flex flex-wrap items-start gap-4">
               <div className="flex-1 min-w-0">
-                <h1 className="font-headline text-[32px] sm:text-[48px] leading-[1.2] font-extralight text-nokturo-900 dark:text-nokturo-100">{product.name}</h1>
+                <h1 className="font-headline text-[32px] sm:text-[48px] leading-[1.2] font-normal text-nokturo-900 dark:text-nokturo-100">{product.name}</h1>
                 {product.sku && (
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">SKU: {product.sku}</p>
                 )}
@@ -287,7 +287,7 @@ export default function SamplingDetailPage() {
           const materialsSection = materials.length > 0 && (
             <section id="section-materials" className="mb-12 scroll-mt-6">
               <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
-              <h2 className="font-body text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4">
+              <h2 className="font-body text-heading-4 font-normal text-nokturo-900 dark:text-nokturo-100 mb-4">
                 {t('products.materials.title')}
               </h2>
               {(() => {
@@ -355,7 +355,7 @@ export default function SamplingDetailPage() {
           const labelsSection = labels.length > 0 && (
             <section id="section-labels" className="mb-12 scroll-mt-6">
               <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
-              <h2 className="font-body text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4">
+              <h2 className="font-body text-heading-4 font-normal text-nokturo-900 dark:text-nokturo-100 mb-4">
                 {t('products.labels.title')}
               </h2>
               <div className="space-y-2">
@@ -437,7 +437,7 @@ export default function SamplingDetailPage() {
           const designGallerySection = designGallery.length > 0 && (
             <section id="section-design-gallery" className="mb-12 scroll-mt-6">
               <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
-              <h2 className="font-body text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4">
+              <h2 className="font-body text-heading-4 font-normal text-nokturo-900 dark:text-nokturo-100 mb-4">
                 {t('products.designGallery')}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -476,7 +476,7 @@ export default function SamplingDetailPage() {
           const moodboardGallerySection = moodboardGallery.length > 0 && (
             <section id="section-moodboard-gallery" className="mb-12 scroll-mt-6">
               <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
-              <h2 className="font-body text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4">
+              <h2 className="font-body text-heading-4 font-normal text-nokturo-900 dark:text-nokturo-100 mb-4">
                 {t('products.moodboardGallery')}
               </h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

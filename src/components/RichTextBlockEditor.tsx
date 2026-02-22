@@ -545,10 +545,20 @@ function BlockRenderer({
             {(() => {
               const isHeadline = headingFont !== 'body';
               const hf = isHeadline ? 'font-headline' : 'font-body';
+              const sizeClass =
+                block.level === 1
+                  ? isHeadline
+                    ? 'text-[48px]'
+                    : 'text-[30px]'
+                  : block.level === 2
+                    ? isHeadline
+                      ? 'text-[40px]'
+                      : 'text-[24px]'
+                    : 'text-[20px]';
               const levelClass = {
-                1: `${hf} w-full text-[${isHeadline ? '48' : '36'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1]`,
-                2: `${hf} w-full text-[${isHeadline ? '40' : '24'}px] font-extralight text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2]`,
-                3: `${hf} w-full text-[20px] font-medium text-nokturo-800 dark:text-nokturo-200 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500`,
+                1: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1]`,
+                2: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2]`,
+                3: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500`,
               }[block.level];
               return (
                 <input

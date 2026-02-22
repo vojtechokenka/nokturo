@@ -168,6 +168,10 @@ export default function TasksPage() {
   const [tab, setTab] = useState<Tab>('active');
   const [scope, setScope] = useState<TaskScope>('mine');
   const [tasks, setTasks] = useState<Task[]>([]);
+
+  useEffect(() => {
+    if (!isFounder && scope === 'all') setScope('mine');
+  }, [isFounder, scope]);
   const [loading, setLoading] = useState(true);
 
   const [editOpen, setEditOpen] = useState(false);
@@ -416,30 +420,32 @@ export default function TasksPage() {
           <h1 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
             {scope === 'mine' ? t('tasks.myTasks') : t('tasks.allTasks')}
           </h1>
-          <div className="flex items-center bg-nokturo-100 dark:bg-nokturo-700 rounded-lg p-0.5">
-            <button
-              type="button"
-              onClick={() => setScope('mine')}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                scope === 'mine'
-                  ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
-                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
-              }`}
-            >
-              {t('tasks.scopeMine')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setScope('all')}
-              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                scope === 'all'
-                  ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
-                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
-              }`}
-            >
-              {t('tasks.scopeAll')}
-            </button>
-          </div>
+          {isFounder && (
+            <div className="flex items-center bg-nokturo-100 dark:bg-nokturo-700 rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => setScope('mine')}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                  scope === 'mine'
+                    ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
+                    : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+                }`}
+              >
+                {t('tasks.scopeMine')}
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope('all')}
+                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                  scope === 'all'
+                    ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
+                    : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+                }`}
+              >
+                {t('tasks.scopeAll')}
+              </button>
+            </div>
+          )}
         </div>
         <button
           onClick={openNew}
