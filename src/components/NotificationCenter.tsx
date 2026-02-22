@@ -8,7 +8,7 @@ import { Bell, Check, CheckCircle2, Clock, UserPlus, Trash2 } from 'lucide-react
 export interface Notification {
   id: string;
   user_id: string;
-  type: 'task_assigned' | 'task_completed' | 'deadline_7d' | 'deadline_48h' | 'deadline_24h';
+  type: 'task_assigned' | 'task_completed' | 'task_comment' | 'deadline_7d' | 'deadline_48h' | 'deadline_24h';
   title: string;
   body: string | null;
   task_id: string | null;
@@ -19,6 +19,7 @@ export interface Notification {
 const ICON_MAP: Record<Notification['type'], typeof Bell> = {
   task_assigned: UserPlus,
   task_completed: CheckCircle2,
+  task_comment: Bell,
   deadline_7d: Clock,
   deadline_48h: Clock,
   deadline_24h: Clock,
@@ -27,6 +28,7 @@ const ICON_MAP: Record<Notification['type'], typeof Bell> = {
 const COLOR_MAP: Record<Notification['type'], string> = {
   task_assigned: 'text-blue-500 dark:text-blue-400',
   task_completed: 'text-green-500 dark:text-green-400',
+  task_comment: 'text-purple-500 dark:text-purple-400',
   deadline_7d: 'text-nokturo-500 dark:text-nokturo-400',
   deadline_48h: 'text-amber-500 dark:text-amber-400',
   deadline_24h: 'text-red-500 dark:text-red-400',
@@ -130,7 +132,7 @@ export function NotificationCenter() {
           setOpen((o) => !o);
           if (!open) fetchNotifications();
         }}
-        className="relative inline-flex items-center justify-center w-8 h-8 text-nokturo-700 dark:text-nokturo-200 bg-white dark:bg-nokturo-800 hover:bg-nokturo-50 dark:hover:bg-nokturo-750 rounded-lg shadow-sm transition-colors"
+        className="relative inline-flex items-center justify-center w-8 h-8 text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-300/50 dark:hover:bg-nokturo-600 rounded-lg transition-colors"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
@@ -173,7 +175,7 @@ export function NotificationCenter() {
             {/* List */}
             <div className="max-h-80 overflow-y-auto">
               {notifications.length === 0 ? (
-                <div className="py-10 text-center text-sm text-nokturo-400 dark:text-nokturo-500">
+                <div className="py-10 text-center text-sm text-nokturo-500 dark:text-nokturo-500">
                   {t('notifications.empty')}
                 </div>
               ) : (

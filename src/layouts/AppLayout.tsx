@@ -1,11 +1,98 @@
-import { Outlet, Navigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { NotificationCenter } from '../components/NotificationCenter';
+import { DefaultAvatar } from '../components/DefaultAvatar';
 import { useAuthStore } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
-import { Loader2, Menu, PanelLeft, ClipboardList } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { Loader2, Menu, ClipboardList, Settings, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+
+function ProfileDropdown() {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const handleLogout = async () => {
+    setOpen(false);
+    if (import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') {
+      useAuthStore.getState().logout();
+    } else {
+      await supabase.auth.signOut();
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="relative shrink-0 w-8 h-8 rounded-full overflow-hidden bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center hover:ring-2 hover:ring-nokturo-400 dark:hover:ring-nokturo-500 transition-all focus:outline-none"
+      >
+        {user?.avatarUrl ? (
+          <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <DefaultAvatar size={32} />
+        )}
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-nokturo-800 rounded-xl shadow-xl z-20 overflow-hidden border border-nokturo-200 dark:border-nokturo-700">
+            {/* User info */}
+            <div className="px-4 py-3 border-b border-nokturo-200/60 dark:border-nokturo-700/60">
+              <div className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 truncate">
+                {user?.firstName || user?.name}
+              </div>
+              <div className="text-xs text-nokturo-600 dark:text-nokturo-400 truncate">
+                {user?.role && t(`roles.${user.role}`)}
+              </div>
+            </div>
+
+            {/* Menu items */}
+            <div className="py-1">
+              <button
+                onClick={() => { setOpen(false); navigate('/tasks'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors"
+              >
+                <ClipboardList className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                {t('tasks.myTasks')}
+              </button>
+              <button
+                onClick={() => { setOpen(false); navigate('/settings/account'); }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors"
+              >
+                <Settings className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                {t('common.settings')}
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                {t('common.logout')}
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 export function AppLayout() {
   const { t } = useTranslation();
@@ -13,8 +100,8 @@ export function AppLayout() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const toggleSidebar = useSidebarStore((s) => s.toggle);
-  const toggleCollapsed = useSidebarStore((s) => s.toggleCollapsed);
   const closeSidebar = useSidebarStore((s) => s.close);
+
   if (isLoading) {
     return (
       <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 items-center justify-center">
@@ -70,23 +157,9 @@ export function AppLayout() {
           {/* Sticky top bar */}
           <div className="sticky top-0 z-30 bg-nokturo-200 dark:bg-nokturo-700">
             <div className="flex items-center gap-2 px-4 sm:px-6 h-[52px]">
-              <button
-                type="button"
-                onClick={toggleCollapsed}
-                className="hidden md:flex items-center justify-center w-8 h-8 rounded-lg text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-300/50 dark:hover:bg-nokturo-600 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-                title={t('common.toggleSidebar')}
-              >
-                <PanelLeft className="w-[18px] h-[18px]" strokeLinejoin="miter" strokeLinecap="square" />
-              </button>
               <div className="flex-1" />
               <NotificationCenter />
-              <Link
-                to="/tasks"
-                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-nokturo-700 dark:text-nokturo-200 bg-white dark:bg-nokturo-800 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 rounded-lg shadow-sm transition-colors"
-              >
-                <ClipboardList className="w-4 h-4" />
-                {t('tasks.myTasks')}
-              </Link>
+              <ProfileDropdown />
             </div>
           </div>
           <ErrorBoundary>

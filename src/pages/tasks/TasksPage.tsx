@@ -157,6 +157,8 @@ function TaskRowMenu({
   );
 }
 
+type TaskScope = 'mine' | 'all';
+
 export default function TasksPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
@@ -164,6 +166,7 @@ export default function TasksPage() {
   const isFounder = user?.role === 'founder';
 
   const [tab, setTab] = useState<Tab>('active');
+  const [scope, setScope] = useState<TaskScope>('mine');
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -202,12 +205,20 @@ export default function TasksPage() {
     if (!userId) return;
     setLoading(true);
 
-    const { data: assigneeRows } = await supabase
-      .from('task_assignees')
-      .select('task_id')
-      .eq('user_id', userId);
+    let taskIds: string[];
 
-    const taskIds = assigneeRows?.map((r: { task_id: string }) => r.task_id) || [];
+    if (scope === 'all') {
+      const { data: allTaskRows } = await supabase
+        .from('tasks')
+        .select('id');
+      taskIds = allTaskRows?.map((r: { id: string }) => r.id) || [];
+    } else {
+      const { data: assigneeRows } = await supabase
+        .from('task_assignees')
+        .select('task_id')
+        .eq('user_id', userId);
+      taskIds = assigneeRows?.map((r: { task_id: string }) => r.task_id) || [];
+    }
 
     if (taskIds.length === 0) {
       setTasks([]);
@@ -247,7 +258,7 @@ export default function TasksPage() {
     setTasks(enriched);
     fetchCommentCounts(taskIds);
     setLoading(false);
-  }, [userId, fetchCommentCounts]);
+  }, [userId, scope, fetchCommentCounts]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
@@ -401,9 +412,35 @@ export default function TasksPage() {
     <PageShell>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
-          {t('tasks.myTasks')}
-        </h1>
+        <div className="flex items-center gap-4">
+          <h1 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
+            {scope === 'mine' ? t('tasks.myTasks') : t('tasks.allTasks')}
+          </h1>
+          <div className="flex items-center bg-nokturo-100 dark:bg-nokturo-700 rounded-lg p-0.5">
+            <button
+              type="button"
+              onClick={() => setScope('mine')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                scope === 'mine'
+                  ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
+                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+              }`}
+            >
+              {t('tasks.scopeMine')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope('all')}
+              className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                scope === 'all'
+                  ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
+                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+              }`}
+            >
+              {t('tasks.scopeAll')}
+            </button>
+          </div>
+        </div>
         <button
           onClick={openNew}
           className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors"
@@ -431,7 +468,7 @@ export default function TasksPage() {
               className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative ${
                 tab === key
                   ? 'text-nokturo-900 dark:text-nokturo-100'
-                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+                  : 'text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
               }`}
             >
               {t(`tasks.${key}`)}
@@ -450,7 +487,7 @@ export default function TasksPage() {
 
       {/* Deleted tab info banner */}
       {tab === 'deleted' && deletedTasks.length > 0 && (
-        <div className="mb-4 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-800 text-xs text-nokturo-500 dark:text-nokturo-400 flex items-center justify-between">
+        <div className="mb-4 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-800 text-xs text-nokturo-600 dark:text-nokturo-400 flex items-center justify-between">
           <span>{t('tasks.deletedInfo')}</span>
           {isFounder && (
             <button
@@ -480,7 +517,7 @@ export default function TasksPage() {
         </div>
       ) : displayed.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-sm">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
             {tab === 'active'
               ? t('tasks.noActiveTasks')
               : tab === 'completed'
@@ -488,7 +525,7 @@ export default function TasksPage() {
                 : t('tasks.noDeletedTasks')}
           </p>
           {tab === 'active' && (
-            <p className="text-nokturo-400 dark:text-nokturo-500 text-sm mt-1">
+            <p className="text-nokturo-500 dark:text-nokturo-500 text-sm mt-1">
               {t('tasks.addFirstTask')}
             </p>
           )}
@@ -539,9 +576,9 @@ export default function TasksPage() {
                   <span
                     className={`text-sm font-medium truncate ${
                       isCompleted
-                        ? 'line-through text-nokturo-400 dark:text-nokturo-500'
+                        ? 'line-through text-nokturo-500 dark:text-nokturo-500'
                         : isDeleted
-                          ? 'text-nokturo-400 dark:text-nokturo-500'
+                          ? 'text-nokturo-500 dark:text-nokturo-500'
                           : 'text-nokturo-900 dark:text-nokturo-100'
                     }`}
                   >

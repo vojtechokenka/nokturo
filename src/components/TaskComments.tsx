@@ -16,6 +16,7 @@ import { INPUT_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications } from '../lib/sendMentionNotifications';
+import { createNotification } from './NotificationCenter';
 
 interface ProfileOption {
   id: string;
@@ -42,9 +43,11 @@ interface Comment {
 
 interface TaskCommentsProps {
   taskId: string;
+  taskCreatorId?: string | null;
+  taskTitle?: string;
 }
 
-export function TaskComments({ taskId }: TaskCommentsProps) {
+export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsProps) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canDelete = user?.role ? canDeleteAnything(user.role) : false;
@@ -179,6 +182,21 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           link: `/tasks`,
         });
       }
+
+      if (taskCreatorId && taskCreatorId !== authorId) {
+        const commenterName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
+        const notifTitle = taskTitle
+          ? `${commenterName}: ${taskTitle}`
+          : commenterName;
+        await createNotification(
+          taskCreatorId,
+          'task_comment',
+          notifTitle,
+          content.trim().slice(0, 200),
+          taskId,
+        );
+      }
+
       if (parentId) {
         setReplyContent('');
         setReplyTo(null);
@@ -209,43 +227,47 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
     const replies = getReplies(comment.id);
 
     return (
-      <div key={comment.id} className={isReply ? 'ml-6' : ''}>
-        <div className="flex items-start gap-2.5 py-2 group">
-          {comment.profile?.avatar_url ? (
-            <img src={comment.profile.avatar_url} alt={name} className="w-6 h-6 rounded-full object-cover shrink-0 mt-0.5" />
-          ) : (
-            <div className="w-6 h-6 rounded-full overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-black">
-              <DefaultAvatar size={24} />
-            </div>
-          )}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-xs font-medium text-nokturo-700 dark:text-nokturo-300">{name}</span>
-              <span className="text-[10px] text-nokturo-500">
-                {new Date(comment.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <p className="text-xs text-nokturo-600 dark:text-nokturo-400 leading-relaxed mt-0.5 break-words">
+      <div key={comment.id} className={isReply ? 'ml-6 mt-2' : ''}>
+        <div
+          className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 ${isOwn ? 'bg-nokturo-100 dark:bg-white/20 text-nokturo-900 dark:text-white' : 'bg-nokturo-50 dark:bg-white/10 text-nokturo-700 dark:text-white'}`}
+        >
+          <div className="-mx-2 px-3 pt-1 pb-2">
+            <p className="text-base break-words text-inherit leading-relaxed">
               {renderContentWithMentions(
                 comment.content,
                 isOwn,
                 [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || ''
               )}
             </p>
-            <div className="flex items-center gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          </div>
+          <div className="flex justify-between items-center mt-4 min-w-0 gap-2">
+            <div className="flex gap-2 items-center min-w-0 flex-1">
+              {comment.profile?.avatar_url ? (
+                <img src={comment.profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+              ) : (
+                <DefaultAvatar size={28} className="rounded-full overflow-hidden shrink-0 w-7 h-7" />
+              )}
+              <div className="flex flex-col min-w-0">
+                <span className="text-sm font-medium truncate text-inherit">{name}</span>
+                <span className="text-[10px] opacity-80 text-inherit">
+                  {new Date(comment.created_at).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 shrink-0">
               {(isOwn || canDelete) && (
                 <div className="relative">
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(commentMenuOpen === comment.id ? null : comment.id); }}
-                    className="p-0.5 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-nokturo-500 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+                    className={`p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-white/60 dark:hover:text-white/90 hover:bg-nokturo-100 dark:hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                   >
-                    <MoreHorizontal className="w-3 h-3" />
+                    <MoreHorizontal className="w-4 h-4" />
                   </button>
                   {commentMenuOpen === comment.id && (
                     <>
                       <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
-                      <div className="absolute left-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[100px] z-20" onClick={(e) => e.stopPropagation()}>
+                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[100px] z-20" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
@@ -261,45 +283,45 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
               {!isReply && (
                 <button
                   onClick={() => { setReplyTo(replyTo === comment.id ? null : comment.id); setReplyContent(''); }}
-                  className="flex items-center gap-1 text-[10px] text-nokturo-500 hover:text-nokturo-600 transition-colors"
+                  className="flex items-center gap-1 text-[10px] text-inherit opacity-80 hover:opacity-100 transition-opacity"
                 >
                   <CornerDownRight className="w-2.5 h-2.5" />
                   {t('comments.reply')}
                 </button>
               )}
             </div>
-            {replyTo === comment.id && (
-              <div className="flex items-end gap-1.5 mt-2 relative">
-                <div className="flex-1 relative">
-                  {replyMention.active && (
-                    <MentionDropdown profiles={replyMention.filtered} selectedIdx={replyMention.selectedIdx} onSelect={handleReplyMentionSelect} />
-                  )}
-                  <input
-                    type="text"
-                    value={replyContent}
-                    onChange={(e) => setReplyContent(e.target.value)}
-                    onKeyDown={(e) => {
-                      const result = replyMention.handleKeyDown(e);
-                      if (result === 'select') { const p = replyMention.getSelectedProfile(); if (p) handleReplyMentionSelect(p); return; }
-                      if (result) return;
-                      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePost(comment.id); }
-                    }}
-                    placeholder={t('comments.replyPlaceholder')}
-                    className={`${INPUT_CLASS} !text-xs !py-1.5`}
-                    autoFocus
-                  />
-                </div>
-                <button
-                  onClick={() => handlePost(comment.id)}
-                  disabled={!replyContent.trim() || sending}
-                  className="p-1.5 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 rounded hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors disabled:opacity-50"
-                >
-                  <Send className="w-3 h-3" />
-                </button>
-              </div>
-            )}
           </div>
         </div>
+        {replyTo === comment.id && (
+          <div className="flex items-end gap-1.5 mt-2 relative">
+            <div className="flex-1 relative">
+              {replyMention.active && (
+                <MentionDropdown profiles={replyMention.filtered} selectedIdx={replyMention.selectedIdx} onSelect={handleReplyMentionSelect} />
+              )}
+              <input
+                type="text"
+                value={replyContent}
+                onChange={(e) => setReplyContent(e.target.value)}
+                onKeyDown={(e) => {
+                  const result = replyMention.handleKeyDown(e);
+                  if (result === 'select') { const p = replyMention.getSelectedProfile(); if (p) handleReplyMentionSelect(p); return; }
+                  if (result) return;
+                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePost(comment.id); }
+                }}
+                placeholder={t('comments.replyPlaceholder')}
+                className={`${INPUT_CLASS} !text-xs !py-1.5`}
+                autoFocus
+              />
+            </div>
+            <button
+              onClick={() => handlePost(comment.id)}
+              disabled={!replyContent.trim() || sending}
+              className="p-1.5 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 rounded hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors disabled:opacity-50"
+            >
+              <Send className="w-3 h-3" />
+            </button>
+          </div>
+        )}
         {replies.map((reply) => renderComment(reply, true))}
       </div>
     );
@@ -312,7 +334,9 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
           <MessageSquare className="w-4 h-4" />
           {t('tasks.comments')}
           {comments.length > 0 && (
-            <span className="text-[10px] text-nokturo-500 dark:text-nokturo-400">({comments.length})</span>
+            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] leading-none px-1 rounded-full bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400">
+              {comments.length}
+            </span>
           )}
         </h4>
       </div>
@@ -325,11 +349,11 @@ export function TaskComments({ taskId }: TaskCommentsProps) {
         ) : rootComments.length === 0 ? (
           <div className="text-center py-10">
             <MessageSquare className="w-7 h-7 text-nokturo-400 dark:text-nokturo-600 mx-auto mb-2" />
-            <p className="text-nokturo-500 text-xs">{t('comments.noComments')}</p>
-            <p className="text-nokturo-400 dark:text-nokturo-500 text-[10px] mt-0.5">{t('tasks.commentsBeFirst')}</p>
+            <p className="text-nokturo-600 text-xs">{t('comments.noComments')}</p>
+            <p className="text-nokturo-500 dark:text-nokturo-500 text-[10px] mt-0.5">{t('tasks.commentsBeFirst')}</p>
           </div>
         ) : (
-          <div className="space-y-0.5">
+          <div className="space-y-2">
             {rootComments.map((c) => renderComment(c))}
             <div ref={bottomRef} />
           </div>

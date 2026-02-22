@@ -12,16 +12,24 @@ import {
 } from '../../components/AccountingSlideOver';
 import { AccountingDetailSlideOver } from '../../components/AccountingDetailSlideOver';
 import { AccountingOrderRow } from '../../components/AccountingOrderRow';
+import {
+  SubscriptionSlideOver,
+  type Subscription,
+} from '../../components/SubscriptionSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { FilterGroup } from '../../components/FilterGroup';
-import { Plus, Receipt, Loader2, ArrowUpDown } from 'lucide-react';
+import { Plus, Receipt, Loader2, ArrowUpDown, RefreshCw, Pause, XCircle } from 'lucide-react';
 import { SimpleDropdown } from '../../components/SimpleDropdown';
+
+type PageTab = 'orders' | 'subscriptions';
 
 export default function AccountingPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
   useExchangeRates();
+
+  const [pageTab, setPageTab] = useState<PageTab>('orders');
 
   const [orders, setOrders] = useState<AccountingOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +46,13 @@ export default function AccountingPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
   const [toasts, setToasts] = useState<ToastData[]>([]);
+
+  // Subscriptions state
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subsLoading, setSubsLoading] = useState(true);
+  const [subEditOpen, setSubEditOpen] = useState(false);
+  const [editingSub, setEditingSub] = useState<Subscription | null>(null);
+  const [subDeleteTarget, setSubDeleteTarget] = useState<string | null>(null);
 
   const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'error') => {
     setToasts((prev) => [...prev, { id: crypto.randomUUID(), message, type }]);
@@ -193,6 +208,52 @@ export default function AccountingPage() {
     addToast(t('accounting.saved'), 'success');
   };
 
+  // ── Subscriptions ────────────────────────────────────────
+  const fetchSubscriptions = useCallback(async () => {
+    setSubsLoading(true);
+    const { data, error } = await supabase
+      .from('subscriptions')
+      .select('*, supplier:suppliers(name)')
+      .order('created_at', { ascending: false });
+    if (!error && data) setSubscriptions(data as Subscription[]);
+    setSubsLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchSubscriptions();
+  }, [fetchSubscriptions]);
+
+  const handleSubSaved = () => {
+    setSubEditOpen(false);
+    setEditingSub(null);
+    fetchSubscriptions();
+    addToast(t('subscriptions.saved'), 'success');
+  };
+
+  const handleSubDelete = async (id: string) => {
+    const { error } = await supabase.from('subscriptions').delete().eq('id', id);
+    if (!error) setSubscriptions((prev) => prev.filter((s) => s.id !== id));
+    setSubDeleteTarget(null);
+  };
+
+  const formatNextBilling = (d: string | null) => {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString(user?.language === 'cs' ? 'cs-CZ' : 'en-US', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
+  const statusColor = (status: string) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
+      case 'paused': return 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300';
+      case 'cancelled': return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
+      default: return 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400';
+    }
+  };
+
   // Overview stats (from filtered orders)
   const ordersComing = orders.filter((o) => o.order_status === 'ordered').length;
   const spentCzk = orders
@@ -216,16 +277,37 @@ export default function AccountingPage() {
     >
       <ToastContainer toasts={toasts} onClose={closeToast} />
 
+      {/* Page-level tabs: Orders | Subscriptions */}
+      <div className="flex gap-1 mb-6 border-b border-nokturo-200 dark:border-nokturo-700">
+        {(['orders', 'subscriptions'] as PageTab[]).map((key) => (
+          <button
+            key={key}
+            onClick={() => setPageTab(key)}
+            className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors relative ${
+              pageTab === key
+                ? 'text-nokturo-900 dark:text-nokturo-100'
+                : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+            }`}
+          >
+            {t(`accounting.tabs.${key}`)}
+            {pageTab === key && (
+              <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-nokturo-900 dark:bg-nokturo-100 rounded-full" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      {pageTab === 'orders' && (<>
       {/* Overview stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('accounting.overview.ordersComing')}
           </p>
           <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">{ordersComing}</p>
         </div>
         <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('accounting.overview.spent')}
           </p>
           <p className="text-xl font-medium text-emerald-600">
@@ -233,7 +315,7 @@ export default function AccountingPage() {
           </p>
         </div>
         <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('accounting.overview.monthlyPay')}
           </p>
           <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
@@ -241,7 +323,7 @@ export default function AccountingPage() {
           </p>
         </div>
         <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('accounting.overview.yearlyPay')}
           </p>
           <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
@@ -332,7 +414,7 @@ export default function AccountingPage() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Receipt className="w-12 h-12 text-nokturo-400 dark:text-nokturo-500 mb-4" />
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">{t('accounting.noOrders')}</p>
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">{t('accounting.addFirst')}</p>
+          <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mt-1">{t('accounting.addFirst')}</p>
         </div>
       ) : (
         <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -417,6 +499,110 @@ export default function AccountingPage() {
         } : undefined}
         canDelete={canDelete}
       />
+      </>)}
+
+      {/* ── Subscriptions Tab ────────────────────────────── */}
+      {pageTab === 'subscriptions' && (<>
+        <div className="flex items-center justify-end mb-6">
+          <button
+            onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {t('subscriptions.add')}
+          </button>
+        </div>
+
+        {subsLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-6 h-6 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+          </div>
+        ) : subscriptions.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <RefreshCw className="w-12 h-12 text-nokturo-400 dark:text-nokturo-500 mb-4" />
+            <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">{t('subscriptions.noSubscriptions')}</p>
+            <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">{t('subscriptions.addFirst')}</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+            <table className="w-full border-collapse min-w-[640px]">
+              <thead>
+                <tr>
+                  <th className="py-2 pl-4 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.name')}</th>
+                  <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.billingCycle')}</th>
+                  <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right">{t('subscriptions.amount')}</th>
+                  <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.nextBillingDate')}</th>
+                  <th className="py-2 pr-4 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.status')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subscriptions.map((sub, idx) => (
+                  <tr
+                    key={sub.id}
+                    onClick={() => { setEditingSub(sub); setSubEditOpen(true); }}
+                    className={`cursor-pointer transition-colors hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 ${
+                      idx % 2 === 0 ? 'bg-white dark:bg-nokturo-800' : 'bg-nokturo-50/50 dark:bg-nokturo-800/50'
+                    }`}
+                  >
+                    <td className="py-3 pl-4 pr-6">
+                      <div className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 truncate max-w-[200px]">{sub.name}</div>
+                      {sub.supplier?.name && (
+                        <div className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate">{sub.supplier.name}</div>
+                      )}
+                    </td>
+                    <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300">
+                      {t(`subscriptions.${sub.billing_cycle}`)}
+                    </td>
+                    <td className="py-3 pr-6 text-sm font-medium text-nokturo-900 dark:text-nokturo-100 text-right whitespace-nowrap">
+                      {sub.amount?.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sub.currency}
+                    </td>
+                    <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300 whitespace-nowrap">
+                      {formatNextBilling(sub.next_billing_date)}
+                    </td>
+                    <td className="py-3 pr-4">
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(sub.status)}`}>
+                        {sub.status === 'active' && <RefreshCw className="w-3 h-3" />}
+                        {sub.status === 'paused' && <Pause className="w-3 h-3" />}
+                        {sub.status === 'cancelled' && <XCircle className="w-3 h-3" />}
+                        {t(`subscriptions.statuses.${sub.status}`)}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {subDeleteTarget && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/30">
+            <div className="bg-white dark:bg-nokturo-800 p-6 max-w-sm w-full mx-4 rounded-xl border border-nokturo-200 dark:border-nokturo-600">
+              <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">{t('common.confirm')}</h3>
+              <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('subscriptions.deleteConfirm')}</p>
+              <div className="flex gap-3 justify-end">
+                <button onClick={() => setSubDeleteTarget(null)} className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors">
+                  {t('common.cancel')}
+                </button>
+                <button onClick={() => handleSubDelete(subDeleteTarget)} className="px-4 py-2 text-sm bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-colors">
+                  {t('common.delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <SubscriptionSlideOver
+          open={subEditOpen}
+          subscription={editingSub}
+          onClose={() => { setSubEditOpen(false); setEditingSub(null); }}
+          onSaved={handleSubSaved}
+          onDelete={canDelete ? (id) => {
+            setSubEditOpen(false);
+            setEditingSub(null);
+            setSubDeleteTarget(id);
+          } : undefined}
+        />
+      </>)}
     </PageShell>
   );
 }

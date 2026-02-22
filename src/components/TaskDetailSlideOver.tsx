@@ -91,7 +91,7 @@ export function TaskDetailSlideOver({
         {/* Comments panel */}
         {commentsOpen && (
           <div className="hidden md:flex w-80 lg:w-96 bg-nokturo-50 dark:bg-nokturo-900 border-l border-nokturo-200 dark:border-nokturo-700 flex-col shrink-0">
-            <TaskComments taskId={task.id} />
+            <TaskComments taskId={task.id} taskCreatorId={task.created_by} taskTitle={task.title} />
           </div>
         )}
 
@@ -209,7 +209,7 @@ export function TaskDetailSlideOver({
           {/* Deadline */}
           {task.deadline && (
             <div>
-              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-1">
+              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-1">
                 {t('tasks.deadline')}
               </label>
               <span
@@ -237,7 +237,7 @@ export function TaskDetailSlideOver({
           {/* Assignees */}
           {task.assignees && task.assignees.length > 0 && (
             <div>
-              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-2">
+              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-2">
                 {t('tasks.assignees')}
               </label>
               <div className="flex flex-wrap gap-2">
@@ -266,7 +266,7 @@ export function TaskDetailSlideOver({
           {/* Created by */}
           {creatorProfile && (
             <div>
-              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-1">
+              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-1">
                 {t('tasks.createdBy')}
               </label>
               <div className="inline-flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-300">
@@ -283,7 +283,7 @@ export function TaskDetailSlideOver({
           {/* Completed date */}
           {task.status === 'completed' && task.completed_at && (
             <div>
-              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-1">
+              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-1">
                 {t('tasks.completedOn')}
               </label>
               <span className="text-sm text-nokturo-700 dark:text-nokturo-300">
@@ -295,7 +295,7 @@ export function TaskDetailSlideOver({
           {/* Description */}
           {task.description && (
             <div>
-              <label className="block text-sm font-normal text-nokturo-500 dark:text-nokturo-400 mb-2">
+              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-2">
                 {t('tasks.description')}
               </label>
               <div

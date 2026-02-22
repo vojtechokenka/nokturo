@@ -113,7 +113,13 @@ export function TaskSlideOver({
         assignee_ids: task.assignees?.map((a) => a.user_id) || [],
       });
     } else {
-      setForm({ ...emptyForm });
+      const now = new Date();
+      setForm({
+        ...emptyForm,
+        deadline_day: String(now.getDate()),
+        deadline_month: String(now.getMonth() + 1),
+        deadline_year: String(now.getFullYear()),
+      });
     }
     setError('');
   }, [task, open]);

@@ -174,7 +174,15 @@ export function AccountingSlideOver({
       setExistingInvoiceUrl(order.invoice_pdf_url);
       setInvoiceFile(null);
     } else {
-      setForm({ ...emptyForm, category: categories[0]?.name ?? '', supplier_id: '' });
+      const now = new Date();
+      setForm({
+        ...emptyForm,
+        category: categories[0]?.name ?? '',
+        supplier_id: '',
+        order_date_day: String(now.getDate()),
+        order_date_month: String(now.getMonth() + 1),
+        order_date_year: String(now.getFullYear()),
+      });
       setExistingInvoiceUrl(null);
       setInvoiceFile(null);
     }
@@ -514,7 +522,7 @@ export function AccountingSlideOver({
                 value={form.note}
                 onChange={(e) => handleChange('note', e.target.value)}
                 rows={3}
-                className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-lg px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500 transition-colors resize-none"
+                className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 border border-nokturo-300 dark:border-nokturo-600 rounded-lg px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/40 focus:border-nokturo-400 dark:focus:border-nokturo-500 transition-colors resize-none"
               />
             </div>
 
