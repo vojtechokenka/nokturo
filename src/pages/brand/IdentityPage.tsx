@@ -99,7 +99,7 @@ export default function IdentityPage() {
           <Loader2 size={24} className="animate-spin text-nokturo-500" />
         </div>
       ) : (
-        <div className={mode === 'view' ? 'max-w-5xl mx-auto' : 'flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl'}>
+        <div className={mode === 'view' ? 'max-w-[860px] mx-auto' : 'flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl'}>
           {mode === 'view' ? (
             <RichTextBlockViewer
               blocks={blocks}

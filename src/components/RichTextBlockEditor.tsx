@@ -71,6 +71,34 @@ function generateId() {
   return `block_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function isBlockEmpty(block: RichTextBlock): boolean {
+  switch (block.type) {
+    case 'heading':
+      return !block.text?.trim();
+    case 'paragraph': {
+      const c = (block.content ?? '').replace(/<br\s*\/?>/gi, '').trim();
+      return !c;
+    }
+    case 'quote':
+      return !block.text?.trim();
+    case 'list':
+      return !block.items?.some((i) => i?.trim()) || (block.items?.length === 1 && !block.items[0]?.trim());
+    case 'image':
+      return !block.url?.trim();
+    case 'gallery':
+    case 'imageGrid':
+      return !block.images?.length;
+    case 'grid':
+      return !block.cells?.some((c) => (c.content ?? '').trim());
+    case 'link':
+      return !block.text?.trim() && !block.url?.trim();
+    case 'divider':
+      return true;
+    default:
+      return true;
+  }
+}
+
 export function getAspectClass(ratio: '5:4' | '1:1' | '3:2' | '16:9' | undefined): string {
   const r = ratio ?? '1:1';
   return r === '1:1' ? 'aspect-square' : r === '5:4' ? 'aspect-[5/4]' : r === '3:2' ? 'aspect-[3/2]' : 'aspect-video';
@@ -118,7 +146,7 @@ const EditableParagraph = forwardRef<
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       if (ref.current) onSave(ref.current.innerHTML);
-    }, 400);
+    }, 800);
   }, [onSave]);
 
   const handleListKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -195,7 +223,7 @@ function EditableListItem({
 
   const handleInput = useCallback(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(save, 400);
+    debounceRef.current = setTimeout(save, 800);
   }, [save]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -290,7 +318,7 @@ function GridCell({
           if (debounceRef.current) clearTimeout(debounceRef.current);
           debounceRef.current = setTimeout(() => {
             if (ref.current) onSave(ref.current.innerHTML);
-          }, 400);
+          }, 800);
         }}
         className={`w-full text-sm bg-transparent outline-none min-h-[1.2em] ${
           isHeader ? 'font-semibold text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-700 dark:text-nokturo-300'
@@ -1450,18 +1478,24 @@ export function RichTextBlockEditor({
   const { t } = useTranslation();
   const [addMenuAtIndex, setAddMenuAtIndex] = useState<number | null>(null);
   const blocks = value?.length ? value : [];
+  const undoableAdditionsRef = useRef<Set<string>>(new Set());
+  const lastAddedBlockIdRef = useRef<string | null>(null);
 
   const updateBlock = useCallback(
     (id: string, data: Partial<RichTextBlock>) => {
-      onChange(
-        blocks.map((b) => {
-          if (b.id !== id) return b;
-          if (data.type && data.type !== b.type) {
-            return { id: b.id, ...data } as RichTextBlock;
-          }
-          return { ...b, ...data } as RichTextBlock;
-        }),
-      );
+      const nextBlocks = blocks.map((b) => {
+        if (b.id !== id) return b;
+        if (data.type && data.type !== b.type) {
+          return { id: b.id, ...data } as RichTextBlock;
+        }
+        return { ...b, ...data } as RichTextBlock;
+      });
+      const updated = nextBlocks.find((b) => b.id === id);
+      if (updated && !isBlockEmpty(updated)) {
+        undoableAdditionsRef.current.delete(id);
+        if (lastAddedBlockIdRef.current === id) lastAddedBlockIdRef.current = null;
+      }
+      onChange(nextBlocks);
     },
     [blocks, onChange],
   );
@@ -1504,12 +1538,43 @@ export function RichTextBlockEditor({
   const handleAddFromMenu = (block: RichTextBlock) => {
     if (addMenuAtIndex !== null) {
       addBlock(block, addMenuAtIndex);
+      undoableAdditionsRef.current.add(block.id);
+      lastAddedBlockIdRef.current = block.id;
       setAddMenuAtIndex(null);
     }
   };
 
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (!((e.ctrlKey || e.metaKey) && e.key === 'z') || e.shiftKey) return;
+      const target = e.target as Element | null;
+      if (!target?.closest) return;
+      const editorRoot = target.closest('[data-rich-text-editor]');
+      if (!editorRoot) return;
+      const blockEl = target.closest('[data-block-id]');
+      let blockId = blockEl?.getAttribute('data-block-id');
+      if (!blockId && lastAddedBlockIdRef.current) {
+        blockId = lastAddedBlockIdRef.current;
+      }
+      if (!blockId || !undoableAdditionsRef.current.has(blockId)) return;
+      const block = blocks.find((b) => b.id === blockId);
+      if (!block || !isBlockEmpty(block)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      undoableAdditionsRef.current.delete(blockId);
+      lastAddedBlockIdRef.current = null;
+      removeBlock(blockId);
+    },
+    [blocks, removeBlock],
+  );
+
+  useEffect(() => {
+    document.addEventListener('keydown', handleKeyDown, true);
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, [handleKeyDown]);
+
   return (
-    <div className="space-y-0">
+    <div className="space-y-0" data-rich-text-editor>
       {blocks.length === 0 ? (
         <div className="relative flex flex-col items-center py-12">
           <div className="relative">

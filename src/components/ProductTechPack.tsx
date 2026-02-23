@@ -191,7 +191,7 @@ export function ProductTechPack({
                 if (blocks.length > 0) {
                   return (
                     <div className="mt-4 pt-4 border-t border-nokturo-700 [&_h1]:text-lg [&_h2]:text-base [&_h3]:text-sm [&_p]:text-sm [&_p]:text-nokturo-300">
-                      <RichTextBlockViewer blocks={blocks} showToc={false} />
+                      <RichTextBlockViewer blocks={blocks} showToc={false} headingFont="body" />
                     </div>
                   );
                 }

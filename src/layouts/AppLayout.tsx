@@ -4,7 +4,7 @@ import { Sidebar } from '../components/Sidebar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { NotificationCenter } from '../components/NotificationCenter';
 import { DefaultAvatar } from '../components/DefaultAvatar';
-import { useAuthStore } from '../stores/authStore';
+import { useAuthStore, getCachedAvatarUrl } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { supabase } from '../lib/supabase';
 import { Loader2, Menu, ClipboardList, Settings, LogOut } from 'lucide-react';
@@ -42,8 +42,8 @@ function ProfileDropdown() {
         onClick={() => setOpen((o) => !o)}
         className="relative shrink-0 w-8 h-8 rounded-full overflow-hidden bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center hover:ring-2 hover:ring-nokturo-400 dark:hover:ring-nokturo-500 transition-all focus:outline-none"
       >
-        {user?.avatarUrl ? (
-          <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" />
+        {(user?.avatarUrl || (user?.id && getCachedAvatarUrl(user.id))) ? (
+          <img src={user?.avatarUrl || (user?.id ? getCachedAvatarUrl(user.id) : '')} alt="" className="w-full h-full object-cover" />
         ) : (
           <DefaultAvatar size={32} />
         )}

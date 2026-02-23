@@ -197,7 +197,7 @@ export default function ProductDetailPage() {
 
   return (
     <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-[860px] mx-auto">
         {/* Back + Actions */}
         <div className="flex items-center justify-between mb-8">
           <button
@@ -289,7 +289,7 @@ export default function ProductDetailPage() {
         {/* Description (Ostatní - rich text) */}
         {descriptionBlocks.length > 0 && (
           <section id="section-description" className="mb-12 scroll-mt-6">
-            <RichTextBlockViewer blocks={descriptionBlocks} showToc={false} />
+            <RichTextBlockViewer blocks={descriptionBlocks} showToc={false} headingFont="body" />
           </section>
         )}
 

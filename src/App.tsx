@@ -55,8 +55,8 @@ function applyProfilePreferences(language: 'en' | 'cs', theme: 'light' | 'dark')
 
 async function buildUserFromSession(
   session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } },
-  /** When profile fetch fails, preserve role from existing user to avoid transient Founder→Client downgrade (e.g. during refreshSession) */
-  getExistingUser?: () => { id: string; role: string } | null
+  /** When profile fetch fails, preserve role/avatar/name from existing user (e.g. during refreshSession, tab return) */
+  getExistingUser?: () => { id: string; role?: string; avatarUrl?: string; name?: string; firstName?: string; lastName?: string } | null
 ) {
   const fetchProfile = () =>
     supabase
@@ -81,11 +81,17 @@ async function buildUserFromSession(
     } catch (err) {
       console.warn(`⚠️ Profile fetch attempt ${attempt + 1} failed:`, err);
       if (attempt === 1) {
-        // Both attempts failed, use minimal user
+        // Both attempts failed, use minimal user but preserve avatar/name from existing
         const minimal = buildMinimalUser(session);
         const existing = getExistingUser?.();
-        if (existing?.id === session.user.id && existing.role && minimal.role === 'client') {
-          minimal.role = existing.role as import('./lib/rbac').Role;
+        if (existing?.id === session.user.id) {
+          if (existing.role && minimal.role === 'client') {
+            minimal.role = existing.role as import('./lib/rbac').Role;
+          }
+          if (existing.avatarUrl) minimal.avatarUrl = existing.avatarUrl;
+          if (existing.name) minimal.name = existing.name;
+          if (existing.firstName) minimal.firstName = existing.firstName;
+          if (existing.lastName) minimal.lastName = existing.lastName;
         }
         return minimal;
       }

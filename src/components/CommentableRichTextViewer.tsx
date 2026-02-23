@@ -9,7 +9,7 @@ import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
 import type { RichTextBlock } from './RichTextBlockEditor';
 import { getAspectClass } from './RichTextBlockEditor';
-import { extractHeadings } from './RichTextBlockViewer';
+import { extractHeadings, type HeadingFontFamily } from './RichTextBlockViewer';
 import type { TocItem } from './TableOfContents';
 import { TableOfContents } from './TableOfContents';
 import { MessageSquare, Send, Loader2, AtSign, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
@@ -65,6 +65,8 @@ interface CommentableRichTextViewerProps {
   renderTocExternally?: boolean;
   /** Called with tocItems when renderTocExternally – parent renders TableOfContents */
   onTocItems?: (items: TocItem[]) => void;
+  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
+  headingFont?: HeadingFontFamily;
 }
 
 // ── Helper: wrap text with multiple highlights (each comment independent) ─────
@@ -124,20 +126,30 @@ function CommentableBlockView({
   block,
   blockComments,
   pendingSelection,
+  headingFont = 'headline',
 }: {
   block: RichTextBlock;
   comments: TextComment[];
   blockComments: TextComment[];
   pendingSelection: { blockId: string; selectedText: string } | null;
+  headingFont?: HeadingFontFamily;
 }) {
   const isPendingBlock = pendingSelection?.blockId === block.id;
+  const isHeadline = headingFont === 'headline';
+  const hFont = isHeadline ? 'font-headline' : 'font-body';
+  const hSizeClass =
+    block.level === 1
+      ? isHeadline ? 'text-[48px]' : 'text-[30px]'
+      : block.level === 2
+        ? isHeadline ? 'text-[40px]' : 'text-[24px]'
+        : 'text-[20px]';
 
   if (block.type === 'heading' && block.text?.trim()) {
     const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
     const headingClass = {
-      1: 'font-headline text-[48px] font-normal text-nokturo-900 dark:text-nokturo-100 mt-16 mb-4 scroll-mt-6 leading-[1.1]',
-      2: 'font-headline text-[40px] font-normal text-nokturo-900 dark:text-nokturo-100 mb-4 scroll-mt-6 leading-[1.2]',
-      3: 'font-body text-[20px] font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-3 scroll-mt-6',
+      1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-16 mb-4 scroll-mt-6 leading-[1.1]`,
+      2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mb-4 scroll-mt-6 leading-[1.2]`,
+      3: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-3 scroll-mt-6`,
     }[block.level];
     const text = block.text;
     const display = isPendingBlock
@@ -361,7 +373,7 @@ function CommentableBlockView({
 }
 
 // ── Main component ────────────────────────────────────────────
-export function CommentableRichTextViewer({ blocks, productId, shortDescription, className = '', showToc = true, tocTitle, sections, sectionTocItems, renderTocExternally, onTocItems }: CommentableRichTextViewerProps) {
+export function CommentableRichTextViewer({ blocks, productId, shortDescription, className = '', showToc = true, tocTitle, sections, sectionTocItems, renderTocExternally, onTocItems, headingFont = 'body' }: CommentableRichTextViewerProps) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canComment = user?.role ? (
@@ -787,6 +799,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
             comments={comments}
             blockComments={blockCommentsMap[block.id] || []}
             pendingSelection={selectionState ? { blockId: selectionState.blockId, selectedText: selectionState.selectedText } : null}
+            headingFont={headingFont}
           />
         ))}
       </article>

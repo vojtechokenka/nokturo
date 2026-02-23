@@ -156,7 +156,8 @@ const emptyForm: FormData = {
 };
 
 const PRODUCT_DRAFT_KEY = 'nokturo-product-draft';
-const AUTO_SAVE_INTERVAL_MS = 30_000;
+/** Debounce: only save to DB 1.8s after user stops typing — never save mid-edit */
+const AUTO_SAVE_DEBOUNCE_MS = 1_800;
 
 interface ProductDraft {
   form: FormData;
@@ -458,6 +459,7 @@ export function ProductSlideOver({
   const fileInputPreviewPhotoRef = useRef<HTMLInputElement>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const [replaceTarget, setReplaceTarget] = useState<{ gallery: 'design' | 'moodboard'; index: number } | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
   const addToast = useCallback((toast: ToastData) => {
     setToasts((prev) => [...prev, { ...toast, id: toast.id || crypto.randomUUID() }]);
@@ -565,6 +567,7 @@ export function ProductSlideOver({
     setExtraVersions(new Set());
     setReplaceTarget(null);
     setError('');
+    setLastSavedAt(null);
   }, [product, open]);
 
   useEffect(() => {
@@ -895,6 +898,7 @@ export function ProductSlideOver({
     setSaving(false);
     clearDraftFromStorage();
     if (options?.autoSave) {
+      setLastSavedAt(new Date());
       addToast({ type: 'success', message: t('common.saved') });
     }
     onSaved(productId, options);
@@ -903,19 +907,29 @@ export function ProductSlideOver({
   const handleSubmitRef = useRef(handleSubmit);
   handleSubmitRef.current = handleSubmit;
 
-  // ── Auto-save to DB (editing existing product only) ───────────
+  // ── Debounced auto-save to DB (existing product only) ─────────
+  // Only save 1.8s after user stops typing — never save mid-edit
   useEffect(() => {
     if (!open || !product || saving) return;
-    const id = setInterval(() => {
-      if (handleSubmitRef.current) {
-        (handleSubmitRef.current as any)(
-          { preventDefault: () => {} } as React.FormEvent,
-          { autoSave: true }
-        );
-      }
-    }, AUTO_SAVE_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [open, product, saving]);
+    const timer = setTimeout(() => {
+      handleSubmitRef.current?.(
+        { preventDefault: () => {} } as React.FormEvent,
+        { autoSave: true }
+      );
+    }, AUTO_SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [
+    open,
+    product,
+    saving,
+    form,
+    descriptionBlocks,
+    linkedMaterials,
+    linkedLabels,
+    previewPhotoUrl,
+    designGallery,
+    moodboardGallery,
+  ]);
 
   // ── Auto-save draft to localStorage (new product only) ────────
   useEffect(() => {
@@ -942,7 +956,7 @@ export function ProductSlideOver({
           savedAt: new Date().toISOString(),
         });
       }
-    }, AUTO_SAVE_INTERVAL_MS);
+    }, 30_000);
     return () => clearInterval(id);
   }, [open, product, form, descriptionBlocks, linkedMaterials, previewPhotoUrl, designGallery, moodboardGallery]);
 
@@ -989,9 +1003,16 @@ export function ProductSlideOver({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
-            {product ? t('products.editProduct') : t('products.addProduct')}
-          </h3>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
+              {product ? t('products.editProduct') : t('products.addProduct')}
+            </h3>
+            {product && lastSavedAt && (
+              <p className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate">
+                {t('common.lastSaved')} {lastSavedAt.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
           <button
             onClick={handleClose}
             className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
@@ -1190,6 +1211,7 @@ export function ProductSlideOver({
                 onChange={setDescriptionBlocks}
                 onUploadImage={handleUploadImage}
                 onToast={addToast}
+                headingFont="body"
               />
             </div>
           </div>

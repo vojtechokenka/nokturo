@@ -219,7 +219,7 @@ export default function SamplingDetailPage() {
       titleKey="pages.readyForSampling.title"
       descriptionKey="pages.readyForSampling.description"
     >
-      <div className="max-w-5xl mx-auto flex gap-12">
+      <div className="max-w-[860px] mx-auto flex gap-12">
         <div className="min-w-0 flex-1">
           {/* Back */}
           <div className="flex items-center justify-between mb-8">
@@ -537,6 +537,7 @@ export default function SamplingDetailPage() {
                 sectionTocItems={sectionTocItems}
                 renderTocExternally
                 onTocItems={setTocItems}
+                headingFont="body"
               />
             </section>
           ) : (
