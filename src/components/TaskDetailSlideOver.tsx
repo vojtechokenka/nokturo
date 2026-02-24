@@ -12,7 +12,6 @@ import {
   Clock,
   AlertTriangle,
   User,
-  MessageSquare,
 } from 'lucide-react';
 import type { Task, TaskProfile } from './TaskSlideOver';
 import { TaskComments } from './TaskComments';
@@ -42,7 +41,6 @@ export function TaskDetailSlideOver({
 }: TaskDetailSlideOverProps) {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [commentsOpen, setCommentsOpen] = useState(true);
   const descRef = useRef<HTMLDivElement>(null);
 
   const syncChecklistLiClasses = useCallback((container: HTMLElement) => {
@@ -128,29 +126,12 @@ export function TaskDetailSlideOver({
       <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-50 flex animate-slide-in" style={{ maxWidth: 'calc(100vw - 60px)' }}>
         {/* Comments panel */}
-        {commentsOpen && (
-          <div className="hidden md:flex w-80 lg:w-96 bg-nokturo-50 dark:bg-nokturo-900 border-l border-nokturo-200 dark:border-nokturo-700 flex-col shrink-0">
-            <TaskComments taskId={task.id} taskCreatorId={task.created_by} taskTitle={task.title} />
-          </div>
-        )}
+        <div className="hidden md:flex w-80 lg:w-96 bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex-col shrink-0">
+          <TaskComments taskId={task.id} taskCreatorId={task.created_by} taskTitle={task.title} />
+        </div>
 
         {/* Task detail panel */}
-        <div className="w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col">
-        {/* Comments toggle – separate row */}
-        <div className="hidden md:flex items-center justify-end px-6 py-2 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <button
-            type="button"
-            onClick={() => setCommentsOpen((p) => !p)}
-            className={`p-2 rounded-lg transition-colors ${
-              commentsOpen
-                ? 'text-nokturo-800 dark:text-nokturo-200 bg-nokturo-100 dark:bg-nokturo-700'
-                : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
-            }`}
-            title={t('tasks.comments')}
-          >
-            <MessageSquare className="w-4 h-4" />
-          </button>
-        </div>
+        <div className="w-full min-w-[480px] max-w-[640px] bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">

@@ -6,8 +6,6 @@ import { canDeleteAnything } from '../lib/rbac';
 import {
   Send,
   Loader2,
-  MessageSquare,
-  CornerDownRight,
   MoreHorizontal,
 } from 'lucide-react';
 import { DefaultAvatar } from './DefaultAvatar';
@@ -55,8 +53,6 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
-  const [replyTo, setReplyTo] = useState<string | null>(null);
-  const [replyContent, setReplyContent] = useState('');
   const [sending, setSending] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
@@ -64,7 +60,6 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
 
   const mention = useMentionSuggestions(newComment, profiles as MentionProfile[]);
-  const replyMention = useMentionSuggestions(replyContent, profiles as MentionProfile[]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const handleMentionSelect = useCallback((profile: MentionProfile) => {
@@ -74,14 +69,6 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
       setTaggedUsers((prev) => [...prev, profile.id]);
     }
   }, [mention, taggedUsers]);
-
-  const handleReplyMentionSelect = useCallback((profile: MentionProfile) => {
-    const newValue = replyMention.applyMention(profile);
-    setReplyContent(newValue);
-    if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
-    }
-  }, [replyMention, taggedUsers]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
@@ -157,27 +144,34 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
     return () => { supabase.removeChannel(channel); };
   }, [taskId]);
 
-  const handlePost = async (parentId: string | null = null) => {
-    const content = parentId ? replyContent : newComment;
+  const handlePost = async () => {
+    const content = newComment.trim();
     const authorId = getUserIdForDb();
-    if (!content.trim() || !user || !authorId) return;
+    if (!content || !user || !authorId) return;
     setSending(true);
 
-    const { error } = await supabase.from('task_comments').insert({
-      task_id: taskId,
-      author_id: authorId,
-      parent_id: parentId,
-      content: content.trim(),
-    });
+    const { data: inserted, error } = await supabase
+      .from('task_comments')
+      .insert({
+        task_id: taskId,
+        author_id: authorId,
+        parent_id: null,
+        content,
+      })
+      .select('*, profile:profiles!task_comments_author_id_fkey(full_name, first_name, last_name, avatar_url)')
+      .single();
 
-    if (!error) {
+    if (!error && inserted) {
+      setComments((prev) => [...prev, inserted as Comment]);
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
       if (taggedUsers.length > 0) {
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
         await sendMentionNotifications({
           taggedUserIds: taggedUsers,
           authorId,
           authorName,
-          content: content.trim(),
+          content,
           type: 'product_tag',
           link: `/tasks`,
         });
@@ -192,19 +186,13 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
           taskCreatorId,
           'task_comment',
           notifTitle,
-          content.trim().slice(0, 200),
+          content.slice(0, 200),
           taskId,
         );
       }
 
-      if (parentId) {
-        setReplyContent('');
-        setReplyTo(null);
-      } else {
-        setNewComment('');
-      }
+      setNewComment('');
       setTaggedUsers([]);
-      fetchComments();
     }
     setSending(false);
   };
@@ -215,21 +203,21 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
     setDeleteTarget(null);
   };
 
-  const rootComments = comments.filter((c) => !c.parent_id);
-  const getReplies = (parentId: string) => comments.filter((c) => c.parent_id === parentId);
+  const displayedComments = comments
+    .filter((c) => !c.parent_id)
+    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
-  const renderComment = (comment: Comment, isReply = false) => {
+  const renderComment = (comment: Comment) => {
     const name =
       [comment.profile?.first_name, comment.profile?.last_name].filter(Boolean).join(' ') ||
       comment.profile?.full_name ||
       'Unknown';
     const isOwn = comment.author_id === user?.id;
-    const replies = getReplies(comment.id);
 
     return (
-      <div key={comment.id} className={isReply ? 'ml-6 mt-2' : ''}>
+      <div key={comment.id} className={isOwn ? 'ml-10' : 'mr-10'}>
         <div
-          className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 ${isOwn ? 'bg-nokturo-100 dark:bg-white/20 text-nokturo-900 dark:text-white' : 'bg-nokturo-50 dark:bg-white/10 text-nokturo-700 dark:text-white'}`}
+          className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 ${isOwn ? 'bg-nokturo-100 dark:bg-white/20 text-nokturo-900 dark:text-white' : 'bg-nokturo-200/80 dark:bg-white/10 text-nokturo-800 dark:text-white border border-nokturo-200/60 dark:border-transparent'}`}
         >
           <div className="-mx-2 px-3 pt-1 pb-2">
             <p className="text-base break-words text-inherit leading-relaxed">
@@ -280,88 +268,35 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
                   )}
                 </div>
               )}
-              {!isReply && (
-                <button
-                  onClick={() => { setReplyTo(replyTo === comment.id ? null : comment.id); setReplyContent(''); }}
-                  className="flex items-center gap-1 text-[10px] text-inherit opacity-80 hover:opacity-100 transition-opacity"
-                >
-                  <CornerDownRight className="w-2.5 h-2.5" />
-                  {t('comments.reply')}
-                </button>
-              )}
             </div>
           </div>
         </div>
-        {replyTo === comment.id && (
-          <div className="flex items-end gap-1.5 mt-2 relative">
-            <div className="flex-1 relative">
-              {replyMention.active && (
-                <MentionDropdown profiles={replyMention.filtered} selectedIdx={replyMention.selectedIdx} onSelect={handleReplyMentionSelect} />
-              )}
-              <input
-                type="text"
-                value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
-                onKeyDown={(e) => {
-                  const result = replyMention.handleKeyDown(e);
-                  if (result === 'select') { const p = replyMention.getSelectedProfile(); if (p) handleReplyMentionSelect(p); return; }
-                  if (result) return;
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePost(comment.id); }
-                }}
-                placeholder={t('comments.replyPlaceholder')}
-                className={`${INPUT_CLASS} !text-xs !py-1.5`}
-                autoFocus
-              />
-            </div>
-            <button
-              onClick={() => handlePost(comment.id)}
-              disabled={!replyContent.trim() || sending}
-              className="p-1.5 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 rounded hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors disabled:opacity-50"
-            >
-              <Send className="w-3 h-3" />
-            </button>
-          </div>
-        )}
-        {replies.map((reply) => renderComment(reply, true))}
       </div>
     );
   };
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-        <h4 className="text-sm font-medium text-nokturo-700 dark:text-nokturo-300 flex items-center gap-2">
-          <MessageSquare className="w-4 h-4" />
-          {t('tasks.comments')}
-          {comments.length > 0 && (
-            <span className="inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] leading-none px-1 rounded-full bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400">
-              {comments.length}
-            </span>
-          )}
-        </h4>
-      </div>
-
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {loading ? (
           <div className="flex items-center justify-center py-10">
             <Loader2 className="w-5 h-5 text-nokturo-500 animate-spin" />
           </div>
-        ) : rootComments.length === 0 ? (
+        ) : displayedComments.length === 0 ? (
           <div className="text-center py-10">
-            <MessageSquare className="w-7 h-7 text-nokturo-400 dark:text-nokturo-600 mx-auto mb-2" />
             <p className="text-nokturo-600 text-xs">{t('comments.noComments')}</p>
             <p className="text-nokturo-500 dark:text-nokturo-500 text-[10px] mt-0.5">{t('tasks.commentsBeFirst')}</p>
           </div>
         ) : (
           <div className="space-y-2">
-            {rootComments.map((c) => renderComment(c))}
+            {displayedComments.map((c) => renderComment(c))}
             <div ref={bottomRef} />
           </div>
         )}
       </div>
 
       <div className="px-4 py-3 border-t border-nokturo-200 dark:border-nokturo-700 shrink-0 relative">
-        <div className="flex items-end gap-1.5">
+        <div className="flex items-center gap-1.5">
           <div className="flex-1 relative">
             {mention.active && (
               <MentionDropdown profiles={mention.filtered} selectedIdx={mention.selectedIdx} onSelect={handleMentionSelect} />
@@ -374,18 +309,19 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
                 const result = mention.handleKeyDown(e);
                 if (result === 'select') { const p = mention.getSelectedProfile(); if (p) handleMentionSelect(p); return; }
                 if (result) return;
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePost(null); }
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handlePost(); }
               }}
               placeholder={t('comments.placeholder')}
-              className={`${INPUT_CLASS} !text-xs`}
+              className={`${INPUT_CLASS} !text-xs h-9 !py-0`}
             />
           </div>
           <button
-            onClick={() => handlePost(null)}
+            type="button"
+            onClick={() => handlePost()}
             disabled={!newComment.trim() || sending}
-            className="p-2 bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="size-9 flex items-center justify-center bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
-            {sending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
         </div>
       </div>

@@ -197,7 +197,8 @@ export default function TasksPage() {
     const { data } = await supabase
       .from('task_comments')
       .select('task_id')
-      .in('task_id', taskIds);
+      .in('task_id', taskIds)
+      .is('parent_id', null);
     const counts: Record<string, number> = {};
     (data || []).forEach((r: { task_id: string }) => {
       counts[r.task_id] = (counts[r.task_id] || 0) + 1;
