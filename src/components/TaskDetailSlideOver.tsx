@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   X,
@@ -26,6 +26,7 @@ interface TaskDetailSlideOverProps {
   onMarkCompleted: (id: string) => void;
   onReopen: (id: string) => void;
   onDelete?: (id: string) => void;
+  onDescriptionChange?: (taskId: string, description: string) => void;
 }
 
 export function TaskDetailSlideOver({
@@ -37,10 +38,48 @@ export function TaskDetailSlideOver({
   onMarkCompleted,
   onReopen,
   onDelete,
+  onDescriptionChange,
 }: TaskDetailSlideOverProps) {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(true);
+  const descRef = useRef<HTMLDivElement>(null);
+
+  const syncChecklistLiClasses = useCallback((container: HTMLElement) => {
+    container.querySelectorAll('.rta-checklist li').forEach((li) => {
+      const cb = li.querySelector(':scope > input[type="checkbox"]') as HTMLInputElement | null;
+      if (cb) li.classList.toggle('checked', cb.checked);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (task?.description && descRef.current) {
+      syncChecklistLiClasses(descRef.current);
+    }
+  }, [task?.description, syncChecklistLiClasses]);
+
+  const handleDescriptionClick = useCallback(
+    (e: React.MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'INPUT' || target.getAttribute('type') !== 'checkbox' || !target.closest('.rta-checklist')) return;
+      if (!onDescriptionChange || !task) return;
+
+      const checkbox = target as HTMLInputElement;
+      const li = checkbox.closest('li');
+      if (!li) return;
+
+      li.classList.toggle('checked', checkbox.checked);
+      if (checkbox.checked) checkbox.setAttribute('checked', '');
+      else checkbox.removeAttribute('checked');
+
+      const container = descRef.current;
+      if (container) {
+        const html = container.innerHTML;
+        onDescriptionChange(task.id, html === '<br>' ? '' : html);
+      }
+    },
+    [onDescriptionChange, task]
+  );
 
   if (!open || !task) return null;
 
@@ -302,7 +341,9 @@ export function TaskDetailSlideOver({
                 {t('tasks.description')}
               </label>
               <div
-                className="text-sm text-nokturo-800 dark:text-nokturo-200 leading-relaxed [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline"
+                ref={descRef}
+                onClick={handleDescriptionClick}
+                className="text-sm text-nokturo-800 dark:text-nokturo-200 leading-relaxed [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul:not(.rta-checklist)]:list-disc [&_ul:not(.rta-checklist)]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline cursor-text"
                 dangerouslySetInnerHTML={{ __html: task.description }}
               />
             </div>

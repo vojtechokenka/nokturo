@@ -178,6 +178,23 @@ export function RichTextArea({
   const [linkPopoverOpen, setLinkPopoverOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
 
+  /** Sync li.checked class with checkbox.checked state (for strikethrough styling) */
+  const syncChecklistLiClasses = useCallback((container: HTMLElement) => {
+    container.querySelectorAll('.rta-checklist li').forEach((li) => {
+      const cb = li.querySelector(':scope > input[type="checkbox"]') as HTMLInputElement | null;
+      if (cb) li.classList.toggle('checked', cb.checked);
+    });
+  }, []);
+
+  /** Ensure checkbox checked state is reflected as HTML attribute so innerHTML serialization includes it */
+  const syncCheckboxAttributes = useCallback((container: HTMLElement) => {
+    container.querySelectorAll('.rta-checklist li input[type="checkbox"]').forEach((cb) => {
+      const input = cb as HTMLInputElement;
+      if (input.checked) input.setAttribute('checked', '');
+      else input.removeAttribute('checked');
+    });
+  }, []);
+
   useEffect(() => {
     if (!editorRef.current || isInternalChange.current) {
       isInternalChange.current = false;
@@ -185,8 +202,9 @@ export function RichTextArea({
     }
     if (editorRef.current.innerHTML !== value) {
       editorRef.current.innerHTML = value || '';
+      syncChecklistLiClasses(editorRef.current);
     }
-  }, [value]);
+  }, [value, syncChecklistLiClasses]);
 
   const saveSelection = useCallback(() => {
     const sel = window.getSelection();
@@ -222,19 +240,21 @@ export function RichTextArea({
         li.appendChild(span);
       }
     });
-  }, []);
+    syncChecklistLiClasses(editorRef.current);
+  }, [syncChecklistLiClasses]);
 
   const emitChange = useCallback(() => {
     if (!editorRef.current) return;
     // only normalize existing checklists, don't re-create deleted ones
     if (editorRef.current.querySelector('.rta-checklist')) {
       normalizeChecklists();
+      syncCheckboxAttributes(editorRef.current);
     }
     isInternalChange.current = true;
     const html = editorRef.current.innerHTML;
     onChange(html === '<br>' ? '' : html);
     forceUpdate((n) => n + 1);
-  }, [onChange, normalizeChecklists]);
+  }, [onChange, normalizeChecklists, syncCheckboxAttributes]);
 
   const handleInput = useCallback(() => {
     saveSelection();

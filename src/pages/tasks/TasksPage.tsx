@@ -397,6 +397,26 @@ export default function TasksPage() {
     setDetailOpen(true);
   };
 
+  const handleDescriptionChange = useCallback(
+    async (taskId: string, description: string) => {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ description })
+        .eq('id', taskId);
+      if (error) {
+        console.error('Description update error:', error);
+        return;
+      }
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, description } : t))
+      );
+      if (viewingTask?.id === taskId) {
+        setViewingTask((prev) => (prev ? { ...prev, description } : null));
+      }
+    },
+    [viewingTask?.id]
+  );
+
   const formatDeadline = (d: string | null) => {
     if (!d) return null;
     return new Date(d).toLocaleDateString(user?.language === 'cs' ? 'cs-CZ' : 'en-US', {
@@ -728,6 +748,7 @@ export default function TasksPage() {
         onMarkCompleted={markCompleted}
         onReopen={reopenTask}
         onDelete={softDeleteTask}
+        onDescriptionChange={handleDescriptionChange}
       />
 
       {/* Edit slide-over */}
