@@ -58,25 +58,26 @@ export function NotificationCenter() {
     if (!userId) return;
     setLoading(true);
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data, error } = await supabase
+    // Fetch both user_id (legacy) AND recipient_id (mention/tag notifications)
+    const { data: byUser } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
       .gte('created_at', sevenDaysAgo)
       .order('created_at', { ascending: false })
       .limit(50);
-    if (error) {
-      const { data: byRecipient } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('recipient_id', userId)
-        .gte('created_at', sevenDaysAgo)
-        .order('created_at', { ascending: false })
-        .limit(50);
-      setNotifications((byRecipient as Notification[]) || []);
-    } else {
-      setNotifications((data as Notification[]) || []);
-    }
+    const { data: byRecipient } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('recipient_id', userId)
+      .gte('created_at', sevenDaysAgo)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    const merged = [...(byUser || []), ...(byRecipient || [])]
+      .filter((n, i, arr) => arr.findIndex((x) => x.id === n.id) === i)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, 50);
+    setNotifications((merged as Notification[]) || []);
     setLoading(false);
   }, [userId]);
 
@@ -241,7 +242,7 @@ export function NotificationCenter() {
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
           <span
-            className="notification-badge absolute top-1 right-1 w-2 h-2 rounded-full bg-[#EF4444]"
+            className="notification-badge absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FF1A1A]"
             aria-hidden
           />
         )}
@@ -313,7 +314,7 @@ export function NotificationCenter() {
                         </span>
                       </div>
                       {!n.read && (
-                        <span className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-[#EF4444]" />
+                        <span className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-[#FF1A1A]" />
                       )}
                     </button>
                   );

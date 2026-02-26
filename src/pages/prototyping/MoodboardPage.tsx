@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { sendMentionNotifications } from '../../lib/sendMentionNotifications';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -30,6 +31,7 @@ import {
   Images,
 } from 'lucide-react';
 import { INPUT_CLASS } from '../../lib/inputStyles';
+import { distributeToColumns } from '../../utils/masonryColumns';
 
 const inputClass = INPUT_CLASS;
 
@@ -146,8 +148,23 @@ export default function MoodboardPage() {
   // Categories (from DB, Notion-style)
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
 
-  // Gallery layout: 3, 4, 5, or 6 columns
+  // Gallery layout: 3, 4, 5, or 6 columns (user preference; responsive cap applies)
   const [galleryColumns, setGalleryColumns] = useState<3 | 4 | 5 | 6>(4);
+
+  // Responsive column count: cap user preference by viewport
+  const [effectiveColumns, setEffectiveColumns] = useState(galleryColumns);
+  useEffect(() => {
+    const getColumns = () => {
+      if (typeof window === 'undefined') return galleryColumns;
+      if (window.innerWidth < 640) return 1;
+      if (window.innerWidth < 1024) return 2;
+      return Math.min(galleryColumns, 6);
+    };
+    const update = () => setEffectiveColumns(getColumns());
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [galleryColumns]);
 
   // ── Fetch ───────────────────────────────────────────────────
   const fetchItems = useCallback(async () => {
@@ -270,6 +287,12 @@ export default function MoodboardPage() {
       return 0;
     });
   }, [items, sortUnreadIds]);
+
+  // Left-to-right masonry: distribute items into columns (row-first order)
+  const columns = useMemo(
+    () => distributeToColumns(sortedItems, Math.max(1, effectiveColumns)),
+    [sortedItems, effectiveColumns]
+  );
 
   // Auto-open lightbox when navigating from a notification with ?item=<id>
   useEffect(() => {
@@ -633,20 +656,18 @@ export default function MoodboardPage() {
           .select('id')
           .single();
 
-        if (comment && uploadTaggedUsers.length > 0 && user) {
+        if (comment && uploadTaggedUsers.length > 0 && authorId && user) {
           const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
-          for (const taggedId of uploadTaggedUsers) {
-            await supabase.from('notifications').insert({
-              user_id: taggedId,
-              type: 'moodboard_tag',
-              title: t('notifications.moodboardTagTitle', { name: authorName }),
-              body: content.slice(0, 100) + (content.length > 100 ? '...' : ''),
-              link: `/prototyping/moodboard?item=${insertedItem.id}`,
-              moodboard_item_id: insertedItem.id,
-              comment_id: comment.id,
-              from_user_id: authorId,
-            });
-          }
+          await sendMentionNotifications({
+            taggedUserIds: uploadTaggedUsers,
+            authorId,
+            authorName,
+            content,
+            type: 'moodboard_tag',
+            link: `/prototyping/moodboard?item=${insertedItem.id}`,
+            moodboardItemId: insertedItem.id,
+            commentId: comment.id,
+          });
         }
       }
 
@@ -854,10 +875,12 @@ export default function MoodboardPage() {
 
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
-        <div className={`columns-1 sm:columns-2 lg:columns-4 gap-4`}>
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="break-inside-avoid mb-4">
-              <div className="rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 aspect-[4/5] animate-pulse" />
+        <div className="flex gap-4">
+          {Array.from({ length: Math.max(1, effectiveColumns) }).map((_, colIdx) => (
+            <div key={colIdx} className="flex flex-col gap-4 flex-1 min-w-0">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 aspect-[4/5] animate-pulse" />
+              ))}
             </div>
           ))}
         </div>
@@ -868,25 +891,21 @@ export default function MoodboardPage() {
           <p className="text-nokturo-500 text-sm mt-1">{t('moodboard.addFirst')}</p>
         </div>
       ) : (
-        /* Masonry grid – images only (Pinterest-style) */
-        <div className={`columns-1 sm:columns-2 ${
-          galleryColumns === 3 ? 'lg:columns-3' :
-          galleryColumns === 4 ? 'lg:columns-4' :
-          galleryColumns === 5 ? 'lg:columns-5' :
-          'lg:columns-6'
-        } gap-4`}
-        >
-          {sortedItems.map((item) => (
+        /* Masonry grid – left-to-right distribution (Pinterest-style) */
+        <div className="flex gap-4">
+          {columns.map((col, colIndex) => (
+            <div key={colIndex} className="flex flex-col gap-4 flex-1 min-w-0">
+              {col.map((item) => (
             <div
               key={item.id}
-              className="break-inside-avoid group relative mb-4 cursor-pointer"
+              className="group relative cursor-pointer"
               onClick={() => { const origIdx = items.findIndex((i) => i.id === item.id); setLightboxIndex(origIdx); setLightboxSubIndex(0); markItemAsRead(item.id); }}
             >
-              {/* Unread comments indicator – red dot inside card, top-right */}
+              {/* Unread comments indicator – red dot inside card, top-left */}
               {unreadCounts[item.id] > 0 && (
                 <span
-                  className="absolute top-6 right-6 z-10 rounded-full bg-[#EF4444]"
-                  style={{ width: 8, height: 8 }}
+                  className="absolute top-6 left-6 z-10 w-2 h-2 rounded-full"
+                  style={{ backgroundColor: '#FF1A1A' }}
                   aria-hidden
                 />
               )}
@@ -939,6 +958,8 @@ export default function MoodboardPage() {
                   </div>
                 </div>
               </div>
+            </div>
+              ))}
             </div>
           ))}
         </div>

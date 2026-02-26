@@ -57,6 +57,10 @@ export async function sendMentionNotifications({
   const uniqueIds = [...new Set(taggedUserIds)].filter((id) => id !== authorId);
   if (uniqueIds.length === 0) return;
 
+  if (import.meta.env.DEV) {
+    console.log('[sendMentionNotifications] taggedUserIds:', taggedUserIds, '→ uniqueRecipients:', uniqueIds, 'type:', type);
+  }
+
   const titleKey = {
     moodboard_tag: 'notifications.moodboardTagTitle',
     gallery_tag: 'notifications.galleryTagTitle',
@@ -114,7 +118,7 @@ export async function sendMentionNotifications({
 
   const { error } = await supabase.from('notifications').insert(rows);
   if (error) {
-    console.error('Failed to insert notifications:', error);
+    console.error('[sendMentionNotifications] insert failed:', error.message, 'code:', error.code, 'details:', error.details);
   }
 }
 
