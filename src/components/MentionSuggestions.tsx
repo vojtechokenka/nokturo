@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { DefaultAvatar } from './DefaultAvatar';
 
 // ── Types ─────────────────────────────────────────────────────
 export interface MentionProfile {
@@ -6,6 +7,7 @@ export interface MentionProfile {
   first_name: string | null;
   last_name: string | null;
   full_name: string | null;
+  avatar_url?: string | null;
 }
 
 export function profileDisplayName(p: MentionProfile): string {
@@ -24,14 +26,15 @@ export function useMentionSuggestions(
     const lastAt = inputValue.lastIndexOf('@');
     if (lastAt === -1) return null;
     if (lastAt > 0 && inputValue[lastAt - 1] !== ' ') return null;
-    const query = inputValue.slice(lastAt + 1);
-    if (query.length > 30) return null;
-    return { query, startIndex: lastAt };
+    const rawQuery = inputValue.slice(lastAt + 1);
+    if (rawQuery.length > 50) return null;
+    return { rawQuery, startIndex: lastAt };
   }, [inputValue]);
 
   const filtered = useMemo(() => {
     if (!mentionMatch) return [];
-    const q = mentionMatch.query.toLowerCase();
+    const q = mentionMatch.rawQuery.trim().split(/\s/)[0]?.toLowerCase() ?? '';
+    if (!q) return [...profiles]; // empty query @ → show all taggable users
     return profiles.filter((p) => {
       const name = [p.first_name, p.last_name]
         .filter(Boolean)
@@ -44,10 +47,22 @@ export function useMentionSuggestions(
 
   const active = !!mentionMatch && filtered.length > 0 && !forceClosed;
 
+  const closeDropdown = useCallback(() => setForceClosed(true), []);
+
   useEffect(() => {
     setSelectedIdx(0);
-    setForceClosed(false);
-  }, [mentionMatch?.query]);
+    // Don't re-open when the text after @ starts with a completed mention (e.g. "@Alena Okénková see" or "@Alena Okénková, ")
+    const r = (mentionMatch?.rawQuery ?? '').trim().toLowerCase();
+    const isCompletedMention =
+      r &&
+      profiles.some((p) => {
+        const name = profileDisplayName(p).toLowerCase();
+        if (!r.startsWith(name)) return false;
+        const next = r[name.length];
+        return next === undefined || /[\s,.\-!?;:]/.test(next);
+      });
+    if (!isCompletedMention) setForceClosed(false);
+  }, [mentionMatch?.rawQuery, profiles]);
 
   /**
    * Call from the input's onKeyDown. Returns:
@@ -96,7 +111,7 @@ export function useMentionSuggestions(
       const name = profileDisplayName(profile);
       const before = inputValue.slice(0, mentionMatch.startIndex);
       const after = inputValue.slice(
-        mentionMatch.startIndex + 1 + mentionMatch.query.length
+        mentionMatch.startIndex + 1 + mentionMatch.rawQuery.length
       );
       return `${before}@${name} ${after}`;
     },
@@ -110,6 +125,7 @@ export function useMentionSuggestions(
     handleKeyDown,
     getSelectedProfile,
     applyMention,
+    closeDropdown,
   };
 }
 
@@ -147,13 +163,18 @@ export function MentionDropdown({
               e.preventDefault();
               onSelect(p);
             }}
-            className={`w-full text-left px-3 py-1.5 text-sm transition-colors ${
+            className={`w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
               i === selectedIdx
                 ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-white'
                 : 'text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600/50'
             }`}
           >
-            @{name}
+            {p.avatar_url ? (
+              <img src={p.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+            ) : (
+              <DefaultAvatar size={24} className="rounded-full overflow-hidden shrink-0 w-6 h-6" />
+            )}
+            <span>@{name}</span>
           </button>
         );
       })}

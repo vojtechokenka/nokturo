@@ -12,7 +12,7 @@ import { getAspectClass } from './RichTextBlockEditor';
 import { extractHeadings, type HeadingFontFamily } from './RichTextBlockViewer';
 import type { TocItem } from './TableOfContents';
 import { TableOfContents } from './TableOfContents';
-import { MessageSquare, Send, Loader2, AtSign, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MessageSquare, Send, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
@@ -400,14 +400,13 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [displayParentOverrides, setDisplayParentOverrides] = useState<Record<string, string>>({});
-  const [showUserPicker, setShowUserPicker] = useState(false);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, full_name')
+      .select('id, first_name, last_name, full_name, avatar_url')
       .neq('id', user?.id ?? '');
     setProfiles((data || []) as ProfileOption[]);
   }, [user?.id]);
@@ -424,22 +423,14 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     if (!taggedUsers.includes(profile.id)) {
       setTaggedUsers((prev) => [...prev, profile.id]);
     }
+    mention.closeDropdown();
   }, [mention, taggedUsers]);
 
   useEffect(() => {
     if (!selectionState) {
-      setShowUserPicker(false);
       setTaggedUsers([]);
     }
   }, [selectionState]);
-
-  const addMentionToComment = useCallback((profile: ProfileOption) => {
-    const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.full_name || '?';
-    setCommentInput((prev) => (prev.trim() ? `${prev} @${name} ` : `@${name} `));
-    if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
-    }
-  }, [taggedUsers]);
 
   useEffect(() => {
     if (!user?.id) {
@@ -629,7 +620,6 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       setTaggedUsers([]);
       setSelectionState(null);
       setPopoverPosition(null);
-      setShowUserPicker(false);
       setAddError(null);
       window.getSelection()?.removeAllRanges();
     } else {
@@ -852,7 +842,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
                 value={commentInput}
                 onChange={(e) => setCommentInput(e.target.value)}
                 placeholder={t('comments.placeholder')}
-                className={`${INPUT_CLASS} pr-8`}
+                className={INPUT_CLASS}
                 autoFocus
                 onKeyDown={(e) => {
                   const result = mention.handleKeyDown(e);
@@ -868,14 +858,6 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
                   }
                 }}
               />
-              <button
-                type="button"
-                onClick={() => setShowUserPicker((p) => !p)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-600"
-                title={t('comments.tagUser')}
-              >
-                <AtSign className="w-3.5 h-3.5" />
-              </button>
             </div>
             <button
               onClick={handleAddComment}
@@ -885,31 +867,6 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
               {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
             </button>
           </div>
-          {showUserPicker && profiles.length > 0 && (
-            <div className="mt-2 bg-white dark:bg-nokturo-700 border border-nokturo-200 dark:border-nokturo-600 rounded-lg p-2 max-h-24 overflow-y-auto">
-              <p className="text-[10px] text-nokturo-500 dark:text-nokturo-400 uppercase tracking-wider mb-1">
-                {t('comments.tagUser')}
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {profiles.map((p) => {
-                  const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.full_name || '?';
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => {
-                        addMentionToComment(p);
-                        setShowUserPicker(false);
-                      }}
-                      className="text-xs px-2 py-1 rounded transition-colors bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-200 dark:hover:bg-nokturo-500"
-                    >
-                      {name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
           {addError && (
             <p className="text-xs text-red-500 mt-2">{addError}</p>
           )}
@@ -997,6 +954,7 @@ function CommentThreadPopover({
   const handleReplyMentionSelect = useCallback((profile: MentionProfile) => {
     const newValue = replyMention.applyMention(profile);
     setReplyContent(newValue);
+    replyMention.closeDropdown();
   }, [replyMention, setReplyContent]);
 
   const renderComment = (c: TextComment, allComments: TextComment[]) => {

@@ -99,7 +99,7 @@ export default function IdentityPage() {
           <Loader2 size={24} className="animate-spin text-nokturo-500" />
         </div>
       ) : (
-        <div className={mode === 'view' ? 'max-w-[860px] mx-auto' : 'flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl'}>
+        <div className={mode === 'view' ? 'max-w-[860px] mx-auto' : 'grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,860px)_224px_1fr] gap-4 lg:gap-8 w-full max-w-6xl mx-auto'}>
           {mode === 'view' ? (
             <RichTextBlockViewer
               blocks={blocks}
@@ -109,7 +109,7 @@ export default function IdentityPage() {
             />
           ) : (
             <>
-              <div className="min-w-0 flex-1 max-w-3xl">
+              <div className="min-w-0 lg:col-start-2">
                 <RichTextBlockEditor
                   value={blocks}
                   onChange={setBlocks}
@@ -121,7 +121,7 @@ export default function IdentityPage() {
               <PageStructurePanel
                 blocks={blocks}
                 onChange={setBlocks}
-                className="hidden lg:block"
+                className="hidden lg:block lg:col-start-3"
               />
             </>
           )}

@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* NProgress top bar – thin red indicator */
+#nprogress .bar {
+  background: #EF4444 !important;
+  height: 3px !important;
+}
+#nprogress .peg {
+  box-shadow: 0 0 10px #EF4444, 0 0 5px #EF4444 !important;
+}
+
 /* Base reset for Electron / light app */
 :root {
   color-scheme: light;

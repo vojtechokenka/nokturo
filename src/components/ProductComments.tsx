@@ -75,6 +75,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
     if (!taggedUsers.includes(profile.id)) {
       setTaggedUsers((prev) => [...prev, profile.id]);
     }
+    mention.closeDropdown();
   }, [mention, taggedUsers]);
 
   const handleReplyMentionSelect = useCallback((profile: MentionProfile) => {
@@ -83,12 +84,13 @@ export function ProductComments({ productId }: ProductCommentsProps) {
     if (!taggedUsers.includes(profile.id)) {
       setTaggedUsers((prev) => [...prev, profile.id]);
     }
+    replyMention.closeDropdown();
   }, [replyMention, taggedUsers]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, full_name')
+      .select('id, first_name, last_name, full_name, avatar_url')
       .neq('id', user?.id ?? '');
     setProfiles((data || []) as ProfileOption[]);
   }, [user?.id]);
@@ -302,8 +304,19 @@ export function ProductComments({ productId }: ProductCommentsProps) {
               {!isReply && (
                 <button
                   onClick={() => {
-                    setReplyTo(replyTo === comment.id ? null : comment.id);
-                    setReplyContent('');
+                    if (replyTo === comment.id) {
+                      setReplyTo(null);
+                      setReplyContent('');
+                      setTaggedUsers([]);
+                    } else {
+                      const authorName =
+                        [comment.profile?.first_name, comment.profile?.last_name].filter(Boolean).join(' ') ||
+                        comment.profile?.full_name ||
+                        'Unknown';
+                      setReplyTo(comment.id);
+                      setReplyContent(`@${authorName} `);
+                      setTaggedUsers([comment.author_id]);
+                    }
                   }}
                   className="flex items-center gap-1 text-xs text-nokturo-500 hover:text-nokturo-600 transition-colors"
                 >

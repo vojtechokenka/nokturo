@@ -6,7 +6,6 @@ import { hasPermission, canDeleteAnything } from '../lib/rbac';
 import {
   Send,
   Loader2,
-  AtSign,
   Check,
   X,
   MoreHorizontal,
@@ -57,7 +56,6 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState('');
   const [taggedUsers, setTaggedUsers] = useState<string[]>([]);
-  const [showUserPicker, setShowUserPicker] = useState(false);
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
   const [sending, setSending] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -77,6 +75,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     if (!taggedUsers.includes(profile.id)) {
       setTaggedUsers((prev) => [...prev, profile.id]);
     }
+    mention.closeDropdown();
   }, [mention, taggedUsers]);
 
   // Close comment menu on outside click
@@ -91,7 +90,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, full_name')
+      .select('id, first_name, last_name, full_name, avatar_url')
       .neq('id', user?.id ?? '');
     setProfiles((data || []) as ProfileOption[]);
   }, [user?.id]);
@@ -288,20 +287,6 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     setEditSaving(false);
   };
 
-  const toggleTagUser = (profile: ProfileOption) => {
-    const name = [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.full_name || '?';
-    const mention = `@${name} `;
-    const isAdding = !taggedUsers.includes(profile.id);
-    if (isAdding) {
-      setNewComment((c) => (c.trim() ? `${c} ${mention}` : mention));
-      setTaggedUsers((prev) => [...prev, profile.id]);
-    } else {
-      const escaped = mention.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      setNewComment((c) => c.replace(new RegExp(escaped, 'g'), '').replace(/\s{2,}/g, ' ').trim());
-      setTaggedUsers((prev) => prev.filter((id) => id !== profile.id));
-    }
-  };
-
   const handleReplyTo = (comment: MoodboardComment) => {
     const authorName =
       [comment.profile?.first_name, comment.profile?.last_name].filter(Boolean).join(' ') ||
@@ -311,7 +296,6 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       setTaggedUsers((prev) => [...prev, comment.author_id]);
     }
     setNewComment((prev) => (prev.trim() ? `${prev} @${authorName} ` : `@${authorName} `));
-    setShowUserPicker(true);
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
@@ -496,20 +480,8 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                 }
               }}
               placeholder={t('comments.placeholder')}
-              className={`${INPUT_CLASS} pr-8`}
+              className={INPUT_CLASS}
             />
-            <button
-              type="button"
-              onClick={() => setShowUserPicker((p) => !p)}
-              className={`absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded transition-colors ${
-                taggedUsers.length > 0
-                  ? 'text-nokturo-700 dark:text-nokturo-300 bg-nokturo-200 dark:bg-nokturo-600'
-                  : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-600'
-              }`}
-              title={t('comments.tagUser')}
-            >
-              <AtSign className="w-3.5 h-3.5" />
-            </button>
           </div>
           <button
             onClick={handlePost}
@@ -521,34 +493,6 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
         </div>
         {postError && (
           <p className="text-xs text-red-500">{postError}</p>
-        )}
-
-        {showUserPicker && profiles.length > 0 && (
-          <div className="bg-white dark:bg-nokturo-700 border border-nokturo-200 dark:border-nokturo-600 rounded-lg p-2 max-h-24 overflow-y-auto">
-            <p className="text-[10px] text-nokturo-500 dark:text-nokturo-400 uppercase tracking-wider mb-1">
-              {t('comments.tagUser')}
-            </p>
-            <div className="flex flex-wrap gap-1">
-              {profiles.map((p) => {
-                const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.full_name || '?';
-                const selected = taggedUsers.includes(p.id);
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => toggleTagUser(p)}
-                    className={`text-xs px-2 py-1 rounded transition-colors ${
-                      selected
-                        ? 'bg-nokturo-900 dark:bg-nokturo-500 text-white'
-                        : 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-200 dark:hover:bg-nokturo-500'
-                    }`}
-                  >
-                    {name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
         )}
       </div>
       )}

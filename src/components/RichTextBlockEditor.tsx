@@ -193,16 +193,29 @@ function EditableListItem({
   onSave,
   onEnter,
   onBackspaceEmpty,
+  autoFocus,
+  onFocused,
 }: {
   html: string;
   placeholder?: string;
   onSave: (html: string) => void;
   onEnter: () => void;
   onBackspaceEmpty: () => void;
+  autoFocus?: boolean;
+  onFocused?: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const savedHtml = useRef(html);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+    const id = setTimeout(() => {
+      ref.current?.focus();
+      onFocused?.();
+    }, 0);
+    return () => clearTimeout(id);
+  }, [autoFocus, onFocused]);
 
   useEffect(() => {
     if (ref.current && ref.current.innerHTML !== html) {
@@ -492,6 +505,7 @@ function BlockRenderer({
   isDragging,
   isDragOver,
   headingFont,
+  h3Large = false,
 }: {
   block: RichTextBlock;
   index: number;
@@ -507,12 +521,14 @@ function BlockRenderer({
   isDragOver?: boolean;
   onToast: (t: ToastData) => void;
   headingFont?: HeadingFontFamily;
+  h3Large?: boolean;
 }) {
   const { t } = useTranslation();
   const paraRef = useRef<HTMLDivElement>(null);
   const [gridHoveredRow, setGridHoveredRow] = useState<number | null>(null);
   const [gridHoveredCol, setGridHoveredCol] = useState<number | null>(null);
   const [gridFocusedCell, setGridFocusedCell] = useState<number | null>(null);
+  const [focusListItemIndex, setFocusListItemIndex] = useState<number | null>(null);
 
   const execFormat = (cmd: string, value?: string) => {
     document.execCommand(cmd, false, value);
@@ -606,6 +622,7 @@ function BlockRenderer({
             {(() => {
               const isHeadline = headingFont !== 'body';
               const hf = isHeadline ? 'font-headline' : 'font-body';
+              const h3Size = h3Large ? 'text-[32px]' : 'text-[20px]';
               const sizeClass =
                 block.level === 1
                   ? isHeadline
@@ -615,7 +632,7 @@ function BlockRenderer({
                     ? isHeadline
                       ? 'text-[40px]'
                       : 'text-[24px]'
-                    : 'text-[20px]';
+                    : h3Size;
               const levelClass = {
                 1: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1]`,
                 2: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2]`,
@@ -737,6 +754,7 @@ function BlockRenderer({
                       const next = [...(block.items || [''])];
                       next.splice(i + 1, 0, '');
                       onUpdate(block.id, { items: next });
+                      setFocusListItemIndex(i + 1);
                     }}
                     onBackspaceEmpty={() => {
                       if ((block.items || ['']).length > 1) {
@@ -744,6 +762,8 @@ function BlockRenderer({
                         onUpdate(block.id, { items: next });
                       }
                     }}
+                    autoFocus={focusListItemIndex === i}
+                    onFocused={() => setFocusListItemIndex(null)}
                   />
                   <button
                     type="button"
@@ -1466,6 +1486,8 @@ export interface RichTextBlockEditorProps {
   showParagraphSizes?: boolean;
   /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
   headingFont?: HeadingFontFamily;
+  /** When true, H3 uses 32px (About Nokturo); otherwise 20px */
+  h3Large?: boolean;
 }
 
 export function RichTextBlockEditor({
@@ -1474,6 +1496,7 @@ export function RichTextBlockEditor({
   onUploadImage,
   onToast,
   headingFont = 'headline',
+  h3Large = false,
 }: RichTextBlockEditorProps) {
   const { t } = useTranslation();
   const [addMenuAtIndex, setAddMenuAtIndex] = useState<number | null>(null);
@@ -1615,6 +1638,7 @@ export function RichTextBlockEditor({
                 onUploadImage={onUploadImage}
                 onToast={onToast}
                 headingFont={headingFont}
+                h3Large={h3Large}
               />
               <div className="relative flex justify-center py-1">
                 <button

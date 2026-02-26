@@ -47,6 +47,7 @@
     "language": "Language",
     "settings": "Settings",
     "logout": "Log out",
+    "loggingOut": "Logging out…",
     "login": "Log in",
     "created": "Created",
     "updated": "Updated",

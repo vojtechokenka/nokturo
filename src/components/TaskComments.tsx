@@ -68,12 +68,13 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
     if (!taggedUsers.includes(profile.id)) {
       setTaggedUsers((prev) => [...prev, profile.id]);
     }
+    mention.closeDropdown();
   }, [mention, taggedUsers]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, full_name')
+      .select('id, first_name, last_name, full_name, avatar_url')
       .neq('id', user?.id ?? '');
     setProfiles((data || []) as ProfileOption[]);
   }, [user?.id]);
@@ -172,8 +173,9 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
           authorId,
           authorName,
           content,
-          type: 'product_tag',
-          link: `/tasks`,
+          type: 'text_tag',
+          link: `/tasks?task=${taskId}`,
+          commentId: inserted.id,
         });
       }
 

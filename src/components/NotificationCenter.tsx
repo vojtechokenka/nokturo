@@ -7,22 +7,29 @@ import { Bell, Check, CheckCircle2, Clock, UserPlus, Trash2 } from 'lucide-react
 
 export interface Notification {
   id: string;
-  user_id: string;
-  type: 'task_assigned' | 'task_completed' | 'task_comment' | 'deadline_7d' | 'deadline_48h' | 'deadline_24h';
+  user_id?: string;
+  recipient_id?: string;
+  type: 'task_assigned' | 'task_completed' | 'task_comment' | 'deadline_7d' | 'deadline_48h' | 'deadline_24h' | 'mention' | 'comment';
   title: string;
-  body: string | null;
-  task_id: string | null;
+  body?: string | null;
+  message?: string | null;
+  task_id?: string | null;
+  link?: string | null;
+  reference_type?: string | null;
+  reference_id?: string | null;
   read: boolean;
   created_at: string;
 }
 
-const ICON_MAP: Record<Notification['type'], typeof Bell> = {
+const ICON_MAP: Partial<Record<Notification['type'], typeof Bell>> = {
   task_assigned: UserPlus,
   task_completed: CheckCircle2,
   task_comment: Bell,
   deadline_7d: Clock,
   deadline_48h: Clock,
   deadline_24h: Clock,
+  mention: Bell,
+  comment: Bell,
 };
 
 const COLOR_MAP: Record<Notification['type'], string> = {
@@ -50,13 +57,26 @@ export function NotificationCenter() {
   const fetchNotifications = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data } = await supabase
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabase
       .from('notifications')
       .select('*')
       .eq('user_id', userId)
+      .gte('created_at', sevenDaysAgo)
       .order('created_at', { ascending: false })
       .limit(50);
-    setNotifications((data as Notification[]) || []);
+    if (error) {
+      const { data: byRecipient } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('recipient_id', userId)
+        .gte('created_at', sevenDaysAgo)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      setNotifications((byRecipient as Notification[]) || []);
+    } else {
+      setNotifications((data as Notification[]) || []);
+    }
     setLoading(false);
   }, [userId]);
 
@@ -89,26 +109,42 @@ export function NotificationCenter() {
   }, [open]);
 
   const markRead = async (id: string) => {
-    await supabase.from('notifications').update({ read: true }).eq('id', id);
+    const updates: Record<string, unknown> = { read_at: new Date().toISOString() };
+    const { error } = await supabase.from('notifications').update({ ...updates, read: true }).eq('id', id);
+    if (error) {
+      await supabase.from('notifications').update(updates).eq('id', id);
+    }
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllRead = async () => {
     if (!userId) return;
-    await supabase.from('notifications').update({ read: true }).eq('user_id', userId).eq('read', false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    let ok = false;
+    const updates = { read: true, read_at: new Date().toISOString() };
+    const r1 = await supabase.from('notifications').update(updates).eq('user_id', userId);
+    if (!r1.error) ok = true;
+    const r2 = await supabase.from('notifications').update(updates).eq('recipient_id', userId);
+    if (!r2.error) ok = true;
+    if (ok) setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const clearAll = async () => {
     if (!userId) return;
     await supabase.from('notifications').delete().eq('user_id', userId);
+    const r2 = await supabase.from('notifications').delete().eq('recipient_id', userId);
     setNotifications([]);
   };
 
-  const handleClick = (n: Notification) => {
+  const handleNotificationClick = (n: Notification) => {
     markRead(n.id);
-    if (n.task_id) {
-      navigate('/tasks');
+    const targetLink = n.link ?? (n.task_id ? `/tasks?task=${n.task_id}` : null);
+    if (targetLink) {
+      navigate(targetLink);
+      const parsed = new URL(targetLink, 'http://x');
+      const itemId = parsed.searchParams.get('item');
+      if (itemId && parsed.pathname.includes('moodboard')) {
+        window.dispatchEvent(new CustomEvent('open-moodboard-item', { detail: { itemId } }));
+      }
     }
     setOpen(false);
   };
@@ -136,9 +172,10 @@ export function NotificationCenter() {
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center min-w-[16px] h-4 px-1 text-[10px] font-medium text-white bg-red-500 rounded-full leading-none">
-            {unreadCount > 99 ? '99+' : unreadCount}
-          </span>
+          <span
+            className="notification-badge absolute top-1 right-1 w-2 h-2 rounded-full bg-[#EF4444]"
+            aria-hidden
+          />
         )}
       </button>
 
@@ -186,7 +223,7 @@ export function NotificationCenter() {
                   return (
                     <button
                       key={n.id}
-                      onClick={() => handleClick(n)}
+                      onClick={() => handleNotificationClick(n)}
                       className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 ${
                         !n.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
                       }`}
@@ -198,9 +235,9 @@ export function NotificationCenter() {
                         <p className={`text-sm leading-snug ${!n.read ? 'font-medium text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-700 dark:text-nokturo-300'}`}>
                           {n.title}
                         </p>
-                        {n.body && (
+                        {(n.body ?? n.message) && (
                           <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5 line-clamp-1">
-                            {n.body}
+                            {n.body ?? n.message}
                           </p>
                         )}
                         <span className="text-[10px] text-nokturo-400 dark:text-nokturo-500 mt-1 block">
@@ -208,7 +245,7 @@ export function NotificationCenter() {
                         </span>
                       </div>
                       {!n.read && (
-                        <span className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-blue-500" />
+                        <span className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-[#EF4444]" />
                       )}
                     </button>
                   );
@@ -233,14 +270,17 @@ export async function createNotification(
   body: string | null = null,
   taskId: string | null = null,
 ) {
-  await supabase.from('notifications').insert({
+  const link = taskId ? `/tasks?task=${taskId}` : null;
+  const row: Record<string, unknown> = {
     user_id: userId,
     type,
     title,
     body,
     task_id: taskId,
+    link,
     read: false,
-  });
+  };
+  await supabase.from('notifications').insert(row);
 }
 
 /**

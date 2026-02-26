@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageShell } from '../../components/PageShell';
 import { TaskSlideOver, type Task, type TaskProfile } from '../../components/TaskSlideOver';
@@ -161,6 +162,7 @@ type TaskScope = 'mine' | 'all';
 
 export default function TasksPage() {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const userId = getUserIdForDb();
   const isFounder = user?.role === 'founder';
@@ -276,10 +278,44 @@ export default function TasksPage() {
     setProfileMap(map);
   }, []);
 
+  const openDetail = useCallback((task: Task) => {
+    setViewingTask(task);
+    setDetailOpen(true);
+  }, []);
+
   useEffect(() => {
     fetchTasks();
     fetchProfiles();
   }, [fetchTasks, fetchProfiles]);
+
+  // Open task from ?task= param (e.g. from notification click)
+  useEffect(() => {
+    const taskId = searchParams.get('task');
+    if (!taskId || loading) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) {
+      openDetail(task);
+      const next = new URLSearchParams(searchParams);
+      next.delete('task');
+      setSearchParams(next, { replace: true });
+    } else {
+      (async () => {
+        const { data } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('id', taskId)
+          .maybeSingle();
+        if (data) {
+          const { data: assignees } = await supabase.from('task_assignees').select('task_id, user_id').eq('task_id', taskId);
+          const enriched = { ...data, assignees: assignees?.map((a: { user_id: string }) => ({ user_id: a.user_id })) || [] };
+          openDetail(enriched);
+        }
+        const next = new URLSearchParams(searchParams);
+        next.delete('task');
+        setSearchParams(next, { replace: true });
+      })();
+    }
+  }, [searchParams.get('task'), tasks, loading, openDetail]);
 
   const activeTasks = sortTasks(tasks.filter((tk) => tk.status === 'active'));
   const completedTasks = tasks
@@ -391,11 +427,6 @@ export default function TasksPage() {
     setDetailOpen(false);
     setEditingTask(task);
     setEditOpen(true);
-  };
-
-  const openDetail = (task: Task) => {
-    setViewingTask(task);
-    setDetailOpen(true);
   };
 
   const handleDescriptionChange = useCallback(

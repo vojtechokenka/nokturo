@@ -34,6 +34,8 @@ interface RichTextBlockViewerProps {
   defaultTocItems?: TocItem[];
   /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
   headingFont?: HeadingFontFamily;
+  /** When true, H3 uses 32px (About Nokturo); otherwise 20px */
+  h3Large?: boolean;
 }
 
 export function extractHeadings(blocks: RichTextBlock[]): TocItem[] {
@@ -46,7 +48,7 @@ export function extractHeadings(blocks: RichTextBlock[]): TocItem[] {
   return headings;
 }
 
-export function RichTextBlockViewer({ blocks, className = '', showToc = true, tocTitle, defaultTocItems, headingFont = 'headline' }: RichTextBlockViewerProps) {
+export function RichTextBlockViewer({ blocks, className = '', showToc = true, tocTitle, defaultTocItems, headingFont = 'headline', h3Large = false }: RichTextBlockViewerProps) {
   const { t } = useTranslation();
   const tocItems = extractHeadings(blocks);
   const effectiveTocItems = tocItems.length > 0 ? tocItems : (defaultTocItems ?? []);
@@ -63,7 +65,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   const content = (
     <article className="font-body">
       {blocks.map((block) => (
-        <BlockView key={block.id} block={block} headingFont={headingFont} />
+        <BlockView key={block.id} block={block} headingFont={headingFont} h3Large={h3Large} />
       ))}
       {useDefaultToc &&
         defaultTocItems!.map((item, idx) => (
@@ -87,13 +89,14 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   return <div className={className}>{content}</div>;
 }
 
-function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; headingFont?: HeadingFontFamily }) {
+function BlockView({ block, headingFont = 'headline', h3Large = false }: { block: RichTextBlock; headingFont?: HeadingFontFamily; h3Large?: boolean }) {
   switch (block.type) {
     case 'heading':
       if (!block.text.trim()) return null;
       const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
       const isHeadline = headingFont === 'headline';
       const hFont = isHeadline ? 'font-headline' : 'font-body';
+      const h3Size = h3Large ? 'text-[32px]' : 'text-[20px]';
       const hSizeClass =
         block.level === 1
           ? isHeadline
@@ -103,7 +106,7 @@ function BlockView({ block, headingFont = 'headline' }: { block: RichTextBlock; 
             ? isHeadline
               ? 'text-[40px]'
               : 'text-[24px]'
-            : 'text-[20px]';
+            : h3Size;
       const headingClass = {
         1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-4 scroll-mt-6 leading-[1.1]`,
         2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-12 mb-4 scroll-mt-6 leading-[1.2]`,

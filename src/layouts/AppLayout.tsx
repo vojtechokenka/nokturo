@@ -15,6 +15,7 @@ function ProfileDropdown() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,14 +29,28 @@ function ProfileDropdown() {
 
   const handleLogout = async () => {
     setOpen(false);
-    if (import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') {
-      useAuthStore.getState().logout();
-    } else {
-      await supabase.auth.signOut();
+    setIsLoggingOut(true);
+    try {
+      if (import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') {
+        useAuthStore.getState().logout();
+      } else {
+        await supabase.auth.signOut();
+      }
+    } finally {
+      setIsLoggingOut(false);
     }
   };
 
   return (
+    <>
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3 rounded-xl bg-white dark:bg-nokturo-800 px-6 py-5 shadow-xl">
+            <Loader2 className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+            <span className="text-sm text-nokturo-700 dark:text-nokturo-300">{t('common.loggingOut')}</span>
+          </div>
+        </div>
+      )}
     <div ref={ref} className="relative">
       <button
         type="button"
@@ -81,16 +96,22 @@ function ProfileDropdown() {
               </button>
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors"
+                disabled={isLoggingOut}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <LogOut className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
-                {t('common.logout')}
+                {isLoggingOut ? (
+                  <Loader2 className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+                ) : (
+                  <LogOut className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                )}
+                {isLoggingOut ? t('common.loggingOut') : t('common.logout')}
               </button>
             </div>
           </div>
         </>
       )}
     </div>
+    </>
   );
 }
 

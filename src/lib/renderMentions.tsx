@@ -5,13 +5,14 @@ import type { ReactNode } from 'react';
  * 1) Někdo mě tagoval → fialové bg #D400FF/20, text-inherit
  * 2) Já tagoval někoho → font-semibold, text-inherit, bez pozadí
  * 3) Někdo tagoval jiného → font-medium, text-inherit, bez pozadí
+ * Regex: @ + jméno (1+ slov), končí na mezere/punctuaci – podporuje @Alena Okénková, @Jan atd.
  */
 export function renderContentWithMentions(
   content: string,
   isOwn?: boolean,
   currentUserDisplayName?: string
 ): ReactNode {
-  const parts = content.split(/(@\S+(?:\s+\S+)?)/g);
+  const parts = content.split(/(@[\w\u00C0-\u024F]+(?:\s+[\w\u00C0-\u024F]+)*)/g);
   const currentNameNorm = currentUserDisplayName?.trim().toLowerCase();
   const mentionOfMeClass =
     'font-medium text-inherit px-1 py-0.5 rounded bg-mention/20 dark:bg-mention/20';
@@ -19,8 +20,9 @@ export function renderContentWithMentions(
   const mentionOtherClass = 'font-medium text-inherit px-0.5 py-0.5';
   return parts.map((part, i) => {
     if (!part.startsWith('@')) return part;
-    const mentionName = part.slice(1).trim();
-    const isMentionOfMe = currentNameNorm && mentionName.toLowerCase() === currentNameNorm;
+    const mentionName = part.slice(1).replace(/[,.\-!?;:]+\s*$/, '').trim();
+    const mentionNorm = mentionName.toLowerCase();
+    const isMentionOfMe = currentNameNorm && mentionNorm === currentNameNorm;
     const mentionClass = isMentionOfMe
       ? mentionOfMeClass
       : isOwn

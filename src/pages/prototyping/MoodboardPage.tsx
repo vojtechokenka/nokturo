@@ -27,7 +27,6 @@ import {
   MoreVertical,
   GripVertical,
   Images,
-  Bell,
 } from 'lucide-react';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
@@ -866,14 +865,9 @@ export default function MoodboardPage() {
               className="break-inside-avoid group relative mb-4 cursor-pointer"
               onClick={() => { const origIdx = items.findIndex((i) => i.id === item.id); setLightboxIndex(origIdx); setLightboxSubIndex(0); markItemAsRead(item.id); }}
             >
-              {/* Unread comments indicator – left of image */}
+              {/* Unread comments indicator – static 8×8px red dot, no animation */}
               {unreadCounts[item.id] > 0 && (
-                <div className="absolute -left-3.5 top-3 z-10">
-                  <div className="relative flex h-7 w-7 items-center justify-center rounded-full bg-red-500 shadow-lg ring-2 ring-white dark:ring-nokturo-800">
-                    <Bell className="h-3.5 w-3.5 text-white" />
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-40" />
-                  </div>
-                </div>
+                <div className="absolute -left-3.5 top-3 z-10 w-2 h-2 rounded-full bg-[#EF4444] shadow-md ring-2 ring-white dark:ring-nokturo-800" />
               )}
               <div className="relative rounded-lg overflow-hidden">
                 <img

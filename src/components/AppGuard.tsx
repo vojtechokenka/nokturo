@@ -1,5 +1,6 @@
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
+import { RouteProgress } from './RouteProgress';
 
 const PUBLIC_PATHS = ['/login', '/forgot-password', '/reset-password', '/auth/callback'];
 
@@ -18,11 +19,11 @@ export function AppGuard() {
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(p + '/'));
 
   if (!isInitialized) {
-    return <Outlet />;
+    return <><RouteProgress /><Outlet /></>;
   }
   if (!user && !isLoading && !isPublic) {
     return <Navigate to="/login" replace />;
   }
 
-  return <Outlet />;
+  return <><RouteProgress /><Outlet /></>;
 }
