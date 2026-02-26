@@ -657,6 +657,9 @@ export default function MoodboardPage() {
           .single();
 
         if (comment && uploadTaggedUsers.length > 0 && authorId && user) {
+          if (import.meta.env.DEV) {
+            console.log('[MoodboardPage upload] calling sendMentionNotifications', { uploadTaggedUsers });
+          }
           const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
           await sendMentionNotifications({
             taggedUserIds: uploadTaggedUsers,

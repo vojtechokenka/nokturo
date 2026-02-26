@@ -15,7 +15,7 @@ import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
-import { sendMentionNotifications, getGalleryNotificationLink } from '../lib/sendMentionNotifications';
+import { sendMentionNotifications, getGalleryNotificationLink, parseMentionsFromText } from '../lib/sendMentionNotifications';
 
 // ── Types ─────────────────────────────────────────────────────
 interface ProductGalleryComment {
@@ -85,7 +85,11 @@ export function ProductGalleryComments({
     const newValue = mention.applyMention(profile);
     setNewComment(newValue);
     if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
+      setTaggedUsers((prev) => {
+        const next = [...prev, profile.id];
+        if (import.meta.env.DEV) console.log('[ProductGalleryComments] handleMentionSelect: added', { profileId: profile.id, taggedUsersAfter: next });
+        return next;
+      });
     }
     mention.closeDropdown();
   }, [mention, taggedUsers]);
@@ -190,6 +194,10 @@ export function ProductGalleryComments({
   const handlePost = async () => {
     const content = newComment.trim();
     if (!content || !user) return;
+
+    const taggedUsersSnapshot = [...taggedUsers];
+    if (import.meta.env.DEV) console.log('[ProductGalleryComments] handlePost SUBMIT – taggedUsers at submit', { taggedUsersSnapshot });
+
     setPostError(null);
     setSending(true);
 
@@ -217,7 +225,7 @@ export function ProductGalleryComments({
         image_index: imageIndex,
         author_id: authorId,
         content,
-        tagged_user_ids: taggedUsers.length > 0 ? taggedUsers : [],
+        tagged_user_ids: taggedUsersSnapshot.length > 0 ? taggedUsersSnapshot : [],
       })
       .select('id')
       .single();
@@ -236,7 +244,7 @@ export function ProductGalleryComments({
         image_index: imageIndex,
         author_id: authorId,
         content,
-        tagged_user_ids: taggedUsers,
+        tagged_user_ids: taggedUsersSnapshot,
         created_at: new Date().toISOString(),
         profile: {
           first_name: user.firstName ?? null,
@@ -249,10 +257,17 @@ export function ProductGalleryComments({
       setNewComment('');
 
       // Create notifications for tagged users
-      if (taggedUsers.length > 0) {
+      if (import.meta.env.DEV && taggedUsersSnapshot.length === 0) {
+        const parsedNames = parseMentionsFromText(content);
+        if (parsedNames.length) {
+          console.log('[ProductGalleryComments] PARSER: mentions in text but taggedUsers empty', { content: content.slice(0, 100), parsedMentionNames: parsedNames });
+        }
+      }
+      if (taggedUsersSnapshot.length > 0) {
+        if (import.meta.env.DEV) console.log('[ProductGalleryComments] calling sendMentionNotifications', { taggedUsersSnapshot });
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
         await sendMentionNotifications({
-          taggedUserIds: taggedUsers,
+          taggedUserIds: taggedUsersSnapshot,
           authorId,
           authorName,
           content,

@@ -15,7 +15,7 @@ import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
-import { sendMentionNotifications } from '../lib/sendMentionNotifications';
+import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
 
 interface ProfileOption {
   id: string;
@@ -73,7 +73,11 @@ export function ProductComments({ productId }: ProductCommentsProps) {
     const newValue = mention.applyMention(profile);
     setNewComment(newValue);
     if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
+      setTaggedUsers((prev) => {
+        const next = [...prev, profile.id];
+        if (import.meta.env.DEV) console.log('[ProductComments] handleMentionSelect: added', { profileId: profile.id, taggedUsersAfter: next });
+        return next;
+      });
     }
     mention.closeDropdown();
   }, [mention, taggedUsers]);
@@ -82,7 +86,11 @@ export function ProductComments({ productId }: ProductCommentsProps) {
     const newValue = replyMention.applyMention(profile);
     setReplyContent(newValue);
     if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
+      setTaggedUsers((prev) => {
+        const next = [...prev, profile.id];
+        if (import.meta.env.DEV) console.log('[ProductComments] handleReplyMentionSelect: added', { profileId: profile.id, taggedUsersAfter: next });
+        return next;
+      });
     }
     replyMention.closeDropdown();
   }, [replyMention, taggedUsers]);
@@ -176,6 +184,10 @@ export function ProductComments({ productId }: ProductCommentsProps) {
     const content = parentId ? replyContent : newComment;
     const authorId = getUserIdForDb();
     if (!content.trim() || !user || !authorId) return;
+
+    const taggedUsersSnapshot = [...taggedUsers];
+    if (import.meta.env.DEV) console.log('[ProductComments] handlePost SUBMIT – taggedUsers at submit', { taggedUsersSnapshot });
+
     setSending(true);
 
     const { error } = await supabase.from('product_comments').insert({
@@ -187,10 +199,17 @@ export function ProductComments({ productId }: ProductCommentsProps) {
 
     if (!error) {
       // Create notifications for tagged users
-      if (taggedUsers.length > 0) {
+      if (import.meta.env.DEV && taggedUsersSnapshot.length === 0) {
+        const parsedNames = parseMentionsFromText(content.trim());
+        if (parsedNames.length) {
+          console.log('[ProductComments] PARSER: mentions in text but taggedUsers empty', { content: content.trim().slice(0, 100), parsedMentionNames: parsedNames });
+        }
+      }
+      if (taggedUsersSnapshot.length > 0) {
+        if (import.meta.env.DEV) console.log('[ProductComments] calling sendMentionNotifications', { taggedUsersSnapshot });
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
         await sendMentionNotifications({
-          taggedUserIds: taggedUsers,
+          taggedUserIds: taggedUsersSnapshot,
           authorId,
           authorName,
           content: content.trim(),

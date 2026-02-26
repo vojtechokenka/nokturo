@@ -7,18 +7,19 @@ import { Bell, Check, CheckCircle2, Clock, UserPlus, Trash2 } from 'lucide-react
 
 export interface Notification {
   id: string;
-  user_id?: string;
-  recipient_id?: string;
-  type: 'task_assigned' | 'task_completed' | 'task_comment' | 'deadline_7d' | 'deadline_48h' | 'deadline_24h' | 'mention' | 'comment';
+  recipient_id: string;
+  sender_id?: string | null;
+  type: 'task_assigned' | 'task_completed' | 'task_comment' | 'deadline_7d' | 'deadline_48h' | 'deadline_24h' | 'mention' | 'comment' | 'project_update';
   title: string;
-  body?: string | null;
   message?: string | null;
-  task_id?: string | null;
   link?: string | null;
   reference_type?: string | null;
   reference_id?: string | null;
+  metadata?: Record<string, unknown>;
   read: boolean;
+  dismissed?: boolean;
   created_at: string;
+  read_at?: string | null;
 }
 
 const ICON_MAP: Partial<Record<Notification['type'], typeof Bell>> = {
@@ -58,26 +59,15 @@ export function NotificationCenter() {
     if (!userId) return;
     setLoading(true);
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    // Fetch both user_id (legacy) AND recipient_id (mention/tag notifications)
-    const { data: byUser } = await supabase
-      .from('notifications')
-      .select('*')
-      .eq('user_id', userId)
-      .gte('created_at', sevenDaysAgo)
-      .order('created_at', { ascending: false })
-      .limit(50);
-    const { data: byRecipient } = await supabase
+    const { data } = await supabase
       .from('notifications')
       .select('*')
       .eq('recipient_id', userId)
+      .eq('dismissed', false)
       .gte('created_at', sevenDaysAgo)
       .order('created_at', { ascending: false })
       .limit(50);
-    const merged = [...(byUser || []), ...(byRecipient || [])]
-      .filter((n, i, arr) => arr.findIndex((x) => x.id === n.id) === i)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, 50);
-    setNotifications((merged as Notification[]) || []);
+    setNotifications((data || []) as Notification[]);
     setLoading(false);
   }, [userId]);
 
@@ -85,27 +75,11 @@ export function NotificationCenter() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Real-time: subscribe to INSERT and UPDATE on notifications
+  // Real-time: recipient_id only
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
       .channel('notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          setNotifications((prev) => {
-            const newN = payload.new as Notification;
-            if (prev.some((n) => n.id === newN.id)) return prev;
-            return [newN, ...prev];
-          });
-        }
-      )
       .on(
         'postgres_changes',
         {
@@ -120,21 +94,6 @@ export function NotificationCenter() {
             if (prev.some((n) => n.id === newN.id)) return prev;
             return [newN, ...prev];
           });
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'notifications',
-          filter: `user_id=eq.${userId}`,
-        },
-        (payload) => {
-          const updated = payload.new as Notification;
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n))
-          );
         }
       )
       .on(
@@ -178,35 +137,27 @@ export function NotificationCenter() {
   }, [open]);
 
   const markRead = async (id: string) => {
-    const updates: Record<string, unknown> = { read_at: new Date().toISOString() };
-    const { error } = await supabase.from('notifications').update({ ...updates, read: true }).eq('id', id);
-    if (error) {
-      await supabase.from('notifications').update(updates).eq('id', id);
-    }
+    const readAt = new Date().toISOString();
+    await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('id', id);
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllRead = async () => {
     if (!userId) return;
-    let ok = false;
-    const updates = { read: true, read_at: new Date().toISOString() };
-    const r1 = await supabase.from('notifications').update(updates).eq('user_id', userId);
-    if (!r1.error) ok = true;
-    const r2 = await supabase.from('notifications').update(updates).eq('recipient_id', userId);
-    if (!r2.error) ok = true;
-    if (ok) setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const readAt = new Date().toISOString();
+    await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('recipient_id', userId);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const clearAll = async () => {
     if (!userId) return;
     setNotifications([]);
-    await supabase.from('notifications').delete().eq('user_id', userId);
     await supabase.from('notifications').delete().eq('recipient_id', userId);
   };
 
   const handleNotificationClick = (n: Notification) => {
     markRead(n.id);
-    const targetLink = n.link ?? (n.task_id ? `/tasks?task=${n.task_id}` : null);
+    const targetLink = n.link ?? (n.reference_type === 'task' && n.reference_id ? `/tasks?task=${n.reference_id}` : null);
     if (targetLink) {
       navigate(targetLink);
       const parsed = new URL(targetLink, 'http://x');
@@ -242,7 +193,7 @@ export function NotificationCenter() {
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
           <span
-            className="notification-badge absolute top-1 right-1 w-2 h-2 rounded-full bg-[#FF1A1A]"
+            className="notification-badge absolute top-4 left-4 w-3 h-3 rounded-full bg-[#FF1A1A]"
             aria-hidden
           />
         )}
@@ -286,8 +237,10 @@ export function NotificationCenter() {
                 </div>
               ) : (
                 notifications.map((n) => {
-                  const Icon = ICON_MAP[n.type] || Bell;
-                  const iconColor = COLOR_MAP[n.type] || 'text-nokturo-500';
+                  const dr = (n.metadata as { deadlineReminder?: string })?.deadlineReminder;
+                  const displayType = (dr ? `deadline_${dr}` : n.type) as Notification['type'];
+                  const Icon = ICON_MAP[displayType] || Bell;
+                  const iconColor = COLOR_MAP[displayType] || 'text-nokturo-500';
 
                   return (
                     <button
@@ -304,9 +257,9 @@ export function NotificationCenter() {
                         <p className={`text-sm leading-snug ${!n.read ? 'font-medium text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-700 dark:text-nokturo-300'}`}>
                           {n.title}
                         </p>
-                        {(n.body ?? n.message) && (
+                        {n.message && (
                           <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5 line-clamp-1">
-                            {n.body ?? n.message}
+                            {n.message}
                           </p>
                         )}
                         <span className="text-[10px] text-nokturo-400 dark:text-nokturo-500 mt-1 block">
@@ -328,33 +281,48 @@ export function NotificationCenter() {
   );
 }
 
+/** DB type CHECK: mention | comment | task_assigned | project_update */
+const CREATE_TYPE_MAP: Record<string, string> = {
+  task_assigned: 'task_assigned',
+  task_completed: 'comment',
+  task_comment: 'comment',
+  deadline_7d: 'task_assigned',
+  deadline_48h: 'task_assigned',
+  deadline_24h: 'task_assigned',
+  mention: 'mention',
+  comment: 'comment',
+};
+
 /**
  * Creates a notification row in the DB.
  * Call this from task actions (assign, complete, etc.)
  */
 export async function createNotification(
-  userId: string,
+  recipientId: string,
   type: Notification['type'],
   title: string,
   body: string | null = null,
   taskId: string | null = null,
+  senderId?: string | null,
+  metadata?: Record<string, unknown>,
 ) {
   const link = taskId ? `/tasks?task=${taskId}` : null;
-  const row: Record<string, unknown> = {
-    user_id: userId,
-    type,
+  await supabase.from('notifications').insert({
+    recipient_id: recipientId,
+    sender_id: senderId ?? null,
+    type: CREATE_TYPE_MAP[type] || 'comment',
     title,
-    body,
-    task_id: taskId,
+    message: body,
     link,
-    read: false,
-  };
-  await supabase.from('notifications').insert(row);
+    reference_type: taskId ? 'task' : null,
+    reference_id: taskId,
+    metadata: metadata ?? {},
+  });
 }
 
 /**
  * Checks tasks with upcoming deadlines and creates reminder notifications
- * if they haven't been sent yet (deduplication by type + task_id + user_id within timeframe).
+ * if they haven't been sent yet (deduplication by recipient_id + reference_id + metadata.deadlineReminder).
  */
 async function checkDeadlineReminders(userId: string) {
   const { data: assigneeRows } = await supabase
@@ -376,13 +344,20 @@ async function checkDeadlineReminders(userId: string) {
 
   const { data: existingNotifs } = await supabase
     .from('notifications')
-    .select('type, task_id')
-    .eq('user_id', userId)
-    .in('type', ['deadline_7d', 'deadline_48h', 'deadline_24h'])
-    .in('task_id', tasks.map((t: { id: string }) => t.id));
+    .select('metadata, reference_id')
+    .eq('recipient_id', userId)
+    .in('reference_id', tasks.map((t: { id: string }) => t.id));
 
   const sentSet = new Set(
-    (existingNotifs || []).map((n: { type: string; task_id: string }) => `${n.type}:${n.task_id}`)
+    (existingNotifs || [])
+      .filter(
+        (n: { metadata?: { deadlineReminder?: string }; reference_id?: string }) =>
+          n.metadata?.deadlineReminder && n.reference_id
+      )
+      .map(
+        (n: { metadata?: { deadlineReminder?: string }; reference_id: string }) =>
+          `${n.metadata!.deadlineReminder}:${n.reference_id}`
+      )
   );
 
   const now = Date.now();
@@ -392,12 +367,18 @@ async function checkDeadlineReminders(userId: string) {
     const diff = deadline - now;
     const hours = diff / (3600 * 1000);
 
-    if (hours <= 24 && hours > 0 && !sentSet.has(`deadline_24h:${task.id}`)) {
-      await createNotification(userId, 'deadline_24h', task.title, null, task.id);
-    } else if (hours <= 48 && hours > 24 && !sentSet.has(`deadline_48h:${task.id}`)) {
-      await createNotification(userId, 'deadline_48h', task.title, null, task.id);
-    } else if (hours <= 7 * 24 && hours > 48 && !sentSet.has(`deadline_7d:${task.id}`)) {
-      await createNotification(userId, 'deadline_7d', task.title, null, task.id);
+    if (hours <= 24 && hours > 0 && !sentSet.has(`24h:${task.id}`)) {
+      await createNotification(userId, 'deadline_24h', task.title, null, task.id, null, {
+        deadlineReminder: '24h',
+      });
+    } else if (hours <= 48 && hours > 24 && !sentSet.has(`48h:${task.id}`)) {
+      await createNotification(userId, 'deadline_48h', task.title, null, task.id, null, {
+        deadlineReminder: '48h',
+      });
+    } else if (hours <= 7 * 24 && hours > 48 && !sentSet.has(`7d:${task.id}`)) {
+      await createNotification(userId, 'deadline_7d', task.title, null, task.id, null, {
+        deadlineReminder: '7d',
+      });
     }
   }
 }

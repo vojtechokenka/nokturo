@@ -16,7 +16,7 @@ import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
-import { sendMentionNotifications } from '../lib/sendMentionNotifications';
+import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
 
 // ── Types ─────────────────────────────────────────────────────
 interface MoodboardComment {
@@ -75,7 +75,13 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     const newValue = mention.applyMention(profile);
     setNewComment(newValue);
     if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
+      setTaggedUsers((prev) => {
+        const next = [...prev, profile.id];
+        if (import.meta.env.DEV) {
+          console.log('[MoodboardComments] handleMentionSelect: added to taggedUsers', { profileId: profile.id, profileName: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || profile.full_name, taggedUsersBefore: prev, taggedUsersAfter: next });
+        }
+        return next;
+      });
     }
     mention.closeDropdown();
   }, [mention, taggedUsers]);
@@ -179,6 +185,13 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   const handlePost = async () => {
     const content = newComment.trim();
     if (!content || !user) return;
+
+    // Capture at submit time – if INVOKED shows [], state was cleared before this
+    const taggedUsersSnapshot = [...taggedUsers];
+    if (import.meta.env.DEV) {
+      console.log('[MoodboardComments] handlePost SUBMIT – taggedUsers at submit time', { taggedUsersSnapshot, length: taggedUsersSnapshot.length });
+    }
+
     setPostError(null);
     setSending(true);
 
@@ -205,7 +218,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       moodboard_item_id: moodboardItemId,
       author_id: authorId,
       content,
-      tagged_user_ids: taggedUsers,
+      tagged_user_ids: taggedUsersSnapshot,
       created_at: new Date().toISOString(),
       profile: {
         first_name: user.firstName ?? null,
@@ -224,7 +237,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
         moodboard_item_id: moodboardItemId,
         author_id: authorId,
         content,
-        tagged_user_ids: taggedUsers.length > 0 ? taggedUsers : [],
+        tagged_user_ids: taggedUsersSnapshot.length > 0 ? taggedUsersSnapshot : [],
       })
       .select('id')
       .single();
@@ -246,11 +259,20 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       });
       addToast(t('comments.posted'), 'success');
 
-      // Create notifications for tagged users
-      if (taggedUsers.length > 0) {
+      // Create notifications for tagged users (use snapshot – immune to setTaggedUsers([]) above)
+      if (import.meta.env.DEV && taggedUsersSnapshot.length === 0) {
+        const parsedNames = parseMentionsFromText(content);
+        if (parsedNames.length) {
+          console.log('[MoodboardComments] PARSER: mentions in text but taggedUsers empty – user may have typed @ without selecting from dropdown', { content: content.slice(0, 100), parsedMentionNames: parsedNames });
+        }
+      }
+      if (taggedUsersSnapshot.length > 0) {
+        if (import.meta.env.DEV) {
+          console.log('[MoodboardComments] calling sendMentionNotifications with snapshot', { taggedUsersSnapshot });
+        }
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
         await sendMentionNotifications({
-          taggedUserIds: taggedUsers,
+          taggedUserIds: taggedUsersSnapshot,
           authorId,
           authorName,
           content,

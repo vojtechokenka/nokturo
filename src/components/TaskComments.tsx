@@ -13,7 +13,7 @@ import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
-import { sendMentionNotifications } from '../lib/sendMentionNotifications';
+import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
 import { createNotification } from './NotificationCenter';
 
 interface ProfileOption {
@@ -66,7 +66,11 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
     const newValue = mention.applyMention(profile);
     setNewComment(newValue);
     if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
+      setTaggedUsers((prev) => {
+        const next = [...prev, profile.id];
+        if (import.meta.env.DEV) console.log('[TaskComments] handleMentionSelect: added', { profileId: profile.id, taggedUsersAfter: next });
+        return next;
+      });
     }
     mention.closeDropdown();
   }, [mention, taggedUsers]);
@@ -149,6 +153,10 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
     const content = newComment.trim();
     const authorId = getUserIdForDb();
     if (!content || !user || !authorId) return;
+
+    const taggedUsersSnapshot = [...taggedUsers];
+    if (import.meta.env.DEV) console.log('[TaskComments] handlePost SUBMIT – taggedUsers at submit', { taggedUsersSnapshot });
+
     setSending(true);
 
     const { data: inserted, error } = await supabase
@@ -166,10 +174,17 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
       setComments((prev) => [...prev, inserted as Comment]);
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
-      if (taggedUsers.length > 0) {
+      if (import.meta.env.DEV && taggedUsersSnapshot.length === 0) {
+        const parsedNames = parseMentionsFromText(content);
+        if (parsedNames.length) {
+          console.log('[TaskComments] PARSER: mentions in text but taggedUsers empty', { content: content.slice(0, 100), parsedMentionNames: parsedNames });
+        }
+      }
+      if (taggedUsersSnapshot.length > 0) {
+        if (import.meta.env.DEV) console.log('[TaskComments] calling sendMentionNotifications', { taggedUsersSnapshot });
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
         await sendMentionNotifications({
-          taggedUserIds: taggedUsers,
+          taggedUserIds: taggedUsersSnapshot,
           authorId,
           authorName,
           content,

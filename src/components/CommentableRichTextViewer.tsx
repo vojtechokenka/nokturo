@@ -18,7 +18,7 @@ import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
-import { sendMentionNotifications } from '../lib/sendMentionNotifications';
+import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
 
 // ── Types ─────────────────────────────────────────────────────
 export interface TextComment {
@@ -421,14 +421,23 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     const newValue = mention.applyMention(profile);
     setCommentInput(newValue);
     if (!taggedUsers.includes(profile.id)) {
-      setTaggedUsers((prev) => [...prev, profile.id]);
+      setTaggedUsers((prev) => {
+        const next = [...prev, profile.id];
+        if (import.meta.env.DEV) console.log('[CommentableRichTextViewer] handleMentionSelect: added', { profileId: profile.id, taggedUsersAfter: next });
+        return next;
+      });
     }
     mention.closeDropdown();
   }, [mention, taggedUsers]);
 
   useEffect(() => {
     if (!selectionState) {
-      setTaggedUsers([]);
+      setTaggedUsers((prev) => {
+        if (prev.length && import.meta.env.DEV) {
+          console.log('[CommentableRichTextViewer] selectionState cleared → taggedUsers reset (user may have clicked outside before submit)', { hadTaggedUsers: prev });
+        }
+        return [];
+      });
     }
   }, [selectionState]);
 
@@ -587,6 +596,10 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       if (!user || !authorId) setAddError(t('comments.loginRequired'));
       return;
     }
+
+    const taggedUsersSnapshot = [...taggedUsers];
+    if (import.meta.env.DEV) console.log('[CommentableRichTextViewer] handleAddComment SUBMIT – taggedUsers at submit', { taggedUsersSnapshot });
+
     setSending(true);
     const { data, error } = await supabase
       .from('product_text_comments')
@@ -604,10 +617,17 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       setComments((prev) => [...prev, data as TextComment]);
 
       // Create notifications for tagged users
-      if (taggedUsers.length > 0) {
+      if (import.meta.env.DEV && taggedUsersSnapshot.length === 0) {
+        const parsedNames = parseMentionsFromText(commentInput.trim());
+        if (parsedNames.length) {
+          console.log('[CommentableRichTextViewer] PARSER: mentions in text but taggedUsers empty', { content: commentInput.trim().slice(0, 100), parsedMentionNames: parsedNames });
+        }
+      }
+      if (taggedUsersSnapshot.length > 0) {
+        if (import.meta.env.DEV) console.log('[CommentableRichTextViewer] calling sendMentionNotifications', { taggedUsersSnapshot });
         const authorName = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name;
         await sendMentionNotifications({
-          taggedUserIds: taggedUsers,
+          taggedUserIds: taggedUsersSnapshot,
           authorId,
           authorName,
           content: commentInput.trim(),

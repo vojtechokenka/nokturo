@@ -1,6 +1,14 @@
 import { supabase } from './supabase';
 import i18n from '../i18n';
 
+/** Same regex as renderMentions – extracts @mention tokens from text (end of text, punctuation, etc.) */
+const MENTION_REGEX = /@[\w\u00C0-\u024F]+(?:\s+[\w\u00C0-\u024F]+)*/g;
+
+export function parseMentionsFromText(content: string): string[] {
+  const matches = content.match(MENTION_REGEX) ?? [];
+  return matches.map((m) => m.slice(1).replace(/[,.\-!?;:]+\s*$/, '').trim()).filter(Boolean);
+}
+
 type NotificationType =
   | 'moodboard_tag'
   | 'gallery_tag'
@@ -21,21 +29,12 @@ interface SendMentionNotificationsParams {
   commentId?: string;
 }
 
-/** Map old granular types to new broad types */
+/** New schema: type IN ('mention', 'comment', 'task_assigned', 'project_update') */
 const TYPE_MAP: Record<NotificationType, string> = {
   moodboard_tag: 'mention',
   gallery_tag: 'mention',
   text_tag: 'mention',
   product_tag: 'mention',
-  comment_reply: 'comment',
-};
-
-/** Map old types to reference_type for context */
-const REFERENCE_TYPE_MAP: Record<NotificationType, string> = {
-  moodboard_tag: 'moodboard',
-  gallery_tag: 'gallery',
-  text_tag: 'text',
-  product_tag: 'product',
   comment_reply: 'comment',
 };
 
@@ -54,11 +53,29 @@ export async function sendMentionNotifications({
   moodboardItemId,
   commentId,
 }: SendMentionNotificationsParams) {
-  const uniqueIds = [...new Set(taggedUserIds)].filter((id) => id !== authorId);
-  if (uniqueIds.length === 0) return;
+  const DEBUG = import.meta.env.DEV;
 
-  if (import.meta.env.DEV) {
-    console.log('[sendMentionNotifications] taggedUserIds:', taggedUserIds, '→ uniqueRecipients:', uniqueIds, 'type:', type);
+  if (DEBUG) {
+    console.log('[sendMentionNotifications] INVOKED', {
+      type,
+      taggedUserIds,
+      taggedUserIdsLength: taggedUserIds?.length ?? 0,
+      authorId,
+    });
+  }
+
+  const uniqueIds = [...new Set(taggedUserIds)].filter((id) => id !== authorId);
+
+  if (uniqueIds.length === 0) {
+    if (DEBUG) {
+      console.log('[sendMentionNotifications] EARLY RETURN: no recipients', {
+        reason: !taggedUserIds?.length
+          ? 'taggedUserIds array empty or undefined'
+          : 'all filtered out (author self-tag or duplicates)',
+        taggedUserIds,
+      });
+    }
+    return;
   }
 
   const titleKey = {
@@ -72,7 +89,7 @@ export async function sendMentionNotifications({
   const title = i18n.t(titleKey, { name: authorName });
   const message = content.slice(0, 100) + (content.length > 100 ? '...' : '');
 
-  // Deduplication: check which recipients already have an active notification for this link
+  // Deduplication: recipient_id + link in last hour
   const alreadyNotified = new Set<string>();
   if (link) {
     try {
@@ -82,11 +99,10 @@ export async function sendMentionNotifications({
         .select('recipient_id')
         .in('recipient_id', uniqueIds)
         .eq('link', link)
-        .eq('dismissed', false)
         .gte('created_at', oneHourAgo);
 
       if (existing) {
-        for (const n of existing) {
+        for (const n of existing as { recipient_id: string }[]) {
           alreadyNotified.add(n.recipient_id);
         }
       }
@@ -96,27 +112,44 @@ export async function sendMentionNotifications({
   }
 
   const newRecipients = uniqueIds.filter((id) => !alreadyNotified.has(id));
-  if (newRecipients.length === 0) return;
 
-  const referenceId = moodboardItemId || commentId || null;
+  if (newRecipients.length === 0) {
+    if (DEBUG) {
+      console.log('[sendMentionNotifications] EARLY RETURN: all already notified (dedup)', {
+        uniqueIds,
+        alreadyNotified: [...alreadyNotified],
+      });
+    }
+    return;
+  }
 
-  const rows = newRecipients.map((userId) => ({
-    recipient_id: userId,
+  const rows = newRecipients.map((recipientId) => ({
+    recipient_id: recipientId,
     sender_id: authorId,
     type: TYPE_MAP[type] || 'mention',
     title,
     message,
     link,
-    reference_type: REFERENCE_TYPE_MAP[type] || 'moodboard',
-    reference_id: referenceId,
-    metadata: {
-      original_type: type,
-      ...(moodboardItemId ? { moodboard_item_id: moodboardItemId } : {}),
-      ...(commentId ? { comment_id: commentId } : {}),
-    },
   }));
 
-  const { error } = await supabase.from('notifications').insert(rows);
+  if (DEBUG) {
+    console.log('[sendMentionNotifications] BEFORE INSERT payload:', {
+      rowCount: rows.length,
+      recipient_ids: rows.map((r) => r.recipient_id),
+      sampleRow: rows[0],
+    });
+  }
+
+  const { data, error } = await supabase.from('notifications').insert(rows).select('id');
+
+  if (DEBUG) {
+    console.log('[sendMentionNotifications] AFTER INSERT response:', {
+      data,
+      error: error ? { message: error.message, code: error.code, details: error.details } : null,
+      insertedCount: data?.length ?? 0,
+    });
+  }
+
   if (error) {
     console.error('[sendMentionNotifications] insert failed:', error.message, 'code:', error.code, 'details:', error.details);
   }
