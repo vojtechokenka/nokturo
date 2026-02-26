@@ -92,6 +92,51 @@ body {
   -webkit-app-region: no-drag;
 }
 
+/* Notification panel slide + fade */
+@keyframes notification-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.animate-notification-panel {
+  animation: notification-panel-in 0.15s ease-out;
+}
+
+/* Fade-in for new list items */
+@keyframes fade-in-item {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-item {
+  animation: fade-in-item 0.2s ease-out;
+}
+
+/* Modal open transition */
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.animate-modal-in {
+  animation: modal-in 0.15s ease-out;
+}
+
 /* Slide-over animation */
 @keyframes slide-in-right {
   from {

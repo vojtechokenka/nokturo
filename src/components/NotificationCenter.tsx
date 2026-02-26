@@ -84,11 +84,79 @@ export function NotificationCenter() {
     fetchNotifications();
   }, [fetchNotifications]);
 
-  // Poll every 60s for new notifications
+  // Real-time: subscribe to INSERT and UPDATE on notifications
   useEffect(() => {
-    const interval = setInterval(fetchNotifications, 60_000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+    if (!userId) return;
+    const channel = supabase
+      .channel('notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          setNotifications((prev) => {
+            const newN = payload.new as Notification;
+            if (prev.some((n) => n.id === newN.id)) return prev;
+            return [newN, ...prev];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${userId}`,
+        },
+        (payload) => {
+          setNotifications((prev) => {
+            const newN = payload.new as Notification;
+            if (prev.some((n) => n.id === newN.id)) return prev;
+            return [newN, ...prev];
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          const updated = payload.new as Notification;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n))
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${userId}`,
+        },
+        (payload) => {
+          const updated = payload.new as Notification;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n))
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   // Check deadline reminders on load and every 30 min
   useEffect(() => {
@@ -130,9 +198,9 @@ export function NotificationCenter() {
 
   const clearAll = async () => {
     if (!userId) return;
-    await supabase.from('notifications').delete().eq('user_id', userId);
-    const r2 = await supabase.from('notifications').delete().eq('recipient_id', userId);
     setNotifications([]);
+    await supabase.from('notifications').delete().eq('user_id', userId);
+    await supabase.from('notifications').delete().eq('recipient_id', userId);
   };
 
   const handleNotificationClick = (n: Notification) => {
@@ -168,7 +236,7 @@ export function NotificationCenter() {
           setOpen((o) => !o);
           if (!open) fetchNotifications();
         }}
-        className="relative inline-flex items-center justify-center w-8 h-8 text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-300/50 dark:hover:bg-nokturo-600 rounded-lg transition-colors"
+        className="relative inline-flex items-center justify-center w-8 h-8 text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-300/50 dark:hover:bg-nokturo-600 rounded-lg transition-all duration-150 hover:opacity-80 active:scale-95"
       >
         <Bell className="w-4 h-4" />
         {unreadCount > 0 && (
@@ -181,8 +249,8 @@ export function NotificationCenter() {
 
       {open && (
         <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-nokturo-800 rounded-xl shadow-xl z-20 overflow-hidden">
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden />
+          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-nokturo-800 rounded-xl shadow-xl z-20 overflow-hidden animate-notification-panel">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-nokturo-200/60 dark:border-nokturo-700/60">
               <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100">
@@ -224,7 +292,7 @@ export function NotificationCenter() {
                     <button
                       key={n.id}
                       onClick={() => handleNotificationClick(n)}
-                      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 ${
+                      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all duration-150 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 hover:opacity-90 active:scale-[0.99] ${
                         !n.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
                       }`}
                     >

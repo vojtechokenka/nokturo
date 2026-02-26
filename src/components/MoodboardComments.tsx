@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
+import { useToastStore } from '../stores/toastStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
 import {
   Send,
@@ -66,6 +67,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const addToast = useToastStore((s) => s.addToast);
 
   const mention = useMentionSuggestions(newComment, profiles as MentionProfile[]);
 
@@ -173,7 +175,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     run();
   }, [user?.id]);
 
-  // ── Post comment (with optional tags) ─────────────────────────
+  // ── Post comment (with optional tags) – optimistic update ───────
   const handlePost = async () => {
     const content = newComment.trim();
     if (!content || !user) return;
@@ -197,6 +199,25 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     }
     setCurrentAuthorId(authorId);
 
+    const tempId = 'temp-' + Date.now();
+    const optimisticRow: MoodboardComment = {
+      id: tempId,
+      moodboard_item_id: moodboardItemId,
+      author_id: authorId,
+      content,
+      tagged_user_ids: taggedUsers,
+      created_at: new Date().toISOString(),
+      profile: {
+        first_name: user.firstName ?? null,
+        last_name: user.lastName ?? null,
+        full_name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name,
+        avatar_url: user.avatarUrl ?? null,
+      },
+    };
+    setComments((prev) => [...prev, optimisticRow]);
+    setNewComment('');
+    setTaggedUsers([]);
+
     const { data: comment, error: commentErr } = await supabase
       .from('moodboard_comments')
       .insert({
@@ -209,29 +230,21 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       .single();
 
     if (commentErr) {
+      setComments((prev) => prev.filter((c) => c.id !== tempId));
       setPostError(commentErr.message || t('comments.postFailed'));
+      addToast(commentErr.message || t('comments.postFailed'), 'error');
       setSending(false);
       return;
     }
 
     if (comment) {
-      const newCommentRow: MoodboardComment = {
-        id: comment.id,
-        moodboard_item_id: moodboardItemId,
-        author_id: authorId,
-        content,
-        tagged_user_ids: taggedUsers,
-        created_at: new Date().toISOString(),
-        profile: {
-          first_name: user.firstName ?? null,
-          last_name: user.lastName ?? null,
-          full_name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name,
-          avatar_url: user.avatarUrl ?? null,
-        },
-      };
-      setComments((prev) => (prev.some((c) => c.id === newCommentRow.id) ? prev : [...prev, newCommentRow]));
-      setNewComment('');
-      setTaggedUsers([]);
+      setComments((prev) => {
+        const withoutRealtimeDuplicate = prev.filter((c) => c.id !== comment.id);
+        return withoutRealtimeDuplicate.map((c) =>
+          c.id === tempId ? { ...c, id: comment.id } : c
+        );
+      });
+      addToast(t('comments.posted'), 'success');
 
       // Create notifications for tagged users
       if (taggedUsers.length > 0) {
@@ -314,7 +327,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     return (
       <div
         key={comment.id}
-        className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 ${isOwn ? 'ml-6 bg-white/20 text-white' : 'mr-6 bg-white/10 text-white'}`}
+        className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 animate-fade-in-item ${isOwn ? 'ml-6 bg-white/20 text-white' : 'mr-6 bg-white/10 text-white'}`}
       >
         {isEditing ? (
           <div className="flex flex-col gap-2 -mx-2 px-3 py-2">
@@ -439,8 +452,16 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     <section className={`flex-1 flex flex-col min-h-0 ${hasHeaderAbove ? 'mt-4 pt-4 border-t border-nokturo-200 dark:border-nokturo-700' : ''}`}>
       <div className="flex-1 overflow-y-auto min-h-0">
         {loading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="w-5 h-5 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+          <div className="space-y-3 py-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex gap-3 animate-pulse">
+                <div className="w-7 h-7 rounded-full bg-nokturo-200/60 dark:bg-nokturo-700/60 shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-3 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded w-3/4" />
+                  <div className="h-3 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded w-1/2" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : comments.length === 0 ? null : (
           <div className="space-y-2 pt-4 mb-4">
@@ -486,7 +507,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
           <button
             onClick={handlePost}
             disabled={!newComment.trim() || sending}
-            className="size-9 flex items-center justify-center bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="size-9 flex items-center justify-center bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>

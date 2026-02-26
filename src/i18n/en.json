@@ -694,6 +694,7 @@
     "noItems": "No moodboard images yet",
     "addFirst": "Upload your first inspiration image to get started",
     "deleteConfirm": "Are you sure you want to delete this moodboard item?",
+    "itemDeleted": "Item deleted",
     "dropOrClick": "Drop an image or click to browse",
     "supportedFormats": "JPG, PNG, WebP up to 10 MB",
     "searchPlaceholder": "Search moodboard...",
@@ -791,7 +792,8 @@
     "moodboardComments": "Comments",
     "tagUser": "Tag user",
     "loginRequired": "You need to log in to comment.",
-    "postFailed": "Failed to post comment."
+    "postFailed": "Failed to post comment.",
+    "posted": "Comment posted"
   },
   "richText": {
     "addBlock": "Add block",

@@ -8,6 +8,7 @@ import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import { MoodboardComments } from '../../components/MoodboardComments';
 import { ToastContainer, type ToastData } from '../../components/Toast';
+import { useToastStore } from '../../stores/toastStore';
 import {
   NotionSelect,
   type NotionSelectOption,
@@ -134,8 +135,9 @@ export default function MoodboardPage() {
   const [editError, setEditError] = useState('');
   const [editSaving, setEditSaving] = useState(false);
 
-  // Toast notifications
+  // Toast notifications (local for backward compat; global store also available)
   const [toasts, setToasts] = useState<ToastData[]>([]);
+  const addGlobalToast = useToastStore((s) => s.addToast);
 
   // URL input (inside upload modal)
   const [urlInput, setUrlInput] = useState('');
@@ -651,19 +653,28 @@ export default function MoodboardPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setUploadError(msg);
+      addGlobalToast(msg, 'error');
       setUploading(false);
       return;
     }
     setUploading(false);
     resetUpload();
     fetchItems();
+    addGlobalToast(t('moodboard.imageAdded'), 'success');
   };
 
-  // ── Delete ──────────────────────────────────────────────────
+  // ── Delete (optimistic) ───────────────────────────────────────
   const handleDelete = async (id: string) => {
-    await supabase.from('moodboard_items').delete().eq('id', id);
+    const deleted = items.find((i) => i.id === id);
     setItems((prev) => prev.filter((i) => i.id !== id));
     setDeleteTarget(null);
+    const { error } = await supabase.from('moodboard_items').delete().eq('id', id);
+    if (error) {
+      if (deleted) setItems((prev) => [...prev, deleted]);
+      addGlobalToast(error.message, 'error');
+    } else {
+      addGlobalToast(t('moodboard.itemDeleted'), 'success');
+    }
   };
 
   // ── Edit / Update ───────────────────────────────────────────
@@ -691,8 +702,10 @@ export default function MoodboardPage() {
     setEditSaving(false);
     if (error) {
       setEditError(error.message);
+      addGlobalToast(error.message, 'error');
       return;
     }
+    addGlobalToast(t('common.saved'), 'success');
     setItems((prev) =>
       prev.map((i) =>
         i.id === editTarget.id
@@ -831,7 +844,7 @@ export default function MoodboardPage() {
           </button>
           <button
             onClick={() => setShowUpload(true)}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             <Plus className="w-4 h-4" />
             {t('moodboard.addItem')}
@@ -841,8 +854,12 @@ export default function MoodboardPage() {
 
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+        <div className={`columns-1 sm:columns-2 lg:columns-4 gap-4`}>
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="break-inside-avoid mb-4">
+              <div className="rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 aspect-[4/5] animate-pulse" />
+            </div>
+          ))}
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -865,9 +882,13 @@ export default function MoodboardPage() {
               className="break-inside-avoid group relative mb-4 cursor-pointer"
               onClick={() => { const origIdx = items.findIndex((i) => i.id === item.id); setLightboxIndex(origIdx); setLightboxSubIndex(0); markItemAsRead(item.id); }}
             >
-              {/* Unread comments indicator – static 8×8px red dot, no animation */}
+              {/* Unread comments indicator – red dot inside card, top-right */}
               {unreadCounts[item.id] > 0 && (
-                <div className="absolute -left-3.5 top-3 z-10 w-2 h-2 rounded-full bg-[#EF4444] shadow-md ring-2 ring-white dark:ring-nokturo-800" />
+                <span
+                  className="absolute top-6 right-6 z-10 rounded-full bg-[#EF4444]"
+                  style={{ width: 8, height: 8 }}
+                  aria-hidden
+                />
               )}
               <div className="relative rounded-lg overflow-hidden">
                 <img
@@ -932,7 +953,7 @@ export default function MoodboardPage() {
           aria-modal="true"
         >
           <div
-            className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-modal-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -1203,7 +1224,7 @@ export default function MoodboardPage() {
           onClick={closeEdit}
         >
           <div
-            className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-modal-in"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">

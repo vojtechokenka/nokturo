@@ -3,9 +3,11 @@ import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { NotificationCenter } from '../components/NotificationCenter';
+import { ToastContainer } from '../components/Toast';
 import { DefaultAvatar } from '../components/DefaultAvatar';
 import { useAuthStore, getCachedAvatarUrl } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
+import { useToastStore } from '../stores/toastStore';
 import { supabase } from '../lib/supabase';
 import { Loader2, Menu, ClipboardList, Settings, LogOut } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -122,6 +124,8 @@ export function AppLayout() {
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const toggleSidebar = useSidebarStore((s) => s.toggle);
   const closeSidebar = useSidebarStore((s) => s.close);
+  const globalToasts = useToastStore((s) => s.toasts);
+  const removeToast = useToastStore((s) => s.removeToast);
 
   if (isLoading) {
     return (
@@ -188,6 +192,13 @@ export function AppLayout() {
           </ErrorBoundary>
         </main>
       </div>
+
+      {/* Global toasts (bottom-right) */}
+      <ToastContainer
+        toasts={globalToasts}
+        onClose={removeToast}
+        position="right"
+      />
     </div>
   );
 }
