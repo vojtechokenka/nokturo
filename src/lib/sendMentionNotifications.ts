@@ -141,6 +141,14 @@ export async function sendMentionNotifications({
     });
   }
 
+  // Exact payload being sent – verify type matches DB CHECK: mention | comment | task_assigned | project_update
+  const ALLOWED_TYPES = ['mention', 'comment', 'task_assigned', 'project_update'] as const;
+  const invalid = rows.filter((r) => !ALLOWED_TYPES.includes(r.type as (typeof ALLOWED_TYPES)[number]));
+  if (invalid.length) {
+    console.warn('⚠️ INVALID type(s) – CHECK constraint will reject:', invalid.map((r) => r.type));
+  }
+  console.warn('🔑 INSERT PAYLOAD:', JSON.stringify(rows, null, 2));
+
   // Debug: verify session before INSERT (RLS 42501 = permission denied)
   console.warn('🔑 SUPABASE IMPORT: lib/supabase.ts (from "./supabase" in sendMentionNotifications.ts)');
   const { data: { session } } = await supabase.auth.getSession();
