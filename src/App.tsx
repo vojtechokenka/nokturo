@@ -217,6 +217,25 @@ export default function App() {
       if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
       if (!session.access_token) return;
 
+      // SIGNED_IN (explicit login): set minimal user immediately so app navigates; profile fetch in background.
+      // INITIAL_SESSION (page load): keep blocking behavior - getSession runs in parallel and sets user.
+      if (event === 'SIGNED_IN') {
+        profileFetchDone = false;
+        const minimalUser = buildMinimalUser(session);
+        setUser(minimalUser, session);
+        setAuthLoading(false);
+        setLoading(false);
+        setInitialized(true);
+        void fetchUserProfileOnce(session).then((user) => {
+          if (user) setUser(user, session);
+        }).catch(() => {
+          const existingUser = useAuthStore.getState().user;
+          if (existingUser?.id !== session.user.id) setUser(minimalUser, session);
+        });
+        return;
+      }
+
+      // INITIAL_SESSION: blocking profile fetch (getSession may also run; one will win)
       try {
         const user = await fetchUserProfileOnce(session);
         if (user) setUser(user, session);
@@ -225,7 +244,7 @@ export default function App() {
         if (existingUser && existingUser.id === session.user.id) {
           setUser(existingUser, session);
         } else {
-          setUser(null, session);
+          setUser(buildMinimalUser(session), session);
         }
       }
       setAuthLoading(false);

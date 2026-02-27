@@ -36,13 +36,15 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
+    const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
       options: {
         data: { persistent: rememberMe },
       },
     });
+
+    console.warn('🔐 signIn result:', data?.user?.id ?? 'null', authError?.message ?? 'no error');
 
     if (authError) {
       setError(authError.message);
