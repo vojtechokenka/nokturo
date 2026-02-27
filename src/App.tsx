@@ -5,6 +5,7 @@ import { router } from './router';
 import { useAuthStore } from './stores/authStore';
 import { useSleepModeStore } from './stores/sleepModeStore';
 import { useThemeStore } from './stores/themeStore';
+import { useToastStore } from './stores/toastStore';
 import { SleepMode } from './components/SleepMode';
 import i18n, { LANGUAGE_KEY } from './i18n';
 import { safeGetStorage } from './lib/storage';
@@ -53,17 +54,22 @@ function applyProfilePreferences(language: 'en' | 'cs', theme: 'light' | 'dark')
   }
 }
 
-/** Ensure we have a valid session with token before profile fetch (Electron/cold start can delay session readiness) */
-async function waitForValidSession(): Promise<{ session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'] } | null> {
-  for (let i = 0; i < 5; i++) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.access_token) {
-      if (import.meta.env.DEV && i > 0) console.log(`[Auth] Session ready after ${i} retries`);
-      return { session };
-    }
-    if (i < 4) await new Promise((r) => setTimeout(r, Math.min(500 * (i + 1), 1000)));
+const PROFILE_FETCH_TIMEOUT_MS = 8000;
+
+/** Guard: prevent multiple simultaneous profile fetches (e.g. from onAuthStateChange loop) */
+let profileFetchInProgress = false;
+
+/** Returns user or null if fetch was skipped (another fetch in progress). Caller should not setUser when null. */
+async function fetchUserProfileOnce(
+  session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } }
+): Promise<Awaited<ReturnType<typeof buildUserFromSession>> | null> {
+  if (profileFetchInProgress) return null;
+  profileFetchInProgress = true;
+  try {
+    return await buildUserFromSession(session, () => useAuthStore.getState().user);
+  } finally {
+    profileFetchInProgress = false;
   }
-  return null;
 }
 
 async function buildUserFromSession(
@@ -79,37 +85,29 @@ async function buildUserFromSession(
       .maybeSingle();
 
   let profile: Record<string, unknown> | null = null;
-  const timeouts = [8000, 12000, 15000]; // Exponential-ish backoff: 8s, 12s, 15s
-  const delays = [0, 1000, 2000]; // Delay before each attempt
-
-  for (let attempt = 0; attempt < 3; attempt++) {
-    try {
-      if (attempt > 0) await new Promise((r) => setTimeout(r, delays[attempt]));
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Profiles fetch timeout')), timeouts[attempt])
-      );
-      const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: unknown };
-      if (error) throw error;
-      profile = data;
-      break; // success
-    } catch (err) {
-      console.warn(`⚠️ Profile fetch attempt ${attempt + 1} failed:`, err);
-      if (attempt === 2) {
-        // Both attempts failed, use minimal user but preserve avatar/name from existing
-        const minimal = buildMinimalUser(session);
-        const existing = getExistingUser?.();
-        if (existing?.id === session.user.id) {
-          if (existing.role && minimal.role === 'client') {
-            minimal.role = existing.role as import('./lib/rbac').Role;
-          }
-          if (existing.avatarUrl) minimal.avatarUrl = existing.avatarUrl;
-          if (existing.name) minimal.name = existing.name;
-          if (existing.firstName) minimal.firstName = existing.firstName;
-          if (existing.lastName) minimal.lastName = existing.lastName;
-        }
-        return minimal;
+  try {
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('Profiles fetch timeout')), PROFILE_FETCH_TIMEOUT_MS)
+    );
+    const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: { message?: string; code?: string } };
+    if (error) throw error;
+    profile = data;
+  } catch (err) {
+    const e = err as { message?: string; code?: string };
+    console.warn('[Profile fetch] message:', e?.message, 'code:', e?.code);
+    useToastStore.getState().addToast('Could not load profile. Some features may be limited.', 'error');
+    const minimal = buildMinimalUser(session);
+    const existing = getExistingUser?.();
+    if (existing?.id === session.user.id) {
+      if (existing.role && minimal.role === 'client') {
+        minimal.role = existing.role as import('./lib/rbac').Role;
       }
+      if (existing.avatarUrl) minimal.avatarUrl = existing.avatarUrl;
+      if (existing.name) minimal.name = existing.name;
+      if (existing.firstName) minimal.firstName = existing.firstName;
+      if (existing.lastName) minimal.lastName = existing.lastName;
     }
+    return minimal;
   }
 
   const role = resolveRole(profile?.role ?? session.user.user_metadata?.role);
@@ -190,17 +188,12 @@ export default function App() {
       .then(async ({ data: { session } }) => {
         console.log('[Auth] Startup getSession:', session?.user?.id ?? 'null', session?.access_token ? 'HAS TOKEN' : 'NO TOKEN');
         try {
-          if (session?.user) {
-            // Ensure session has token before profile fetch (Electron/cold start may return session before client is ready)
-            let usableSession = session;
-            if (!session.access_token) {
-              const waited = await waitForValidSession();
-              if (waited?.session) usableSession = waited.session;
-              else console.warn('[Auth] No valid token after wait, proceeding with cached session (profile fetch may fail)');
-            }
-            const user = await buildUserFromSession(usableSession, () => useAuthStore.getState().user);
-            setUser(user, usableSession);
+          // Fast path: session already valid on startup → fetch profile immediately
+          if (session?.access_token && session?.user) {
+            const user = await fetchUserProfileOnce(session);
+            if (user) setUser(user, session);
           } else {
+            // No token yet: rely on onAuthStateChange when SIGNED_IN/TOKEN_REFRESHED fires
             setUser(null, session);
           }
         } catch {
@@ -220,26 +213,30 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Sign-out: clear user and mark ready
+      if (!session?.user) {
+        setUser(null, session);
+        setAuthLoading(false);
+        setLoading(false);
+        setInitialized(true);
+        return;
+      }
+      // Event-driven: only fetch profile when we have a valid token from sign-in or refresh
+      if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+      if (!session.access_token) return;
+
       try {
-        if (session?.user) {
-          const existingUser = useAuthStore.getState().user;
-          // On token refresh, if we already have good user data, keep it
-          // Only rebuild if user ID changed or we have no data
-          if (event === 'TOKEN_REFRESHED' && existingUser && existingUser.id === session.user.id) {
-            // Silently update session without re-fetching profile
-            // This prevents avatar/name reset when profile fetch times out
-            setUser(existingUser, session);
-          } else {
-            const user = await buildUserFromSession(session, () => useAuthStore.getState().user);
-            setUser(user, session);
-          }
+        const existingUser = useAuthStore.getState().user;
+        // On token refresh, if we already have good user data, keep it (prevents avatar reset)
+        if (event === 'TOKEN_REFRESHED' && existingUser && existingUser.id === session.user.id) {
+          setUser(existingUser, session);
         } else {
-          setUser(null, session);
+          const user = await fetchUserProfileOnce(session);
+          if (user) setUser(user, session);
         }
       } catch {
-        // On error, preserve existing user if same session
         const existingUser = useAuthStore.getState().user;
-        if (existingUser && session?.user && existingUser.id === session.user.id) {
+        if (existingUser && existingUser.id === session.user.id) {
           setUser(existingUser, session);
         } else {
           setUser(null, session);
@@ -247,6 +244,7 @@ export default function App() {
       }
       setAuthLoading(false);
       setLoading(false);
+      setInitialized(true);
     });
 
     return () => {
