@@ -398,6 +398,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   const [replyContent, setReplyContent] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
+  const [threadPopoverPosition, setThreadPopoverPosition] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [displayParentOverrides, setDisplayParentOverrides] = useState<Record<string, string>>({});
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
@@ -530,6 +531,86 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       });
     }
   }, [selectionState?.blockId, selectionState?.rect]);
+
+  // Position thread popover near the highlighted source (mark element)
+  // From anchor center, pick the direction (left/right/above/below) with the most available space
+  useLayoutEffect(() => {
+    if (!activeThreadId || !containerRef.current) {
+      setThreadPopoverPosition(null);
+      return;
+    }
+    const anchor = containerRef.current.querySelector(
+      `[data-comment-id="${activeThreadId}"]`
+    ) as HTMLElement | null;
+    if (!anchor) {
+      setThreadPopoverPosition(null);
+      return;
+    }
+    const anchorRect = anchor.getBoundingClientRect();
+    const centerX = anchorRect.left + anchorRect.width / 2;
+    const centerY = anchorRect.top + anchorRect.height / 2;
+    const popoverWidth = 384; // w-96
+    const popoverMinHeight = 280;
+    const gap = 8;
+    const padding = 16;
+
+    // Space from anchor center toward each viewport edge
+    const spaceLeft = centerX;
+    const spaceRight = window.innerWidth - centerX;
+    const spaceAbove = centerY;
+    const spaceBelow = window.innerHeight - centerY;
+
+    // Which directions have enough room for the popover?
+    const canBelow = spaceBelow >= popoverMinHeight + gap + padding;
+    const canAbove = spaceAbove >= popoverMinHeight + gap + padding;
+    const canRight = spaceRight >= popoverWidth + gap + padding;
+    const canLeft = spaceLeft >= popoverWidth + gap + padding;
+
+    const candidates: { dir: 'below' | 'above' | 'right' | 'left'; space: number }[] = [];
+    if (canBelow) candidates.push({ dir: 'below', space: spaceBelow });
+    if (canAbove) candidates.push({ dir: 'above', space: spaceAbove });
+    if (canRight) candidates.push({ dir: 'right', space: spaceRight });
+    if (canLeft) candidates.push({ dir: 'left', space: spaceLeft });
+
+    // Pick direction with most space; fallback to below if none fit
+    const best = candidates.length > 0
+      ? candidates.reduce((a, b) => (a.space > b.space ? a : b))
+      : { dir: 'below' as const, space: 0 };
+
+    let top: number | undefined;
+    let bottom: number | undefined;
+    let left: number;
+
+    const hCenter = Math.max(
+      padding,
+      Math.min(window.innerWidth - popoverWidth - padding, centerX - popoverWidth / 2)
+    );
+    const vCenter = Math.max(
+      padding,
+      Math.min(window.innerHeight - popoverMinHeight - padding, centerY - popoverMinHeight / 2)
+    );
+
+    switch (best.dir) {
+      case 'below':
+        top = anchorRect.bottom + gap;
+        left = hCenter;
+        break;
+      case 'above':
+        bottom = window.innerHeight - anchorRect.top + gap;
+        left = hCenter;
+        break;
+      case 'right':
+        left = Math.min(anchorRect.right + gap, window.innerWidth - popoverWidth - padding);
+        top = vCenter;
+        break;
+      case 'left':
+        left = Math.max(padding, anchorRect.left - popoverWidth - gap);
+        top = vCenter;
+        break;
+    }
+
+    setThreadPopoverPosition({ top, left, bottom });
+  }, [activeThreadId]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (!canComment) return;
@@ -739,7 +820,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     }
     return comments
       .filter((c) => threadIds.has(c.id))
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
   };
 
   if (!blocks?.length && !shortDescription) {
@@ -769,21 +850,28 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           : shortDescription)
     : null;
 
+  const getCommentAnchor = useCallback((e: React.MouseEvent) => {
+    const target = e.target as Node;
+    if (!target) return null;
+    const elem = target.nodeType === Node.TEXT_NODE ? (target as Text).parentElement : (target as HTMLElement);
+    return elem?.closest?.('[data-comment-id]') as HTMLElement | null;
+  }, []);
+
   const handleContainerClick = useCallback((e: React.MouseEvent) => {
-    const el = (e.target as HTMLElement).closest('[data-comment-id]');
+    const el = getCommentAnchor(e);
     if (el) {
       setActiveThreadId(el.getAttribute('data-comment-id'));
     }
-  }, []);
+  }, [getCommentAnchor]);
 
   const handleContainerMouseDown = useCallback((e: React.MouseEvent) => {
-    const el = (e.target as HTMLElement).closest('[data-comment-id]');
+    const el = getCommentAnchor(e);
     if (el && comments.some((c) => c.id === el.getAttribute('data-comment-id'))) {
       e.preventDefault();
       skipNextBackdropClickRef.current = true;
       setActiveThreadId(el.getAttribute('data-comment-id'));
     }
-  }, [comments]);
+  }, [comments, getCommentAnchor]);
 
   const tocItems = [...extractHeadings(blocks), ...(sectionTocItems ?? [])];
   const showTocSidebar = showToc && tocItems.length > 0;
@@ -905,7 +993,11 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           onReply={handleReply}
           onDelete={handleDelete}
           onEdit={handleEditComment}
-          onClose={() => setActiveThreadId(null)}
+          onClose={() => {
+            setActiveThreadId(null);
+            setThreadPopoverPosition(null);
+          }}
+          anchorPosition={threadPopoverPosition}
           skipNextBackdropClickRef={skipNextBackdropClickRef}
           replyTo={replyTo}
           setReplyTo={setReplyTo}
@@ -933,6 +1025,7 @@ function CommentThreadPopover({
   onEdit,
   onClose,
   skipNextBackdropClickRef,
+  anchorPosition,
   replyTo,
   setReplyTo,
   replyContent,
@@ -952,6 +1045,7 @@ function CommentThreadPopover({
   onEdit: (id: string, newContent: string) => void;
   onClose: () => void;
   skipNextBackdropClickRef?: React.MutableRefObject<boolean>;
+  anchorPosition: { top?: number; bottom?: number; left: number } | null;
   replyTo: string | null;
   setReplyTo: (id: string | null) => void;
   replyContent: string;
@@ -1037,7 +1131,7 @@ function CommentThreadPopover({
               </div>
             </div>
           ) : (
-            <p className="text-base break-words text-inherit">
+            <p className="text-base font-normal break-words text-inherit">
               {renderContentWithMentions(c.content, isOwn, currentUserDisplayName)}
             </p>
           )}
@@ -1148,17 +1242,30 @@ function CommentThreadPopover({
   };
 
   return (
-    <div className="fixed inset-0 z-[99] flex justify-center items-start p-6 pt-20" onClick={(e) => {
-      if (e.target === e.currentTarget) {
-        if (skipNextBackdropClickRef?.current) {
-          skipNextBackdropClickRef.current = false;
-          return;
-        }
-        onClose();
-      }
-    }}>
+    <>
       <div
-        className="flex flex-col w-96 max-w-[calc(100vw-32px)] max-h-[calc(100vh-8rem)] bg-white dark:bg-nokturo-800 rounded-lg p-4"
+        className="fixed inset-0 z-[99]"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            if (skipNextBackdropClickRef?.current) {
+              skipNextBackdropClickRef.current = false;
+              return;
+            }
+            onClose();
+          }
+        }}
+      />
+      <div
+        className="fixed z-[100] flex flex-col w-96 max-w-[calc(100vw-32px)] max-h-[calc(100vh-8rem)] bg-white dark:bg-nokturo-800 rounded-lg p-4 shadow-lg"
+        style={
+          anchorPosition
+            ? {
+                ...(anchorPosition.top !== undefined && { top: anchorPosition.top }),
+                ...(anchorPosition.bottom !== undefined && { bottom: anchorPosition.bottom }),
+                left: anchorPosition.left,
+              }
+            : { top: '5rem', left: '50%', transform: 'translateX(-50%)' }
+        }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-2 shrink-0">
@@ -1169,7 +1276,7 @@ function CommentThreadPopover({
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden space-y-2 pt-4 mb-4">
           {[...threadComments]
-            .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
             .map((c) => renderComment(c, threadComments))}
         </div>
         <div className="flex gap-2 mt-3 pt-3 border-t border-nokturo-200 dark:border-nokturo-600 shrink-0 relative">
@@ -1211,6 +1318,6 @@ function CommentThreadPopover({
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }

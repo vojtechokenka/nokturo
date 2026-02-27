@@ -524,9 +524,45 @@ export default function IdeasPage() {
       titleKey="pages.ideas.title"
       descriptionKey="pages.ideas.description"
     >
-      {/* ── Action bar ──────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-        {/* Quick capture button */}
+      {/* ── Action bar: filters (left) + Quick Capture (right) ───────────────────── */}
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-between">
+        {/* Tag filter – left */}
+        {categories.length > 0 ? (
+          <div className="flex flex-wrap gap-2 justify-start">
+            <button
+              onClick={() => setFilterCategories([])}
+              className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${
+                !isFiltering
+                  ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                  : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+              }`}
+            >
+              {t('ideas.filterAll')}
+            </button>
+            {categories.map(cat => {
+              const active = filterCategories.includes(cat.name);
+              const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setFilterCategories(prev =>
+                    active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
+                  )}
+                  className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${colorCls} ${
+                    active
+                      ? ''
+                      : 'opacity-40 hover:opacity-70'
+                  }`}
+                >
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div />
+        )}
+        {/* Quick capture button – right */}
         <button
           onClick={openAdd}
           className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
@@ -535,41 +571,6 @@ export default function IdeasPage() {
           {t('ideas.quickCapture')}
         </button>
       </div>
-
-      {/* ── Tag filter ──────────────────────────────────────── */}
-      {categories.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            onClick={() => setFilterCategories([])}
-            className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${
-              !isFiltering
-                ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
-                : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
-            }`}
-          >
-            {t('ideas.filterAll')}
-          </button>
-          {categories.map(cat => {
-            const active = filterCategories.includes(cat.name);
-            const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setFilterCategories(prev =>
-                  active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
-                )}
-                className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${colorCls} ${
-                  active
-                    ? ''
-                    : 'opacity-40 hover:opacity-70'
-                }`}
-              >
-                {cat.name}
-              </button>
-            );
-          })}
-        </div>
-      )}
 
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (

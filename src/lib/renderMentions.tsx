@@ -5,14 +5,14 @@ import type { ReactNode } from 'react';
  * 1) Někdo mě tagoval → fialové bg #D400FF/20, text-inherit
  * 2) Já tagoval někoho → font-semibold, text-inherit, bez pozadí
  * 3) Někdo tagoval jiného → font-medium, text-inherit, bez pozadí
- * Regex: @ + jméno (1+ slov), končí na mezere/punctuaci – podporuje @Alena Okénková, @Jan atd.
+ * Regex: @ + jméno (1–3 slova), např. @Alena Okénková, @Jan – zbytek věty zůstane obyčejný text
  */
 export function renderContentWithMentions(
   content: string,
   isOwn?: boolean,
   currentUserDisplayName?: string
 ): ReactNode {
-  const parts = content.split(/(@[\w\u00C0-\u024F]+(?:\s+[\w\u00C0-\u024F]+)*)/g);
+  const parts = content.split(/(@[\w\u00C0-\u024F]+(?:\s+[\w\u00C0-\u024F]+){0,1})(?=\s|$|[,.!?;:])/g);
   const currentNameNorm = currentUserDisplayName?.trim().toLowerCase();
   const mentionOfMeClass =
     'font-medium text-inherit px-1 py-0.5 rounded bg-mention/20 dark:bg-mention/20';
