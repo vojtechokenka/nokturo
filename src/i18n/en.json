@@ -945,7 +945,12 @@
     "taskComment": "New comment on your task",
     "deadline7d": "Due in 7 days",
     "deadline48h": "Due in 48 hours",
-    "deadline24h": "Due in 24 hours"
+    "deadline24h": "Due in 24 hours",
+    "moodboardTagTitle": "{{name}} tagged you in a moodboard image",
+    "galleryTagTitle": "{{name}} tagged you in a gallery",
+    "textTagTitle": "{{name}} tagged you in a product",
+    "productTagTitle": "{{name}} tagged you in a product",
+    "commentReplyTitle": "{{name}} replied to your comment"
   },
   "headerImage": {
     "addCover": "Add cover",

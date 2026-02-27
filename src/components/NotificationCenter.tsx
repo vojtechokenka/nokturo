@@ -157,14 +157,20 @@ export function NotificationCenter() {
     markRead(n.id);
     const targetLink = n.link ?? (n.reference_type === 'task' && n.reference_id ? `/tasks?task=${n.reference_id}` : null);
     if (targetLink) {
-      navigate(targetLink);
-      const parsed = new URL(targetLink, 'http://x');
+      const parsed = new URL(targetLink.startsWith('/') ? targetLink : `/${targetLink}`, 'http://x');
       const itemId = parsed.searchParams.get('item');
-      if (itemId && parsed.pathname.includes('moodboard')) {
-        window.dispatchEvent(new CustomEvent('open-moodboard-item', { detail: { itemId } }));
+      const isMoodboard = parsed.pathname.includes('moodboard');
+      navigate(targetLink);
+      setOpen(false);
+      // Dispatch after navigation so MoodboardPage is mounted and listening
+      if (itemId && isMoodboard) {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('open-moodboard-item', { detail: { itemId } }));
+        }, 150);
       }
+    } else {
+      setOpen(false);
     }
-    setOpen(false);
   };
 
   const formatTime = (iso: string) => {

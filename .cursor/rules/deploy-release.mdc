@@ -9,9 +9,9 @@ When the user says **"push live"**, **"deploy"**, **"release"**, or similar — 
 
 Do the following steps in order:
 
-1. **Suggest the next patch version** (e.g. 4.8.2 → 4.8.3) — read current `package.json` version and bump the patch. Only use a different bump (minor/major) if the user explicitly asks. If user confirms (e.g. "ano"), proceed.
+1. **Bump the patch version** (e.g. 4.8.13 → 4.8.14) — read current `package.json` version and bump the patch. Do NOT ask for confirmation; proceed automatically. Only use minor/major if the user explicitly asks.
 
-2. **Update `"version"` in package.json** to the agreed version
+2. **Update `"version"` in package.json** to the new version
 
 3. **Run `npm run electron:build:publish`** — GH_TOKEN is in `.env` and loaded automatically by the publish script
 

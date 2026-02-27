@@ -951,7 +951,12 @@
     "taskComment": "Nový komentář k vašemu úkolu",
     "deadline7d": "Termín za 7 dní",
     "deadline48h": "Termín za 48 hodin",
-    "deadline24h": "Termín za 24 hodin"
+    "deadline24h": "Termín za 24 hodin",
+    "moodboardTagTitle": "{{name}} vás označil v obrázku moodboardu",
+    "galleryTagTitle": "{{name}} vás označil v galerii",
+    "textTagTitle": "{{name}} vás označil u produktu",
+    "productTagTitle": "{{name}} vás označil u produktu",
+    "commentReplyTitle": "{{name}} odpověděl na váš komentář"
   },
   "headerImage": {
     "addCover": "Přidat cover",

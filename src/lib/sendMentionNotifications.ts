@@ -90,26 +90,23 @@ export async function sendMentionNotifications({
   const title = i18n.t(titleKey, { name: authorName });
   const message = content.slice(0, 100) + (content.length > 100 ? '...' : '');
 
-  // Deduplication: recipient_id + link in last hour
+  // Deduplication: recipient_id + created_at (no link – avoids RLS 403 on link)
   const alreadyNotified = new Set<string>();
-  if (link) {
-    try {
-      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-      const { data: existing } = await supabase
-        .from('notifications')
-        .select('recipient_id')
-        .in('recipient_id', uniqueIds)
-        .eq('link', link)
-        .gte('created_at', oneHourAgo);
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: existing } = await supabase
+      .from('notifications')
+      .select('recipient_id')
+      .in('recipient_id', uniqueIds)
+      .gte('created_at', oneHourAgo);
 
-      if (existing) {
-        for (const n of existing as { recipient_id: string }[]) {
-          alreadyNotified.add(n.recipient_id);
-        }
+    if (existing) {
+      for (const n of existing as { recipient_id: string }[]) {
+        alreadyNotified.add(n.recipient_id);
       }
-    } catch (err) {
-      console.warn('Dedup check failed, proceeding without:', err);
     }
+  } catch (err) {
+    console.warn('Dedup check failed, proceeding without:', err);
   }
 
   const newRecipients = uniqueIds.filter((id) => !alreadyNotified.has(id));
