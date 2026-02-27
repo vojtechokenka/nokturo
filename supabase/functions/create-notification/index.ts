@@ -4,6 +4,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
@@ -23,10 +24,10 @@ serve(async (req) => {
   const { notifications } = await req.json();
 
   if (!Array.isArray(notifications) || notifications.length === 0) {
-    return new Response(
-      JSON.stringify({ data: null, error: { message: 'notifications array required and must not be empty' } }),
-      { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return new Response(JSON.stringify({ data: null, error: { message: 'Invalid payload' } }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   const { data, error } = await supabase

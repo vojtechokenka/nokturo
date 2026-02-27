@@ -118,8 +118,11 @@ export async function sendMentionNotifications({
     console.warn('🔑 INSERT PAYLOAD:', JSON.stringify(rows, null, 2));
   }
 
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
   const { data: res, error: invokeError } = await supabase.functions.invoke('create-notification', {
     body: { notifications: rows },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
   const data = res?.data;
   const error = invokeError ?? res?.error;
