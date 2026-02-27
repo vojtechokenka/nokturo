@@ -907,7 +907,7 @@ export default function MoodboardPage() {
               {/* Unread comments indicator – red dot inside card, top-left */}
               {unreadCounts[item.id] > 0 && (
                 <span
-                  className="absolute top-6 left-6 z-10 w-2 h-2 rounded-full"
+                  className="absolute top-3 left-3 z-10 w-4 h-4 rounded-full"
                   style={{ backgroundColor: '#FF1A1A' }}
                   aria-hidden
                 />
