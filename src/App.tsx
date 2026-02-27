@@ -54,22 +54,16 @@ function applyProfilePreferences(language: 'en' | 'cs', theme: 'light' | 'dark')
   }
 }
 
-const PROFILE_FETCH_TIMEOUT_MS = 30_000; // temporarily 30s to debug timeout
+/** Profile fetch runs once per app lifetime (avoids alt-tab / TOKEN_REFRESHED loops) */
+let profileFetchDone = false;
 
-/** Guard: prevent multiple simultaneous profile fetches (e.g. from onAuthStateChange loop) */
-let profileFetchInProgress = false;
-
-/** Returns user or null if fetch was skipped (another fetch in progress). Caller should not setUser when null. */
+/** Returns user or null if fetch was skipped (already done this session). Caller should not setUser when null. */
 async function fetchUserProfileOnce(
   session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } }
 ): Promise<Awaited<ReturnType<typeof buildUserFromSession>> | null> {
-  if (profileFetchInProgress) return null;
-  profileFetchInProgress = true;
-  try {
-    return await buildUserFromSession(session, () => useAuthStore.getState().user);
-  } finally {
-    profileFetchInProgress = false;
-  }
+  if (profileFetchDone) return null;
+  profileFetchDone = true;
+  return buildUserFromSession(session, () => useAuthStore.getState().user);
 }
 
 async function buildUserFromSession(
@@ -86,11 +80,7 @@ async function buildUserFromSession(
 
   let profile: Record<string, unknown> | null = null;
   try {
-    const timeoutPromise = new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error('Profiles fetch timeout')), PROFILE_FETCH_TIMEOUT_MS)
-    );
-    const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: { message?: string; code?: string } };
-    console.warn('[Profile fetch] data:', data, 'error:', error);
+    const { data, error } = await fetchProfile();
     if (error) throw error;
     profile = data;
   } catch (err) {
@@ -214,27 +204,22 @@ export default function App() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Sign-out: clear user and mark ready
+      // Sign-out: clear user, reset profile flag, mark ready
       if (!session?.user) {
+        profileFetchDone = false;
         setUser(null, session);
         setAuthLoading(false);
         setLoading(false);
         setInitialized(true);
         return;
       }
-      // Event-driven: only fetch profile when we have a valid token from sign-in or refresh
-      if (event !== 'SIGNED_IN' && event !== 'TOKEN_REFRESHED') return;
+      // Only react to SIGNED_IN for profile fetch. Ignore INITIAL_SESSION, TOKEN_REFRESHED, etc.
+      if (event !== 'SIGNED_IN') return;
       if (!session.access_token) return;
 
       try {
-        const existingUser = useAuthStore.getState().user;
-        // On token refresh, if we already have good user data, keep it (prevents avatar reset)
-        if (event === 'TOKEN_REFRESHED' && existingUser && existingUser.id === session.user.id) {
-          setUser(existingUser, session);
-        } else {
-          const user = await fetchUserProfileOnce(session);
-          if (user) setUser(user, session);
-        }
+        const user = await fetchUserProfileOnce(session);
+        if (user) setUser(user, session);
       } catch {
         const existingUser = useAuthStore.getState().user;
         if (existingUser && existingUser.id === session.user.id) {

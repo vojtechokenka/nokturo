@@ -118,12 +118,10 @@ export function NotificationCenter() {
     };
   }, [userId]);
 
-  // Check deadline reminders on load and every 30 min
+  // Check deadline reminders once on mount (polling removed to reduce notification spam)
   useEffect(() => {
     if (!userId) return;
     checkDeadlineReminders(userId);
-    const interval = setInterval(() => checkDeadlineReminders(userId), 30 * 60_000);
-    return () => clearInterval(interval);
   }, [userId]);
 
   // Close on outside click
