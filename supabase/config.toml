@@ -1,0 +1,3 @@
+# Edge Function: allow OPTIONS (preflight) without JWT; we verify JWT in code for POST
+[functions.create-notification]
+verify_jwt = false

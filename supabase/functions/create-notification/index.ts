@@ -16,10 +16,28 @@ serve(async (req) => {
     return new Response('Method not allowed', { status: 405, headers: corsHeaders });
   }
 
-  const supabase = createClient(
-    Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-  );
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return new Response(JSON.stringify({ data: null, error: { message: 'Authorization required' } }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+  const userClient = createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) {
+    return new Response(JSON.stringify({ data: null, error: { message: 'Unauthorized' } }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   const { notifications } = await req.json();
 
@@ -30,7 +48,17 @@ serve(async (req) => {
     });
   }
 
-  const { data, error } = await supabase
+  // Ensure all sender_ids match the authenticated user
+  const invalidSender = notifications.find((n: { sender_id?: string }) => n.sender_id !== user.id);
+  if (invalidSender) {
+    return new Response(JSON.stringify({ data: null, error: { message: 'sender_id must match authenticated user' } }), {
+      status: 403,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey);
+  const { data, error } = await supabaseAdmin
     .from('notifications')
     .insert(notifications)
     .select('id');
