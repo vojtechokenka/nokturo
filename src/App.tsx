@@ -213,8 +213,8 @@ export default function App() {
         setInitialized(true);
         return;
       }
-      // Only react to SIGNED_IN for profile fetch. Ignore INITIAL_SESSION, TOKEN_REFRESHED, etc.
-      if (event !== 'SIGNED_IN') return;
+      // React to INITIAL_SESSION (OAuth callback, page load) and SIGNED_IN (explicit sign-in). Ignore TOKEN_REFRESHED.
+      if (event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
       if (!session.access_token) return;
 
       try {
