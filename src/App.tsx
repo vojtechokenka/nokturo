@@ -53,6 +53,19 @@ function applyProfilePreferences(language: 'en' | 'cs', theme: 'light' | 'dark')
   }
 }
 
+/** Ensure we have a valid session with token before profile fetch (Electron/cold start can delay session readiness) */
+async function waitForValidSession(): Promise<{ session: Awaited<ReturnType<typeof supabase.auth.getSession>>['data']['session'] } | null> {
+  for (let i = 0; i < 5; i++) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      if (import.meta.env.DEV && i > 0) console.log(`[Auth] Session ready after ${i} retries`);
+      return { session };
+    }
+    if (i < 4) await new Promise((r) => setTimeout(r, Math.min(500 * (i + 1), 1000)));
+  }
+  return null;
+}
+
 async function buildUserFromSession(
   session: { user: { id: string; email?: string | null; user_metadata?: Record<string, unknown> } },
   /** When profile fetch fails, preserve role/avatar/name from existing user (e.g. during refreshSession, tab return) */
@@ -66,13 +79,14 @@ async function buildUserFromSession(
       .maybeSingle();
 
   let profile: Record<string, unknown> | null = null;
+  const timeouts = [8000, 12000, 15000]; // Exponential-ish backoff: 8s, 12s, 15s
+  const delays = [0, 1000, 2000]; // Delay before each attempt
 
-  // Try up to 2 times with short timeouts (3s each)
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      if (attempt > 0) await new Promise((r) => setTimeout(r, 1000));
+      if (attempt > 0) await new Promise((r) => setTimeout(r, delays[attempt]));
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Profiles fetch timeout')), 3000)
+        setTimeout(() => reject(new Error('Profiles fetch timeout')), timeouts[attempt])
       );
       const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: unknown };
       if (error) throw error;
@@ -80,7 +94,7 @@ async function buildUserFromSession(
       break; // success
     } catch (err) {
       console.warn(`⚠️ Profile fetch attempt ${attempt + 1} failed:`, err);
-      if (attempt === 1) {
+      if (attempt === 2) {
         // Both attempts failed, use minimal user but preserve avatar/name from existing
         const minimal = buildMinimalUser(session);
         const existing = getExistingUser?.();
@@ -174,10 +188,18 @@ export default function App() {
     supabase.auth
       .getSession()
       .then(async ({ data: { session } }) => {
+        console.log('[Auth] Startup getSession:', session?.user?.id ?? 'null', session?.access_token ? 'HAS TOKEN' : 'NO TOKEN');
         try {
           if (session?.user) {
-            const user = await buildUserFromSession(session, () => useAuthStore.getState().user);
-            setUser(user, session);
+            // Ensure session has token before profile fetch (Electron/cold start may return session before client is ready)
+            let usableSession = session;
+            if (!session.access_token) {
+              const waited = await waitForValidSession();
+              if (waited?.session) usableSession = waited.session;
+              else console.warn('[Auth] No valid token after wait, proceeding with cached session (profile fetch may fail)');
+            }
+            const user = await buildUserFromSession(usableSession, () => useAuthStore.getState().user);
+            setUser(user, usableSession);
           } else {
             setUser(null, session);
           }
