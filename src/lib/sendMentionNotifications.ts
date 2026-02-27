@@ -42,7 +42,7 @@ const TYPE_MAP: Record<NotificationType, string> = {
 /**
  * Creates notification rows for each tagged user.
  * Skips the author (can't notify yourself).
- * Deduplicates: won't create a duplicate for the same recipient + link within 1 hour.
+ * (Deduplication removed – client cannot SELECT other users' notifications due to RLS.)
  */
 export async function sendMentionNotifications({
   taggedUserIds,
@@ -90,38 +90,9 @@ export async function sendMentionNotifications({
   const title = i18n.t(titleKey, { name: authorName });
   const message = content.slice(0, 100) + (content.length > 100 ? '...' : '');
 
-  // Deduplication: recipient_id + created_at (no link – avoids RLS 403 on link)
-  const alreadyNotified = new Set<string>();
-  try {
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { data: existing } = await supabase
-      .from('notifications')
-      .select('recipient_id')
-      .in('recipient_id', uniqueIds)
-      .gte('created_at', oneHourAgo);
+  // Deduplication removed – SELECT for other users' notifications hits RLS 403 (sender can only see own)
 
-    if (existing) {
-      for (const n of existing as { recipient_id: string }[]) {
-        alreadyNotified.add(n.recipient_id);
-      }
-    }
-  } catch (err) {
-    console.warn('Dedup check failed, proceeding without:', err);
-  }
-
-  const newRecipients = uniqueIds.filter((id) => !alreadyNotified.has(id));
-
-  if (newRecipients.length === 0) {
-    if (DEBUG) {
-      console.log('[sendMentionNotifications] EARLY RETURN: all already notified (dedup)', {
-        uniqueIds,
-        alreadyNotified: [...alreadyNotified],
-      });
-    }
-    return;
-  }
-
-  const rows = newRecipients.map((recipientId) => ({
+  const rows = uniqueIds.map((recipientId) => ({
     recipient_id: recipientId,
     sender_id: authorId,
     type: TYPE_MAP[type] || 'mention',
