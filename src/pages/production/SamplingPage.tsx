@@ -28,7 +28,8 @@ export default function SamplingPage() {
         )`
       )
       .eq('ready_for_sampling', true)
-      .order('updated_at', { ascending: false });
+      .order('priority', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false });
 
     if (!error && data) {
       setProducts(data as unknown as ProductWithMaterials[]);
