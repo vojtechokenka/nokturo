@@ -1,3 +1,4 @@
+// Client with session – must be lib/supabase.ts (not server-side / anon-only client)
 import { supabase } from './supabase';
 import i18n from '../i18n';
 
@@ -139,6 +140,12 @@ export async function sendMentionNotifications({
       sampleRow: rows[0],
     });
   }
+
+  // Debug: verify session before INSERT (RLS 42501 = permission denied)
+  console.warn('🔑 SUPABASE IMPORT: lib/supabase.ts (from "./supabase" in sendMentionNotifications.ts)');
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  console.warn('🔑 TOKEN BEFORE INSERT:', token ? token.substring(0, 20) + '...' : 'NULL');
 
   const { data, error } = await supabase.from('notifications').insert(rows).select('id');
 
