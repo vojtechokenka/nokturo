@@ -469,6 +469,8 @@
     "replaceImage": "Nahradit obrázek",
     "moodboardGallery": "Moodboard galerie",
     "moodboardNotesPlaceholder": "Pozn\u00e1mky",
+    "pickFromMoodboard": "Vybrat z moodboardu",
+    "noMoodboardItems": "Zatím žádné položky v moodboardu. Nejprve přidejte obrázky v sekci Moodboard.",
     "techPack": {
       "title": "Tech Pack",
       "productInfo": "Informace o produktu",

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, Plus, Trash2, Search, Image as ImageIcon, Upload, GripVertical, RefreshCw, Tag } from 'lucide-react';
+import { X, Loader2, Plus, Trash2, Search, Image as ImageIcon, Upload, GripVertical, RefreshCw, Tag, Link2 } from 'lucide-react';
 import { NotionSelect } from './NotionSelect';
 import { SelectField } from './SelectField';
 import { RichTextBlockEditor } from './RichTextBlockEditor';
@@ -460,6 +460,11 @@ export function ProductSlideOver({
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
   const [replaceTarget, setReplaceTarget] = useState<{ gallery: 'design' | 'moodboard'; index: number } | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [showMoodboardPicker, setShowMoodboardPicker] = useState(false);
+  const [moodboardPickerItems, setMoodboardPickerItems] = useState<
+    { id: string; title: string | null; image_url: string; sub_images: { image_url: string }[] }[]
+  >([]);
+  const [moodboardPickerLoading, setMoodboardPickerLoading] = useState(false);
 
   const addToast = useCallback((toast: ToastData) => {
     setToasts((prev) => [...prev, { ...toast, id: toast.id || crypto.randomUUID() }]);
@@ -482,7 +487,23 @@ export function ProductSlideOver({
   }, []);
 
   // ── Populate form when panel opens (or restore draft) ────────
+  // Only sync when opening or switching product — NOT when parent refetches after auto-save
+  const lastSyncedProductIdRef = useRef<string | null>(null);
+  const wasOpenRef = useRef(false);
   useEffect(() => {
+    if (!open) {
+      wasOpenRef.current = false;
+      lastSyncedProductIdRef.current = null;
+      return;
+    }
+    const productId = product?.id ?? null;
+    const justOpened = !wasOpenRef.current;
+    const switchedProduct = lastSyncedProductIdRef.current !== productId;
+    wasOpenRef.current = true;
+    lastSyncedProductIdRef.current = productId;
+
+    if (!justOpened && !switchedProduct) return;
+
     if (product) {
       const tp = (product.tech_pack || {}) as ProductTechPack;
       setForm({
@@ -606,6 +627,42 @@ export function ProductSlideOver({
     }
   }, [open]);
 
+  useEffect(() => {
+    if (!open) setShowMoodboardPicker(false);
+  }, [open]);
+
+  // ── Fetch moodboard items when picker opens ───────────────────
+  useEffect(() => {
+    if (!showMoodboardPicker || !open) return;
+    setMoodboardPickerLoading(true);
+    const fetchMoodboard = async () => {
+      let { data, error } = await supabase
+        .from('moodboard_items')
+        .select('id, title, image_url, moodboard_item_images(image_url, sort_order)')
+        .order('created_at', { ascending: false });
+      if (error) {
+        const fallback = await supabase.from('moodboard_items').select('id, title, image_url').order('created_at', { ascending: false });
+        data = fallback.data;
+        error = fallback.error;
+      }
+      setMoodboardPickerLoading(false);
+      if (error) {
+        addToast({ id: crypto.randomUUID(), type: 'error', message: error.message });
+        return;
+      }
+      const items = (data || []).map((row: { id: string; title: string | null; image_url: string; moodboard_item_images?: { image_url: string; sort_order: number }[] }) => ({
+        id: row.id,
+        title: row.title,
+        image_url: row.image_url,
+        sub_images: Array.isArray(row.moodboard_item_images)
+          ? [...row.moodboard_item_images].sort((a, b) => a.sort_order - b.sort_order).map((si) => ({ image_url: si.image_url }))
+          : [],
+      }));
+      setMoodboardPickerItems(items);
+    };
+    fetchMoodboard();
+  }, [showMoodboardPicker, open, addToast]);
+
   const handleChange = (field: keyof FormData, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -719,6 +776,10 @@ export function ProductSlideOver({
     } catch (err) {
       addToast({ id: crypto.randomUUID(), type: 'error', message: (err as Error).message });
     }
+  };
+
+  const addMoodboardImageFromUrl = (url: string, caption?: string) => {
+    setMoodboardGallery((prev) => [...prev, { url, caption: caption ?? '' }]);
   };
 
   const setPreviewPhoto = async (file: File) => {
@@ -1694,8 +1755,16 @@ export function ProductSlideOver({
                 onClick={() => fileInputMoodboardRef.current?.click()}
                 className="aspect-square rounded-lg flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 hover:text-nokturo-600 dark:hover:text-nokturo-300"
               >
-                <ImageIcon className="w-6 h-6 mb-1" />
+                <Upload className="w-6 h-6 mb-1" />
                 <span className="text-xs">Add</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowMoodboardPicker(true)}
+                className="aspect-square rounded-lg flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 hover:text-nokturo-600 dark:hover:text-nokturo-300"
+              >
+                <Link2 className="w-6 h-6 mb-1" />
+                <span className="text-xs">{t('products.pickFromMoodboard')}</span>
               </button>
               {moodboardGallery.map((img, i) => {
                 const isDragging =
@@ -1856,6 +1925,66 @@ export function ProductSlideOver({
           </button>
         </div>
       </div>
+
+      {/* Moodboard picker modal */}
+      {showMoodboardPicker && (
+        <div
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          onClick={() => setShowMoodboardPicker(false)}
+        >
+          <div
+            className="bg-white dark:bg-nokturo-800 rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
+              <h4 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
+                {t('products.pickFromMoodboard')}
+              </h4>
+              <button
+                type="button"
+                onClick={() => setShowMoodboardPicker(false)}
+                className="p-2 text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              {moodboardPickerLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <Loader2 className="w-8 h-8 animate-spin text-nokturo-500" />
+                </div>
+              ) : moodboardPickerItems.length === 0 ? (
+                <p className="text-center text-nokturo-500 dark:text-nokturo-400 py-8">
+                  {t('products.noMoodboardItems')}
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {moodboardPickerItems.flatMap((item) => {
+                    const images = [item.image_url, ...item.sub_images.map((si) => si.image_url)];
+                    return images.map((url, idx) => (
+                      <button
+                        key={`${item.id}-${idx}`}
+                        type="button"
+                        onClick={() => {
+                          addMoodboardImageFromUrl(url, item.title ?? undefined);
+                        }}
+                        className="aspect-square rounded-lg overflow-hidden bg-nokturo-100 dark:bg-nokturo-700 hover:ring-2 hover:ring-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500"
+                      >
+                        <img
+                          src={url}
+                          alt={item.title ?? ''}
+                          className="w-full h-full object-cover"
+                        />
+                      </button>
+                    ));
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <ToastContainer toasts={toasts} onClose={removeToast} />
     </>
   );

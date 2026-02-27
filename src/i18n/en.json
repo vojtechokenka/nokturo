@@ -469,6 +469,8 @@
     "replaceImage": "Replace image",
     "moodboardGallery": "Moodboard gallery",
     "moodboardNotesPlaceholder": "Notes",
+    "pickFromMoodboard": "Pick from moodboard",
+    "noMoodboardItems": "No moodboard items yet. Add images in the Moodboard section first.",
     "techPack": {
       "title": "Tech Pack",
       "productInfo": "Product Information",

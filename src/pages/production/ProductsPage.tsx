@@ -40,8 +40,8 @@ export default function ProductsPage() {
     useState<ProductWithMaterials | null>(null);
 
   // ── Fetch ───────────────────────────────────────────────────
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
+  const fetchProducts = useCallback(async (options?: { silent?: boolean }) => {
+    if (!options?.silent) setLoading(true);
 
     let query = supabase
       .from('products')
@@ -110,12 +110,12 @@ export default function ProductsPage() {
 
   const handleSaved = (productId?: string, options?: { autoSave?: boolean }) => {
     if (options?.autoSave) {
-      fetchProducts();
+      fetchProducts({ silent: true });
       return;
     }
     setSlideOverOpen(false);
     setEditingProduct(null);
-    fetchProducts();
+    fetchProducts({ silent: true });
     if (productId) navigate(`/production/products/${productId}`);
   };
 
