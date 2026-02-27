@@ -7,6 +7,8 @@ import { useAuthStore } from '../../stores/authStore';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { NokturoLogo } from '../../components/NokturoLogo';
+import { AppUpdateSection } from '../../components/AppUpdateSection';
+import { isElectron } from '../../utils/platform';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -148,6 +150,9 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* App version & update (Electron only) — dostupné bez přihlášení */}
+          {isElectron() && <AppUpdateSection compact />}
         </div>
       </div>
     </div>
