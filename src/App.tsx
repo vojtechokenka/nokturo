@@ -54,7 +54,7 @@ function applyProfilePreferences(language: 'en' | 'cs', theme: 'light' | 'dark')
   }
 }
 
-const PROFILE_FETCH_TIMEOUT_MS = 8000;
+const PROFILE_FETCH_TIMEOUT_MS = 30_000; // temporarily 30s to debug timeout
 
 /** Guard: prevent multiple simultaneous profile fetches (e.g. from onAuthStateChange loop) */
 let profileFetchInProgress = false;
@@ -90,6 +90,7 @@ async function buildUserFromSession(
       setTimeout(() => reject(new Error('Profiles fetch timeout')), PROFILE_FETCH_TIMEOUT_MS)
     );
     const { data, error } = await Promise.race([fetchProfile(), timeoutPromise]) as { data: typeof profile; error: { message?: string; code?: string } };
+    console.warn('[Profile fetch] data:', data, 'error:', error);
     if (error) throw error;
     profile = data;
   } catch (err) {
