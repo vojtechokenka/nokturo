@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { CheckCircle, AlertCircle, Info, X } from 'lucide-react';
+import { X } from 'lucide-react';
 
 // ── Types ────────────────────────────────────────────────────────
 export interface ToastData {
@@ -30,35 +30,25 @@ function ToastItem({ toast, onClose }: { toast: ToastData; onClose: (id: string)
 
   const styles = {
     success: {
-      bg: 'bg-green-100 dark:bg-green-900',
-      text: 'text-green-800 dark:text-green-100',
-      icon: 'text-green-700 dark:text-green-200',
+      bg: 'bg-emerald-100 dark:bg-emerald-900',
+      text: 'text-emerald-800 dark:text-emerald-100',
     },
     error: {
       bg: 'bg-red-100 dark:bg-red-900',
       text: 'text-red-800 dark:text-red-100',
-      icon: 'text-red-700 dark:text-red-200',
     },
     info: {
       bg: 'bg-blue-100 dark:bg-blue-900',
       text: 'text-blue-800 dark:text-blue-100',
-      icon: 'text-blue-700 dark:text-blue-200',
     },
-  }[toast.type];
-
-  const icon = {
-    success: <CheckCircle className={`w-4 h-4 ${styles.icon} shrink-0`} />,
-    error: <AlertCircle className={`w-4 h-4 ${styles.icon} shrink-0`} />,
-    info: <Info className={`w-4 h-4 ${styles.icon} shrink-0`} />,
   }[toast.type];
 
   return (
     <div
-      className={`flex items-center gap-3 ${styles.bg} rounded-lg px-4 py-3 shadow-lg transition-all duration-300 ${
+      className={`flex items-center gap-3 ${styles.bg} rounded-[8px] px-4 py-3 shadow-lg transition-all duration-300 ${
         visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
       }`}
     >
-      {icon}
       <span className={`text-sm ${styles.text}`}>{toast.message}</span>
       {toast.actionLabel && toast.onAction && (
         <button

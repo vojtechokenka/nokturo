@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { FilterChevronIcon } from './FilterSelect';
 
 const triggerBaseClass =
-  'w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 border border-nokturo-300/70 dark:border-nokturo-600 focus:outline-none focus:ring-2 focus:ring-nokturo-500 focus:border-nokturo-400 dark:focus:border-nokturo-500 transition-colors cursor-pointer text-left pr-10';
+  'w-full h-11 flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-[6px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 focus:outline-none focus:ring-2 focus:ring-nokturo-500 transition-colors cursor-pointer text-left pr-10';
 
 export interface SelectFieldProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
   /** Override base input classes (merge with base) */
@@ -83,7 +83,7 @@ export const SelectField = React.forwardRef<HTMLDivElement, SelectFieldProps>(
         </button>
 
         {open && (
-          <div className="absolute left-0 right-0 top-full mt-1 z-[100] bg-white dark:bg-nokturo-800 rounded-xl border border-nokturo-200 dark:border-nokturo-600 shadow-lg overflow-hidden min-w-0">
+          <div className="absolute left-0 right-0 top-full mt-1 z-[100] bg-white dark:bg-nokturo-800 rounded-[12px] shadow-lg overflow-hidden min-w-0">
             <ul role="listbox" className="py-1 max-h-60 overflow-y-auto">
               {options.map((opt, i) => (
                 <li key={opt.value !== '' ? opt.value : `opt-${i}`}>

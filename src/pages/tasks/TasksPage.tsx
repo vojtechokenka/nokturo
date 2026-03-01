@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { PageShell } from '../../components/PageShell';
 import { TaskSlideOver, type Task, type TaskProfile } from '../../components/TaskSlideOver';
 import { TaskDetailSlideOver } from '../../components/TaskDetailSlideOver';
+import { TaskComments } from '../../components/TaskComments';
 import { ToastContainer, type ToastData } from '../../components/Toast';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
@@ -13,15 +14,8 @@ import {
   Loader2,
   Check,
   RotateCcw,
-  Clock,
-  AlertTriangle,
-  Calendar,
   MoreHorizontal,
-  Pencil,
-  Trash2,
-  CheckCircle2,
   Undo2,
-  MessageSquare,
 } from 'lucide-react';
 
 type Tab = 'active' | 'completed' | 'deleted';
@@ -42,20 +36,20 @@ function isOverdue(deadline: string | null): boolean {
   return new Date(deadline) < today;
 }
 
-function isRecentlyOverdue(deadline: string | null): boolean {
-  if (!deadline) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const dl = new Date(deadline);
-  const daysPast = (today.getTime() - dl.getTime()) / 86_400_000;
-  return daysPast > 0 && daysPast <= URGENT_DAYS;
-}
-
 function daysUntilPermanentDelete(deletedAt: string | null): number {
   if (!deletedAt) return DELETE_RETENTION_DAYS;
   const deleted = new Date(deletedAt).getTime();
   const expiry = deleted + DELETE_RETENTION_DAYS * 86_400_000;
   return Math.max(0, Math.ceil((expiry - Date.now()) / 86_400_000));
+}
+
+function daysUntilDeadline(deadline: string | null): number {
+  if (!deadline) return 0;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const dl = new Date(deadline);
+  dl.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.ceil((dl.getTime() - today.getTime()) / 86_400_000));
 }
 
 function sortTasks(tasks: Task[]): Task[] {
@@ -110,19 +104,21 @@ function TaskRowMenu({
           e.stopPropagation();
           setOpen((o) => !o);
         }}
-        className="p-1.5 text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
+        className="p-1.5 text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-white/10 rounded-lg transition-colors"
       >
         <MoreHorizontal className="w-4 h-4" />
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 w-max z-20">
+          <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-black py-1 px-1 w-max z-20">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
               className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
             >
-              <Pencil className="w-3.5 h-3.5 shrink-0" />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
+                <path d="M3 21v-4.25L16.2 3.575q.3-.275.663-.425t.762-.15t.775.15t.65.45L20.425 5q.3.275.438.65T21 6.4q0 .4-.137.763t-.438.662L7.25 21zM17.6 7.8L19 6.4L17.6 5l-1.4 1.4z" />
+              </svg>
               {t('common.edit')}
             </button>
             {task.status === 'active' ? (
@@ -130,7 +126,9 @@ function TaskRowMenu({
                 onClick={(e) => { e.stopPropagation(); onMarkCompleted(); setOpen(false); }}
                 className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
+                  <path d="m10.95 14l4.95-4.95l-1.425-1.4l-3.525 3.525L9.525 9.75L8.1 11.175zM5 21V3h14v18l-7-3z" />
+                </svg>
                 {t('tasks.markCompleted')}
               </button>
             ) : (
@@ -145,9 +143,11 @@ function TaskRowMenu({
             {onDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
-                className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2 whitespace-nowrap"
+                className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2 whitespace-nowrap"
               >
-                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
+                  <path d="M9 17h2V8H9zm4 0h2V8h-2zm-8 4V6H4V4h5V3h6v1h5v2h-1v15z" />
+                </svg>
                 {t('common.delete')}
               </button>
             )}
@@ -283,6 +283,11 @@ export default function TasksPage() {
     setDetailOpen(true);
   }, []);
 
+  const closeDetail = useCallback(() => {
+    setDetailOpen(false);
+    setViewingTask(null);
+  }, []);
+
   useEffect(() => {
     fetchTasks();
     fetchProfiles();
@@ -353,7 +358,7 @@ export default function TasksPage() {
         onAction: () => reopenTask(taskId),
       },
     ]);
-    if (viewingTask?.id === taskId) setDetailOpen(false);
+    if (viewingTask?.id === taskId) closeDetail();
     fetchTasks();
   };
 
@@ -382,7 +387,7 @@ export default function TasksPage() {
       addToast(error.message, 'error');
       return;
     }
-    if (viewingTask?.id === taskId) setDetailOpen(false);
+    if (viewingTask?.id === taskId) closeDetail();
     setToasts((prev) => [
       ...prev,
       {
@@ -424,7 +429,7 @@ export default function TasksPage() {
   };
 
   const openEdit = (task: Task) => {
-    setDetailOpen(false);
+    closeDetail();
     setEditingTask(task);
     setEditOpen(true);
   };
@@ -465,59 +470,89 @@ export default function TasksPage() {
   };
 
   return (
-    <PageShell>
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
-            {scope === 'mine' ? t('tasks.myTasks') : t('tasks.allTasks')}
-          </h1>
-          {isFounder && (
-            <div className="flex items-center bg-nokturo-100 dark:bg-nokturo-700 rounded-lg p-0.5">
-              <button
-                type="button"
-                onClick={() => setScope('mine')}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                  scope === 'mine'
-                    ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
-                    : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
-                }`}
-              >
-                {t('tasks.scopeMine')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setScope('all')}
-                className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                  scope === 'all'
-                    ? 'bg-white dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 shadow-sm'
-                    : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
-                }`}
-              >
-                {t('tasks.scopeAll')}
-              </button>
-            </div>
-          )}
+    <PageShell
+      contentBg="black"
+      contentOverflow={viewingTask ? 'hidden' : 'auto'}
+      actionsSlot={
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <h1 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
+              {scope === 'mine' ? t('tasks.myTasks') : t('tasks.allTasks')}
+            </h1>
+            {isFounder && (
+              <div className="flex items-center bg-white/10 rounded-[6px] p-0.5">
+                <button
+                  type="button"
+                  onClick={() => setScope('mine')}
+                  className={`px-3 py-1 text-xs font-medium rounded-[4px] transition-colors ${
+                    scope === 'mine'
+                      ? 'bg-white/10 text-nokturo-900 dark:text-nokturo-100'
+                      : 'text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-200'
+                  }`}
+                >
+                  {t('tasks.scopeMine')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScope('all')}
+                  className={`px-3 py-1 text-xs font-medium rounded-[4px] transition-colors ${
+                    scope === 'all'
+                      ? 'bg-white/10 text-nokturo-900 dark:text-nokturo-100'
+                      : 'text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-200'
+                  }`}
+                >
+                  {t('tasks.scopeAll')}
+                </button>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={openNew}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-[6px] hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            {t('tasks.addTask')}
+          </button>
         </div>
-        <button
-          onClick={openNew}
-          className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          {t('tasks.addTask')}
-        </button>
-      </div>
-
+      }
+    >
+      {viewingTask ? (
+        /* Task detail + comments grid */
+        <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-[1fr_0.75fr] gap-3">
+          <div className="min-h-0 overflow-hidden flex flex-col rounded-[12px] bg-nokturo-900">
+            <TaskDetailSlideOver
+              open
+              task={viewingTask}
+              profileMap={profileMap}
+              onClose={closeDetail}
+              onEdit={openEdit}
+              onMarkCompleted={markCompleted}
+              onReopen={reopenTask}
+              onDelete={softDeleteTask}
+              onDescriptionChange={handleDescriptionChange}
+              inline
+            />
+          </div>
+          <div className="min-h-0 overflow-hidden flex flex-col rounded-[12px] bg-nokturo-900">
+            <TaskComments
+              taskId={viewingTask.id}
+              taskCreatorId={viewingTask.created_by}
+              taskTitle={viewingTask.title}
+            />
+          </div>
+        </div>
+      ) : (
+        <>
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-nokturo-200 dark:border-nokturo-700">
         {(['active', 'completed', 'deleted'] as Tab[]).map((key) => {
           const count = key === 'active' ? activeTasks.length : key === 'completed' ? completedTasks.length : deletedTasks.length;
           const badgeClass =
             key === 'active'
-              ? 'bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
+              ? 'bg-nokturo-500 text-white'
               : key === 'completed'
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400';
+                ? 'bg-emerald-600 text-white'
+                : 'bg-red-600 text-white';
 
           return (
             <button
@@ -531,7 +566,7 @@ export default function TasksPage() {
             >
               {t(`tasks.${key}`)}
               {count > 0 && (
-                <span className={`inline-flex items-center justify-center min-w-[18px] h-[18px] text-[10px] leading-none px-1 rounded-full ${badgeClass}`}>
+                <span className={`inline-flex items-center justify-center w-4 h-4 min-w-4 min-h-4 rounded-[9999px] text-[10px] font-medium tabular-nums ${badgeClass}`}>
                   {count}
                 </span>
               )}
@@ -545,7 +580,7 @@ export default function TasksPage() {
 
       {/* Deleted tab info banner */}
       {tab === 'deleted' && deletedTasks.length > 0 && (
-        <div className="mb-4 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-800 text-xs text-nokturo-600 dark:text-nokturo-400 flex items-center justify-between">
+        <div className="mb-4 px-3 py-2 text-xs text-nokturo-600 dark:text-nokturo-400 flex items-center justify-between">
           <span>{t('tasks.deletedInfo')}</span>
           {isFounder && (
             <button
@@ -560,7 +595,7 @@ export default function TasksPage() {
                 addToast(t('tasks.deleteForever'));
                 fetchTasks();
               }}
-              className="text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors whitespace-nowrap ml-4"
+              className="text-xs font-medium bg-red-500 text-white hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
             >
               {t('tasks.deleteAll')}
             </button>
@@ -592,7 +627,6 @@ export default function TasksPage() {
         <div className="space-y-2">
           {displayed.map((task) => {
             const overdue = task.status === 'active' && isOverdue(task.deadline);
-            const recentlyOverdue = task.status === 'active' && isRecentlyOverdue(task.deadline);
             const urgent = task.status === 'active' && isUrgent(task.deadline) && !overdue;
             const isCompleted = task.status === 'completed';
             const isDeleted = task.status === 'deleted';
@@ -601,12 +635,12 @@ export default function TasksPage() {
             return (
               <div
                 key={task.id}
-                className={`group flex items-center gap-3 p-4 rounded-xl transition-colors cursor-pointer ${
+                className={`group flex items-center gap-3 p-4 rounded-[6px] transition-colors cursor-pointer ${
                   isDeleted
                     ? 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20'
                     : isCompleted
-                      ? 'bg-green-50/50 dark:bg-green-900/10 hover:bg-green-50 dark:hover:bg-green-900/20'
-                      : 'bg-white dark:bg-nokturo-800 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50'
+                      ? 'bg-emerald-50/50 dark:bg-emerald-900/10 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                      : 'bg-white/5 hover:bg-white/10'
                 }`}
                 onClick={() => !isDeleted && openDetail(task)}
               >
@@ -620,12 +654,12 @@ export default function TasksPage() {
                     }}
                     className={`shrink-0 w-4 h-4 rounded-[3px] flex items-center justify-center transition-colors ${
                       isCompleted
-                        ? 'bg-green-600 dark:bg-green-500 text-white'
+                        ? 'bg-emerald-600 text-white'
                         : 'bg-nokturo-200/60 dark:bg-nokturo-700/60 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
                     }`}
                     title={isCompleted ? t('tasks.reopen') : t('tasks.markCompleted')}
                   >
-                    {isCompleted && <Check className="w-3 h-3" strokeWidth={3} />}
+                    {isCompleted && <Check className="w-4 h-4" strokeWidth={3} />}
                   </button>
                 )}
 
@@ -636,7 +670,7 @@ export default function TasksPage() {
                       isCompleted
                         ? 'line-through text-nokturo-500 dark:text-nokturo-500'
                         : isDeleted
-                          ? 'text-nokturo-500 dark:text-nokturo-500'
+                          ? 'text-white'
                           : 'text-nokturo-900 dark:text-nokturo-100'
                     }`}
                   >
@@ -646,23 +680,29 @@ export default function TasksPage() {
                   {/* Deadline badge */}
                   {task.deadline && !isDeleted && (
                     <span
-                      className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full shrink-0 ${
-                        recentlyOverdue
-                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                          : overdue || urgent
-                            ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                      className={`inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] ${
+                        overdue
+                          ? 'bg-red-600 text-[#ffc2c2]'
+                          : urgent
+                            ? 'bg-amber-600 text-[rgb(254,229,200)]'
                             : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
                       }`}
                     >
-                      {recentlyOverdue ? (
-                        <AlertTriangle className="w-3 h-3" />
-                      ) : overdue || urgent ? (
-                        <Clock className="w-3 h-3" />
+                      {overdue ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M1 21L12 2l11 19zm11.713-3.287Q13 17.425 13 17t-.288-.712T12 16t-.712.288T11 17t.288.713T12 18t.713-.288M11 15h2v-5h-2z"/></svg>
+                      ) : urgent ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 22V4h3V2h2v2h8V2h2v2h3v7.675q-.475-.225-.975-.375T19 11.075V10H5v10h6.3q.175.55.413 1.05t.562.95zm11.463-.462Q13 20.075 13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23t-3.537-1.463m5.212-1.162l.7-.7L18.5 17.8V15h-1v3.2z"/></svg>
                       ) : (
-                        <Calendar className="w-3 h-3" />
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 22V4h3V2h2v2h8V2h2v2h3v18zm2-2h14V10H5z"/></svg>
                       )}
-                      {overdue && `${t('tasks.overdue')}: `}
-                      {formatDeadline(task.deadline)}
+                      {overdue
+                        ? `${t('tasks.overdue')}: ${formatDeadline(task.deadline)}`
+                        : (() => {
+                            const days = daysUntilDeadline(task.deadline);
+                            if (days === 0) return t('tasks.dueToday');
+                            if (days === 1) return t('tasks.daysLeftOne');
+                            return t('tasks.daysLeft', { count: days });
+                          })()}
                     </span>
                   )}
 
@@ -677,7 +717,7 @@ export default function TasksPage() {
                             src={p.avatar_url}
                             alt={profileName(a.user_id)}
                             title={profileName(a.user_id)}
-                            className="w-5 h-5 rounded-full object-cover border border-white dark:border-nokturo-800"
+                            className="avatar-round w-5 h-5 object-cover border border-white dark:border-nokturo-800"
                           />
                         ) : (
                           <span
@@ -699,7 +739,7 @@ export default function TasksPage() {
 
                   {/* Completed date */}
                   {isCompleted && task.completed_at && (
-                    <span className="text-xs text-green-600 dark:text-green-400 shrink-0">
+                    <span className="inline-flex items-center text-xs h-6 px-2 shrink-0 rounded-[4px] bg-emerald-600 text-[#b3ffe8]">
                       {t('tasks.completedOn')}{' '}
                       {new Date(task.completed_at).toLocaleDateString(
                         user?.language === 'cs' ? 'cs-CZ' : 'en-US',
@@ -710,16 +750,18 @@ export default function TasksPage() {
 
                   {/* Comment count */}
                   {!isDeleted && (commentCounts[task.id] || 0) > 0 && (
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-400 shrink-0">
-                      <MessageSquare className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1 text-xs text-nokturo-500 dark:text-nokturo-400 shrink-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor">
+                        <path d="M2 18V2h20v20l-4-4z" />
+                      </svg>
                       {commentCounts[task.id]}
                     </span>
                   )}
 
                   {/* Deleted countdown */}
                   {isDeleted && (
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 shrink-0">
-                      <Clock className="w-3 h-3" />
+                    <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-red-600 text-[#ffc2c2]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M9 3V1h6v2zm2 11h2V8h-2zm-2.488 7.288q-1.637-.713-2.862-1.938t-1.937-2.863T3 13t.713-3.488T5.65 6.65t2.863-1.937T12 4q1.55 0 2.975.5t2.675 1.45l1.4-1.4l1.4 1.4l-1.4 1.4Q20 8.6 20.5 10.025T21 13q0 1.85-.713 3.488T18.35 19.35t-2.863 1.938T12 22t-3.488-.712"/></svg>
                       {t('tasks.autoDeleteIn')} {daysLeft} {daysLeft === 1 ? t('tasks.day') : t('tasks.days')}
                     </span>
                   )}
@@ -727,32 +769,19 @@ export default function TasksPage() {
 
                 {/* Actions */}
                 {isDeleted ? (
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         recoverTask(task.id);
                       }}
-                      className="px-2.5 py-1 text-xs font-medium text-nokturo-600 dark:text-nokturo-300 bg-nokturo-200/60 dark:bg-nokturo-700/60 hover:bg-nokturo-300 dark:hover:bg-nokturo-600 rounded-lg transition-colors whitespace-nowrap"
+                      className="inline-flex items-center gap-1 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 transition-colors whitespace-nowrap rounded-lg"
                       title={t('tasks.recover')}
                     >
                       <Undo2 className="w-3.5 h-3.5 inline mr-1" />
                       {t('tasks.recover')}
                     </button>
-                    {isFounder && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          permanentDeleteTask(task.id);
-                        }}
-                        className="p-1.5 text-red-500 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                        title={t('tasks.deleteForever')}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    )}
                   </div>
                 ) : (
                   <TaskRowMenu
@@ -769,19 +798,9 @@ export default function TasksPage() {
           })}
         </div>
       )}
+        </>
+      )}
 
-      {/* Detail slide-over */}
-      <TaskDetailSlideOver
-        open={detailOpen}
-        task={viewingTask}
-        profileMap={profileMap}
-        onClose={() => setDetailOpen(false)}
-        onEdit={openEdit}
-        onMarkCompleted={markCompleted}
-        onReopen={reopenTask}
-        onDelete={softDeleteTask}
-        onDescriptionChange={handleDescriptionChange}
-      />
 
       {/* Edit slide-over */}
       <TaskSlideOver

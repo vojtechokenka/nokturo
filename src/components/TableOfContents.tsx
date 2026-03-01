@@ -11,13 +11,19 @@ interface TableOfContentsProps {
   items: TocItem[];
   title?: string;
   className?: string;
+  /** Optional footer slot (e.g. Edit button) – rendered at bottom, full width */
+  footerSlot?: React.ReactNode;
   /** Align top with header row (CATEGORY/STATUS) when used at page level */
   alignWithHeader?: boolean;
   /** Align top with first heading (h1 mt-16) in article */
   alignWithFirstHeading?: boolean;
+  /** Override top position (e.g. 340 when header image present) – only when fixed */
+  topOffset?: number;
+  /** Use sticky positioning – stays within scroll container, no overflow */
+  sticky?: boolean;
 }
 
-export function TableOfContents({ items, title, className = '', alignWithHeader, alignWithFirstHeading }: TableOfContentsProps) {
+export function TableOfContents({ items, title, className = '', footerSlot, alignWithHeader, alignWithFirstHeading, topOffset, sticky }: TableOfContentsProps) {
   const { t } = useTranslation();
   const [currentId, setCurrentId] = useState<string | null>(null);
 
@@ -53,17 +59,21 @@ export function TableOfContents({ items, title, className = '', alignWithHeader,
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const asideClass = sticky
+    ? `sticky top-6 self-start shrink-0 w-[240px] flex flex-col max-h-[calc(100vh-6rem)] ${alignWithHeader ? 'pt-[108px]' : ''} ${className}`
+    : `fixed left-auto right-6 bottom-6 w-[240px] flex flex-col ${topOffset == null ? 'top-[60px]' : ''} ${alignWithHeader ? 'pt-[108px]' : ''} ${className}`;
+  const asideStyle = !sticky && topOffset != null ? { top: topOffset } : undefined;
+
   return (
-    <aside className={`w-[240px] shrink-0 self-stretch ${alignWithHeader ? 'mt-[160px]' : ''} ${alignWithFirstHeading ? 'pt-8' : ''} ${className}`}>
+    <aside className={asideClass} style={asideStyle}>
       <nav
-        className="sticky top-[76px] font-body bg-nokturo-100 dark:bg-[#1f1f1f]"
+        className="font-body bg-transparent flex-1 min-h-0 flex flex-col overflow-y-auto border-l border-nokturo-200 dark:border-nokturo-700"
         aria-label={t('richText.tableOfContents')}
       >
-        <ul className="space-y-0.5 text-[13px] leading-snug border-l border-nokturo-200 dark:border-nokturo-700">
-          {items.map((item) => {
+        <ul className="space-y-0 text-[13px] leading-snug pt-6 pb-6 flex-1 min-h-0">
+          {items.filter((item) => item.level <= 2).map((item) => {
             const isActive = currentId === item.id;
-            const indent = { 1: 'pl-3', 2: 'pl-5', 3: 'pl-7' }[item.level];
-            const weight = item.level === 1 ? 'font-medium' : item.level === 2 ? 'font-normal' : 'font-normal text-[12px]';
+            const weight = item.level === 1 ? 'font-medium' : 'font-normal';
 
             const fadeStyle: React.CSSProperties = {
               maskImage: 'linear-gradient(to right, black calc(100% - 48px), transparent)',
@@ -75,7 +85,7 @@ export function TableOfContents({ items, title, className = '', alignWithHeader,
                 <a
                   href={`#${item.id}`}
                   onClick={(e) => handleClick(e, item.id)}
-                  className={`block py-1.5 pr-2 ${indent} -ml-px border-l-2 transition-colors overflow-hidden whitespace-nowrap ${
+                  className={`block py-2 px-4 border-l-2 transition-colors overflow-hidden whitespace-nowrap ${
                     isActive
                       ? 'border-nokturo-800 dark:border-nokturo-200 text-nokturo-900 dark:text-nokturo-100'
                       : 'border-transparent text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:border-nokturo-300 dark:hover:border-nokturo-500'
@@ -89,6 +99,16 @@ export function TableOfContents({ items, title, className = '', alignWithHeader,
           })}
         </ul>
       </nav>
+      {footerSlot && !sticky && (
+        <div className="fixed right-6 bottom-6 w-[240px] p-4">
+          {footerSlot}
+        </div>
+      )}
+      {footerSlot && sticky && (
+        <div className="shrink-0 p-4 pt-0">
+          {footerSlot}
+        </div>
+      )}
     </aside>
   );
 }

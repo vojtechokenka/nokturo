@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -235,43 +236,42 @@ export default function SuppliersPage() {
     <PageShell
       titleKey="pages.supplierDirectory.title"
       descriptionKey="pages.supplierDirectory.description"
+      compactContent
+      noHorizontalPadding
+      actionsSlot={
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+          {categoryFilter.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setCategoryFilter([])}
+              className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+            >
+              {t('common.clearFilters')}
+            </button>
+          )}
+          <FilterSelect
+            value={categoryFilter}
+            onChange={setCategoryFilter}
+            titleKey="suppliers.filterTitle"
+            options={[
+              { value: 'all', label: t('suppliers.allCategories') },
+              ...categories.map((cat) => ({
+                value: cat.name,
+                label: t(`suppliers.categories.${cat.name}`) !== `suppliers.categories.${cat.name}` ? t(`suppliers.categories.${cat.name}`) : cat.name,
+              })),
+            ]}
+          />
+          <button
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {t('suppliers.addSupplier')}
+          </button>
+        </div>
+      }
     >
       <ToastContainer toasts={toasts} onClose={closeToast} />
-      {/* ── Action bar ────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-        {categoryFilter.length > 0 && (
-          <button
-            type="button"
-            onClick={() => setCategoryFilter([])}
-            className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
-          >
-            {t('common.clearFilters')}
-          </button>
-        )}
-        {/* Category filter */}
-        <FilterSelect
-          value={categoryFilter}
-          onChange={setCategoryFilter}
-          titleKey="suppliers.filterTitle"
-          options={[
-            { value: 'all', label: t('suppliers.allCategories') },
-            ...categories.map((cat) => ({
-              value: cat.name,
-              label: t(`suppliers.categories.${cat.name}`) !== `suppliers.categories.${cat.name}` ? t(`suppliers.categories.${cat.name}`) : cat.name,
-            })),
-          ]}
-        />
-
-        {/* Add button */}
-        <button
-          onClick={openAdd}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('suppliers.addSupplier')}
-        </button>
-      </div>
-
       {/* ── Content area ──────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -319,7 +319,7 @@ export default function SuppliersPage() {
               key={supplier.id}
               type="button"
               onClick={() => openDetail(supplier)}
-              className={`col-span-4 grid grid-cols-subgrid gap-x-3 group py-2.5 pl-4 text-sm text-nokturo-900 dark:text-nokturo-100 text-left cursor-pointer hover:!bg-nokturo-100/60 dark:hover:!bg-nokturo-800/60 transition-colors ${
+              className={`col-span-4 grid grid-cols-subgrid gap-x-3 group py-2.5 pl-4 text-sm text-nokturo-900 dark:text-nokturo-100 text-left cursor-pointer hover:!bg-nokturo-100/60 dark:hover:!bg-nokturo-800/60 transition-colors rounded-none ${
                 idx % 2 === 1 ? 'bg-black/10 dark:bg-white/10' : ''
               }`}
             >
@@ -342,7 +342,8 @@ export default function SuppliersPage() {
                     href={supplier.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-lg font-medium text-nokturo-600 hover:text-nokturo-900 dark:text-white dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 hover:text-nokturo-900 dark:text-white dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+                    style={{ borderRadius: '6px' }}
                   >
                     <ExternalLink className="w-3 h-3 shrink-0" />
                     <span className="truncate">
@@ -356,11 +357,12 @@ export default function SuppliersPage() {
               <span className="shrink-0 flex justify-start items-center">
                 {supplier.category && (
                   <span
-                    className={`inline-block text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap ${
+                    className={`inline-block text-xs px-2 py-0.5 font-medium whitespace-nowrap ${
                       TAG_BADGE_CLASSES[
                         categories.find((c) => c.name === supplier.category)?.color ?? 'gray'
                       ] ?? TAG_BADGE_CLASSES.gray
                     }`}
+                    style={{ borderRadius: '4px' }}
                   >
                     {t(`suppliers.categories.${supplier.category}`) !== `suppliers.categories.${supplier.category}` ? t(`suppliers.categories.${supplier.category}`) : supplier.category}
                   </span>
@@ -392,24 +394,24 @@ export default function SuppliersPage() {
 
       {/* ── Delete confirmation dialog ────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/30">
-          <div className="bg-white p-6 max-w-sm w-full mx-4 rounded-xl">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 p-6 max-w-sm w-full mx-4 rounded-xl shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
               {t('common.confirm')}
             </h3>
-            <p className="text-nokturo-600 text-sm mb-4">
+            <p className="text-nokturo-400 text-sm mb-4">
               {t('suppliers.deleteConfirm')}
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 hover:text-nokturo-900 transition-colors"
+                className="px-4 py-2 text-sm text-nokturo-400 hover:text-white transition-colors"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-colors"
+                className="px-4 py-2 text-sm bg-white text-nokturo-900 rounded-lg hover:bg-nokturo-100 transition-colors"
               >
                 {t('common.delete')}
               </button>

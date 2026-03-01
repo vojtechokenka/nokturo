@@ -4,9 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 import { useAuthStore } from '../../stores/authStore';
-import { LanguageToggle } from '../../components/LanguageToggle';
-import { Mail, Lock, Loader2 } from 'lucide-react';
-import { NokturoLogo } from '../../components/NokturoLogo';
+import { Loader2 } from 'lucide-react';
+import { LoginLogo } from '../../components/LoginLogo';
 import { AppUpdateSection } from '../../components/AppUpdateSection';
 import { isElectron } from '../../utils/platform';
 
@@ -22,7 +21,7 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nokturo-50 dark:bg-nokturo-900 flex items-center justify-center">
+      <div className="min-h-screen bg-nokturo-50 dark:bg-black flex items-center justify-center">
         <div className="text-nokturo-500 dark:text-nokturo-400">{t('common.loading')}</div>
       </div>
     );
@@ -55,35 +54,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-nokturo-50 dark:bg-nokturo-900 flex items-center justify-center p-4">
-      {/* Language toggle – top right */}
-      <div className="absolute top-4 right-4">
-        <LanguageToggle />
-      </div>
-
+    <div className="min-h-screen bg-nokturo-50 dark:bg-black flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Branding */}
         <div className="flex justify-center mb-10">
-          <NokturoLogo className="h-10 w-auto text-nokturo-900 dark:text-nokturo-100" />
+          <LoginLogo className="h-10 w-auto" />
         </div>
 
         {/* Card */}
-        <div className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-8 shadow-sm">
-          <form onSubmit={handleLogin} className="space-y-4">
+        <div>
+          <form onSubmit={handleLogin} className="login-form space-y-4">
             {/* Email */}
             <div>
-              <label className="block text-sm text-nokturo-700 dark:text-nokturo-300 mb-1.5">
-                {t('auth.email')}
-              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className={`${INPUT_CLASS} pl-10 py-2.5`}
+                  aria-label={t('auth.email')}
+                  className={`${INPUT_CLASS} h-11 border-0 focus:border-0 !bg-white/10`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -91,18 +82,15 @@ export default function LoginPage() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm text-nokturo-700 dark:text-nokturo-300 mb-1.5">
-                {t('auth.password')}
-              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
-                  className={`${INPUT_CLASS} pl-10 py-2.5`}
+                  aria-label={t('auth.password')}
+                  className={`${INPUT_CLASS} h-11 border-0 focus:border-0 !bg-white/10`}
                   placeholder="••••••••"
                 />
               </div>
@@ -115,7 +103,7 @@ export default function LoginPage() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="rounded border-nokturo-300 dark:border-nokturo-600 text-nokturo-600 focus:ring-nokturo-500"
+                  className="checkbox-auth rounded-none border-nokturo-300 dark:border-nokturo-600 focus:ring-nokturo-500"
                 />
                 <span className="text-sm text-nokturo-700 dark:text-nokturo-300">
                   {t('auth.rememberMe')}
@@ -131,7 +119,7 @@ export default function LoginPage() {
 
             {/* Error message */}
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-none px-4 py-2.5">
                 {error}
               </div>
             )}
@@ -140,7 +128,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-nokturo-900 dark:bg-nokturo-100 text-white dark:text-nokturo-900 font-medium rounded-lg py-2.5 hover:bg-nokturo-800 dark:hover:bg-nokturo-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full bg-nokturo-900 dark:bg-nokturo-100 text-white dark:text-nokturo-900 font-medium py-2.5 hover:bg-nokturo-800 dark:hover:bg-nokturo-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

@@ -5,14 +5,10 @@
 import { useState, useCallback, useRef, useEffect, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Type,
   AlignLeft,
   AlignCenter,
   AlignRight,
-  Quote,
-  Image as ImageIcon,
-  LayoutGrid,
-  Grid3X3,
+  ChevronDown,
   Link2,
   Minus,
   Plus,
@@ -20,9 +16,6 @@ import {
   Trash2,
   Bold,
   Italic,
-  List,
-  Lock,
-  Unlock,
 } from 'lucide-react';
 import type { ToastData } from './Toast';
 import { INPUT_CLASS } from '../lib/inputStyles';
@@ -65,7 +58,8 @@ export type RichTextBlock =
     }
   | { id: string; type: 'link'; url: string; text: string }
   | { id: string; type: 'divider' }
-  | { id: string; type: 'list'; style: 'bullet' | 'numbered'; items: string[] };
+  | { id: string; type: 'list'; style: 'bullet' | 'numbered'; items: string[] }
+  | { id: string; type: 'tag'; text: string; visible?: boolean };
 
 function generateId() {
   return `block_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -94,6 +88,8 @@ function isBlockEmpty(block: RichTextBlock): boolean {
       return !block.text?.trim() && !block.url?.trim();
     case 'divider':
       return true;
+    case 'tag':
+      return !block.text?.trim();
     default:
       return true;
   }
@@ -386,6 +382,21 @@ function FormattingBar({
   );
 }
 
+// ── Block menu icons (custom SVGs) ───────────────────────────────
+const AddBlockIcons = {
+  heading: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M7 20V7H2V4h13v3h-5v13zm9 0v-8h-3V9h9v3h-3v8z"/></svg>,
+  paragraph: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M9 20v-6q-2.075 0-3.537-1.463T4 9t1.463-3.537T9 4h9v2h-2v14h-2V6h-3v14z"/></svg>,
+  tag: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M2 20V4h14l6 8l-6 8z"/></svg>,
+  quote: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M5.7 18L8 14q-1.65 0-2.825-1.175T4 10t1.175-2.825T8 6t2.825 1.175T12 10q0 .575-.137 1.063T11.45 12L8 18zm9 0l2.3-4q-1.65 0-2.825-1.175T13 10t1.175-2.825T17 6t2.825 1.175T21 10q0 .575-.137 1.063T20.45 12L17 18z"/></svg>,
+  bulletList: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M14 21v-8h8v8zM2 18v-2h9v2zm12-7V3h8v8zM2 8V6h9v2z"/></svg>,
+  image: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M6 17h12l-3.75-5l-3 4L9 13zm-3 4V3h18v18zM9.563 9.563Q10 9.125 10 8.5t-.437-1.062T8.5 7t-1.062.438T7 8.5t.438 1.063T8.5 10t1.063-.437"/></svg>,
+  gallery: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M1 19V5h14v14zm16-8V5h6v6zM4 15h8l-2.625-3.5L7.5 14l-1.375-1.825zm13 4v-6h6v6z"/></svg>,
+  imageGrid: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M3 11V3h8v8zm0 10v-8h8v8zm10-10V3h8v8zm0 10v-8h8v8z"/></svg>,
+  grid: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M3 21V3h18v18zm2-2h3.325v-3.325H5zm5.325 0h3.35v-3.325h-3.35zm5.35 0H19v-3.325h-3.325zM5 13.675h3.325v-3.35H5zm5.325 0h3.35v-3.35h-3.35zm5.35 0H19v-3.35h-3.325zM5 8.325h3.325V5H5zm5.325 0h3.35V5h-3.35zm5.35 0H19V5h-3.325z"/></svg>,
+  link: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M11 17H7q-2.075 0-3.537-1.463T2 12t1.463-3.537T7 7h4v2H7q-1.25 0-2.125.875T4 12t.875 2.125T7 15h4zm-3-4v-2h8v2zm5 4v-2h4q1.25 0 2.125-.875T20 12t-.875-2.125T17 9h-4V7h4q2.075 0 3.538 1.463T22 12t-1.463 3.538T17 17z"/></svg>,
+  divider: <Minus size={16} />,
+};
+
 // ── Block menu (add block) ──────────────────────────────────────
 function AddBlockMenu({
   onAdd,
@@ -397,32 +408,37 @@ function AddBlockMenu({
   const { t } = useTranslation();
   const options: { icon: React.ReactNode; labelKey: string; block: RichTextBlock }[] = [
     {
-      icon: <Type size={16} />,
+      icon: AddBlockIcons.heading,
       labelKey: 'richText.heading',
       block: { id: generateId(), type: 'heading', level: 1, text: '' },
     },
     {
-      icon: <AlignLeft size={16} />,
+      icon: AddBlockIcons.paragraph,
       labelKey: 'richText.paragraph',
       block: { id: generateId(), type: 'paragraph', size: 'normal', content: '' },
     },
     {
-      icon: <Quote size={16} />,
+      icon: AddBlockIcons.tag,
+      labelKey: 'richText.tag',
+      block: { id: generateId(), type: 'tag', text: '', visible: true },
+    },
+    {
+      icon: AddBlockIcons.quote,
       labelKey: 'richText.quote',
       block: { id: generateId(), type: 'quote', text: '' },
     },
     {
-      icon: <List size={16} />,
+      icon: AddBlockIcons.bulletList,
       labelKey: 'richText.bulletList',
       block: { id: generateId(), type: 'list', style: 'bullet', items: [''] },
     },
     {
-      icon: <ImageIcon size={16} />,
+      icon: AddBlockIcons.image,
       labelKey: 'richText.image',
       block: { id: generateId(), type: 'image', url: '', fit: 'fill' },
     },
     {
-      icon: <LayoutGrid size={16} />,
+      icon: AddBlockIcons.gallery,
       labelKey: 'richText.gallery',
       block: {
         id: generateId(),
@@ -432,7 +448,7 @@ function AddBlockMenu({
       },
     },
     {
-      icon: <Grid3X3 size={16} />,
+      icon: AddBlockIcons.imageGrid,
       labelKey: 'richText.imageGrid',
       block: {
         id: generateId(),
@@ -445,7 +461,7 @@ function AddBlockMenu({
       },
     },
     {
-      icon: <Grid3X3 size={16} />,
+      icon: AddBlockIcons.grid,
       labelKey: 'richText.grid',
       block: {
         id: generateId(),
@@ -458,12 +474,12 @@ function AddBlockMenu({
       },
     },
     {
-      icon: <Link2 size={16} />,
+      icon: AddBlockIcons.link,
       labelKey: 'richText.link',
       block: { id: generateId(), type: 'link', url: '', text: '' },
     },
     {
-      icon: <Minus size={16} />,
+      icon: AddBlockIcons.divider,
       labelKey: 'richText.divider',
       block: { id: generateId(), type: 'divider' },
     },
@@ -486,6 +502,104 @@ function AddBlockMenu({
         </button>
       ))}
     </div>
+  );
+}
+
+// ── Aspect ratio dropdown (styled to match design) ─────────────────
+function AspectRatioSelect({
+  value,
+  onChange,
+  t,
+}: {
+  value: '5:4' | '1:1' | '3:2' | '16:9';
+  onChange: (v: '5:4' | '1:1' | '3:2' | '16:9') => void;
+  t: (k: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const options: { value: '5:4' | '1:1' | '3:2' | '16:9'; labelKey: string }[] = [
+    { value: '5:4', labelKey: 'richText.aspectRatio54' },
+    { value: '1:1', labelKey: 'richText.aspectRatio11' },
+    { value: '3:2', labelKey: 'richText.aspectRatio32' },
+    { value: '16:9', labelKey: 'richText.aspectRatio169' },
+  ];
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [open]);
+  const selected = options.find((o) => o.value === value);
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="h-6 min-w-[4rem] pl-2 pr-6 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 focus:ring-inset"
+      >
+        <span>{selected ? t(selected.labelKey) : value}</span>
+        <ChevronDown size={12} className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 pointer-events-none transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-0.5 z-50 min-w-[4rem] py-0.5 rounded-[4px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => {
+                onChange(opt.value);
+                setOpen(false);
+              }}
+              className={`w-full text-left px-2 py-1.5 text-xs transition-colors ${
+                value === opt.value
+                  ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 font-medium'
+                  : 'text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-50 dark:hover:bg-nokturo-700'
+              }`}
+            >
+              {t(opt.labelKey)}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Auto-resize heading textarea ──────────────────────────────────
+function AutoResizeHeadingTextarea({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  className: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  }, []);
+  useEffect(() => {
+    resize();
+  }, [value, resize]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onInput={resize}
+      placeholder={placeholder}
+      rows={1}
+      className={className}
+    />
   );
 }
 
@@ -609,7 +723,7 @@ function BlockRenderer({
                       onUpdate(block.id, { level: lvl });
                     }
                   }}
-                  className={`px-2 py-0.5 rounded text-xs font-medium ${
+                  className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
                     block.level === lvl
                       ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                       : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
@@ -626,7 +740,7 @@ function BlockRenderer({
               const sizeClass =
                 block.level === 1
                   ? isHeadline
-                    ? 'text-[48px]'
+                    ? 'text-[56px]'
                     : 'text-[30px]'
                   : block.level === 2
                     ? isHeadline
@@ -634,15 +748,14 @@ function BlockRenderer({
                       : 'text-[24px]'
                     : h3Size;
               const levelClass = {
-                1: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1]`,
-                2: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2]`,
-                3: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500`,
+                1: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1] resize-none overflow-hidden min-h-[1.5em]`,
+                2: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2] resize-none overflow-hidden min-h-[1.5em]`,
+                3: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 resize-none overflow-hidden min-h-[1.5em]`,
               }[block.level];
               return (
-                <input
-                  type="text"
+                <AutoResizeHeadingTextarea
                   value={block.text}
-                  onChange={(e) => onUpdate(block.id, { text: e.target.value })}
+                  onChange={(text) => onUpdate(block.id, { text })}
                   placeholder={t('richText.headingPlaceholder')}
                   className={levelClass}
                 />
@@ -662,18 +775,18 @@ function BlockRenderer({
               isItalic={document.queryCommandState?.('italic') ?? false}
               />
               <div className="flex gap-1">
-                {(['normal', 'large', 'small'] as const).map((sz) => (
+                {(['small', 'normal', 'large'] as const).map((sz) => (
                   <button
                     key={sz}
                     type="button"
                     onClick={() => onUpdate(block.id, { size: sz })}
-                    className={`px-2 py-0.5 rounded text-xs ${
+                    className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
                       block.size === sz
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                         : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                     }`}
                   >
-                    {sz === 'normal' ? t('richText.paragraphNormal') : sz === 'large' ? t('richText.paragraphLarge') : t('richText.paragraphSmall')}
+                    {sz === 'small' ? 'S' : sz === 'normal' ? 'M' : 'L'}
                   </button>
                 ))}
               </div>
@@ -683,7 +796,7 @@ function BlockRenderer({
                     key={al}
                     type="button"
                     onClick={() => onUpdate(block.id, { align: al })}
-                    className={`p-0.5 rounded ${
+                    className={`p-0.5 rounded-[4px] ${
                       (block.align ?? 'left') === al
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                         : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
@@ -835,7 +948,7 @@ function BlockRenderer({
                   <button
                     type="button"
                     onClick={() => onUpdate(block.id, { url: '' })}
-                    className="px-3 py-1.5 bg-white dark:bg-nokturo-700 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
+                    className="px-3 py-1.5 bg-red-500 text-white text-sm hover:bg-red-600"
                   >
                     {t('common.delete')}
                   </button>
@@ -877,7 +990,7 @@ function BlockRenderer({
 
         {block.type === 'gallery' && (
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-1 mb-2">
               <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.columns')}:</span>
               <div className="flex items-center gap-1">
                 {([2, 3, 4] as const).map((c) => (
@@ -885,7 +998,7 @@ function BlockRenderer({
                     key={c}
                     type="button"
                     onClick={() => onUpdate(block.id, { columns: c })}
-                    className={`size-7 flex items-center justify-center rounded text-sm ${
+                    className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
                       block.columns === c
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                         : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
@@ -963,7 +1076,7 @@ function BlockRenderer({
 
         {block.type === 'imageGrid' && (
           <div className="mb-4">
-            <div className="flex items-center gap-4 mb-2 flex-wrap">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.columns')}:</span>
               <div className="flex items-center gap-1">
                 {([2, 3, 4] as const).map((c) => (
@@ -971,7 +1084,7 @@ function BlockRenderer({
                     key={c}
                     type="button"
                     onClick={() => onUpdate(block.id, { columns: c })}
-                    className={`size-7 flex items-center justify-center rounded text-sm ${
+                    className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
                       block.columns === c
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                         : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
@@ -982,43 +1095,38 @@ function BlockRenderer({
                 ))}
               </div>
               <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.aspectRatio')}:</span>
-              <select
+              <AspectRatioSelect
                 value={block.aspectRatio ?? '1:1'}
-                onChange={(e) => onUpdate(block.id, { aspectRatio: e.target.value as '5:4' | '1:1' | '3:2' | '16:9' })}
-                className="px-2 py-0.5 text-sm rounded border border-nokturo-200 dark:border-nokturo-600 bg-white dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100"
-              >
-                <option value="5:4">{t('richText.aspectRatio54')}</option>
-                <option value="1:1">{t('richText.aspectRatio11')}</option>
-                <option value="3:2">{t('richText.aspectRatio32')}</option>
-                <option value="16:9">{t('richText.aspectRatio169')}</option>
-              </select>
-              <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.gapRow')} (px):</span>
-              <input
-                type="number"
-                min={0}
-                value={block.gapRow ?? 8}
-                onChange={(e) => {
-                  const v = Math.max(0, parseInt(e.target.value, 10) || 0);
-                  const update: { gapRow: number; gapCol?: number } = { gapRow: v };
-                  if (block.gapLocked ?? true) update.gapCol = v;
-                  onUpdate(block.id, update);
-                }}
-                className="w-14 px-2 py-0.5 text-sm rounded border border-nokturo-200 dark:border-nokturo-600 bg-white dark:bg-nokturo-800"
+                onChange={(v) => onUpdate(block.id, { aspectRatio: v })}
+                t={t}
               />
-              <button
-                type="button"
-                onClick={() => onUpdate(block.id, { gapLocked: !(block.gapLocked ?? true) })}
-                className={`p-0.5 rounded ${
-                  (block.gapLocked ?? true)
-                    ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                }`}
-                title={t((block.gapLocked ?? true) ? 'richText.gapLocked' : 'richText.gapUnlocked')}
-              >
-                {(block.gapLocked ?? true) ? <Lock size={14} /> : <Unlock size={14} />}
-              </button>
-              <span className="text-xs text-nokturo-500 dark:text-nokturo-400">{t('richText.gapCol')} (px):</span>
-              <div className="relative">
+              <span className="text-xs text-nokturo-500 dark:text-nokturo-400 leading-6">{t('richText.gap')}:</span>
+              <div className="flex items-center gap-0.5">
+                <input
+                  type="number"
+                  min={0}
+                  value={block.gapRow ?? 8}
+                  onChange={(e) => {
+                    const v = Math.max(0, parseInt(e.target.value, 10) || 0);
+                    const update: { gapRow: number; gapCol?: number } = { gapRow: v };
+                    if (block.gapLocked ?? true) update.gapCol = v;
+                    onUpdate(block.id, update);
+                  }}
+                  className="w-10 h-6 px-1.5 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100"
+                />
+                <button
+                  type="button"
+                  onClick={() => onUpdate(block.id, { gapLocked: !(block.gapLocked ?? true) })}
+                  className="w-6 h-6 flex items-center justify-center shrink-0 rounded-[4px] text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300"
+                  title={t((block.gapLocked ?? true) ? 'richText.gapLocked' : 'richText.gapUnlocked')}
+                >
+                  {(block.gapLocked ?? true) ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M4 22V8h3V6q0-2.075 1.463-3.537T12 1t3.538 1.463T17 6v2h3v14zm9.413-5.587Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M9 8h6V6q0-1.25-.875-2.125T12 3t-2.125.875T9 6z"/></svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M13.413 16.413Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M4 22V8h9V6q0-2.075 1.463-3.537T18 1t3.538 1.463T23 6h-2q0-1.25-.875-2.125T18 3t-2.125.875T15 6v2h5v14z"/></svg>
+                  )}
+                </button>
+                <div className="relative w-10 h-6 shrink-0">
                 <input
                   type="number"
                   min={0}
@@ -1030,14 +1138,15 @@ function BlockRenderer({
                     onUpdate(block.id, update);
                   }}
                   disabled={block.gapLocked ?? true}
-                  className="w-14 px-2 py-0.5 text-sm rounded border border-nokturo-200 dark:border-nokturo-600 bg-white dark:bg-nokturo-800 disabled:opacity-100"
+                  className="absolute inset-0 w-full h-full px-1.5 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 disabled:opacity-100"
                 />
                 {(block.gapLocked ?? true) && (
                   <div
-                    className="absolute inset-0 cursor-not-allowed rounded pointer-events-auto bg-white/60 dark:bg-nokturo-800/60"
+                    className="absolute inset-0 rounded-[4px] cursor-not-allowed pointer-events-auto bg-white/60 dark:bg-nokturo-800/60"
                     aria-hidden
                   />
                 )}
+                </div>
               </div>
             </div>
             <div
@@ -1195,7 +1304,7 @@ function BlockRenderer({
               <button
                 type="button"
                 onClick={headerRowCount === 0 ? addHeaderRow : removeHeaderRow}
-                className={`px-2 py-0.5 rounded text-xs ${
+                className={`px-2 py-0.5 rounded-[4px] text-xs ${
                   headerRowCount > 0
                     ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                     : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
@@ -1206,7 +1315,7 @@ function BlockRenderer({
               <button
                 type="button"
                 onClick={headerColumnCount === 0 ? addHeaderColumn : removeHeaderColumn}
-                className={`px-2 py-0.5 rounded text-xs ${
+                className={`px-2 py-0.5 rounded-[4px] text-xs ${
                   headerColumnCount > 0
                     ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                     : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
@@ -1465,6 +1574,29 @@ function BlockRenderer({
         {block.type === 'divider' && (
           <div className="my-6 py-2">
             <hr className="border-0 border-t border-nokturo-300 dark:border-nokturo-600" />
+          </div>
+        )}
+
+        {block.type === 'tag' && (
+          <div className="mb-4">
+            <div className="flex items-center gap-2 mb-2">
+              <label className="flex items-center gap-1.5 text-xs text-nokturo-600 dark:text-nokturo-400 shrink-0">
+                <input
+                  type="checkbox"
+                  checked={block.visible !== false}
+                  onChange={(e) => onUpdate(block.id, { visible: e.target.checked })}
+                  className="rounded-[4px] border-nokturo-300 dark:border-nokturo-600"
+                />
+                {t('richText.tagVisible')}
+              </label>
+            </div>
+            <input
+              type="text"
+              value={block.text}
+              onChange={(e) => onUpdate(block.id, { text: e.target.value })}
+              placeholder={t('richText.tagPlaceholder')}
+              className="w-full text-xs uppercase tracking-[0.2em] font-normal text-nokturo-600 dark:text-nokturo-400 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500"
+            />
           </div>
         )}
       </div>

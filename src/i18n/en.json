@@ -232,6 +232,10 @@
       "currentPasswordNote": "Enter a new password for your account.",
       "newPassword": "New Password",
       "confirmPassword": "Confirm New Password"
+    },
+    "styleGuide": {
+      "title": "Style Guide",
+      "description": "UI primitives and components used in the app"
     }
   },
   "materials": {
@@ -360,6 +364,7 @@
     "design": "Design",
     "uploadDesign": "Upload design",
     "changeDesign": "Change design",
+    "replaceDesign": "Replace",
     "material": "Material",
     "noMaterial": "— No material —",
     "searchPlaceholder": "Search labels...",
@@ -463,6 +468,7 @@
       "selectPlacement": "Select placement"
     },
     "designGallery": "Design gallery",
+    "uploadImages": "Upload images",
     "designGalleryCaption": "Add caption",
     "previewPhoto": "Preview photo",
     "previewPhotoUpload": "Upload preview photo",
@@ -802,6 +808,9 @@
     "chooseBlock": "Choose block type",
     "heading": "Heading",
     "paragraph": "Paragraph",
+    "tag": "Tag",
+    "tagPlaceholder": "TOC anchor label...",
+    "tagVisible": "Visible",
     "paragraphNormal": "Normal",
     "paragraphLarge": "Large",
     "paragraphSmall": "Small",
@@ -822,6 +831,7 @@
     "aspectRatio169": "16:9",
     "gapRow": "Row gap",
     "gapCol": "Column gap",
+    "gap": "Gap",
     "gapLocked": "Gaps are linked – changing one updates both",
     "gapUnlocked": "Gaps are independent – click to link",
     "captionPlaceholder": "Image caption...",
@@ -857,8 +867,8 @@
     "tableOfContents": "Table of Contents",
     "pageStructure": "Page structure",
     "defaultToc": {
-      "seamFinishing": "Seam finishing",
-      "hardware": "Hardware"
+"seamFinishing": "Placeholder",
+    "hardware": "Placeholder"
     }
   },
   "magazine": {
@@ -907,6 +917,9 @@
     "autoDeleteIn": "Auto-deletes in",
     "days": "days",
     "day": "day",
+    "daysLeft": "{{count}} days left",
+    "daysLeftOne": "1 day left",
+    "dueToday": "Due today",
     "addFirstTask": "Create your first task.",
     "completedOn": "Completed",
     "due": "Due",

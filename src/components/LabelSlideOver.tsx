@@ -2,12 +2,13 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, ImageIcon, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
+import { X, Loader2, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
+import { UploadImageIcon } from './icons/UploadImageIcon';
 import {
   NotionSelect,
   type NotionSelectOption,
 } from './NotionSelect';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Types shared with LabelsPage ─────────────────────────
 export interface Label {
@@ -195,12 +196,12 @@ export function LabelSlideOver({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
+          <h3 className={MODAL_HEADING_CLASS}>
             {label ? t('labels.editLabel') : t('labels.addLabel')}
           </h3>
           <div className="flex items-center gap-2">
@@ -215,7 +216,7 @@ export function LabelSlideOver({
                 {menuOpen && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                    <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
                       {onDuplicate && (
                         <button
                           onClick={() => { onDuplicate(label); setMenuOpen(false); }}
@@ -228,7 +229,7 @@ export function LabelSlideOver({
                       {canDelete && onDelete && (
                         <button
                           onClick={() => { onDelete(label.id); setMenuOpen(false); }}
-                          className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           {t('common.delete')}
@@ -320,28 +321,68 @@ export function LabelSlideOver({
             <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
               {t('labels.design')}
             </label>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="relative rounded-lg overflow-hidden cursor-pointer bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors aspect-[16/9]"
-            >
-              {designPreview ? (
-                <img
-                  src={designPreview}
-                  alt="Design"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400">
-                  <ImageIcon className="w-8 h-8 mb-2" />
-                  <span className="text-sm">{t('labels.uploadDesign')}</span>
+            {designPreview ? (
+              <div className="relative w-full group">
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full block text-left"
+                >
+                  <img
+                    src={designPreview}
+                    alt="Design"
+                    className="w-full aspect-[16/9] object-cover rounded-lg group-hover:opacity-90 transition-opacity"
+                  />
+                </button>
+                <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                    className="px-2 py-1 text-xs text-white bg-black/60 hover:bg-black/80 rounded transition-colors"
+                  >
+                    {t('labels.replaceDesign')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setDesignFile(null); setDesignPreview(null); }}
+                    className="px-2 py-1 text-xs text-white bg-red-500/90 hover:bg-red-600 rounded transition-colors"
+                  >
+                    {t('common.delete')}
+                  </button>
                 </div>
-              )}
-              {uploading && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
-                </div>
-              )}
-            </div>
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg pointer-events-none">
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer?.files?.[0];
+                  if (file?.type.startsWith('image/')) {
+                    setDesignFile(file);
+                    setDesignPreview(URL.createObjectURL(file));
+                  }
+                }}
+                className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
+              >
+                {uploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <UploadImageIcon className="w-4 h-4" size={16} />
+                    {t('labels.uploadDesign')}
+                  </>
+                )}
+              </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -349,15 +390,6 @@ export function LabelSlideOver({
               onChange={handleDesignSelect}
               className="hidden"
             />
-            {designPreview && (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="text-xs text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 mt-1.5 transition-colors"
-              >
-                {t('labels.changeDesign')}
-              </button>
-            )}
           </div>
 
           {error && (

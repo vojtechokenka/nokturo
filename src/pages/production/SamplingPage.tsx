@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import { ProductCard } from '../../components/ProductCard';
 import type { ProductWithMaterials } from '../../components/ProductSlideOver';
-import { Package, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export default function SamplingPage() {
   const { t } = useTranslation();
@@ -71,6 +71,10 @@ export default function SamplingPage() {
     <PageShell
       titleKey="pages.readyForSampling.title"
       descriptionKey="pages.readyForSampling.description"
+      compactContent
+      noHorizontalPadding
+      noContentPadding
+      contentBg="black"
     >
       {loading ? (
         <div className="flex items-center justify-center py-32">
@@ -78,7 +82,6 @@ export default function SamplingPage() {
         </div>
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Package className="w-12 h-12 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">
             {t('products.sampling.noProducts')}
           </p>

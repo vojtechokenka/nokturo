@@ -1,124 +1,19 @@
-import { useState, useEffect, useRef } from 'react';
-import { Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
-import { NotificationCenter } from '../components/NotificationCenter';
 import { ToastContainer } from '../components/Toast';
-import { DefaultAvatar } from '../components/DefaultAvatar';
-import { useAuthStore, getCachedAvatarUrl } from '../stores/authStore';
+import { ProfileDropdown } from '../components/ProfileDropdown';
+import { useAuthStore } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { useToastStore } from '../stores/toastStore';
-import { supabase } from '../lib/supabase';
-import { Loader2, Menu, ClipboardList, Settings, LogOut } from 'lucide-react';
+import { Loader2, Menu } from 'lucide-react';
+import { MyTasksIcon } from '../components/icons/MyTasksIcon';
 import { useTranslation } from 'react-i18next';
-
-function ProfileDropdown() {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const [open, setOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  const handleLogout = async () => {
-    setOpen(false);
-    setIsLoggingOut(true);
-    try {
-      if (import.meta.env.DEV && import.meta.env.VITE_DEV_BYPASS_AUTH === 'true') {
-        useAuthStore.getState().logout();
-      } else {
-        await supabase.auth.signOut();
-      }
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
-
-  return (
-    <>
-      {isLoggingOut && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3 rounded-xl bg-white dark:bg-nokturo-800 px-6 py-5 shadow-xl">
-            <Loader2 className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
-            <span className="text-sm text-nokturo-700 dark:text-nokturo-300">{t('common.loggingOut')}</span>
-          </div>
-        </div>
-      )}
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="relative shrink-0 w-8 h-8 rounded-full overflow-hidden bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center hover:ring-2 hover:ring-nokturo-400 dark:hover:ring-nokturo-500 transition-all focus:outline-none"
-      >
-        {(user?.avatarUrl || (user?.id && getCachedAvatarUrl(user.id))) ? (
-          <img src={user?.avatarUrl || (user?.id ? getCachedAvatarUrl(user.id) : '')} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <DefaultAvatar size={32} />
-        )}
-      </button>
-
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 w-52 bg-white dark:bg-nokturo-800 rounded-xl shadow-xl z-20 overflow-hidden border border-nokturo-200 dark:border-nokturo-700">
-            {/* User info */}
-            <div className="px-4 py-3 border-b border-nokturo-200/60 dark:border-nokturo-700/60">
-              <div className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 truncate">
-                {user?.firstName || user?.name}
-              </div>
-              <div className="text-xs text-nokturo-600 dark:text-nokturo-400 truncate">
-                {user?.role && t(`roles.${user.role}`)}
-              </div>
-            </div>
-
-            {/* Menu items */}
-            <div className="py-1">
-              <button
-                onClick={() => { setOpen(false); navigate('/tasks'); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors"
-              >
-                <ClipboardList className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
-                {t('tasks.myTasks')}
-              </button>
-              <button
-                onClick={() => { setOpen(false); navigate('/settings/account'); }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors"
-              >
-                <Settings className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
-                {t('common.settings')}
-              </button>
-              <button
-                onClick={handleLogout}
-                disabled={isLoggingOut}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoggingOut ? (
-                  <Loader2 className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
-                ) : (
-                  <LogOut className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
-                )}
-                {isLoggingOut ? t('common.loggingOut') : t('common.logout')}
-              </button>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-    </>
-  );
-}
 
 export function AppLayout() {
   const { t } = useTranslation();
+  const location = useLocation();
+  const isBareLayout = location.pathname.includes('moodboard') || location.pathname.includes('ideas');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const isLoading = useAuthStore((s) => s.isLoading);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
@@ -178,18 +73,27 @@ export function AppLayout() {
         </div>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto bg-nokturo-50 dark:bg-nokturo-900">
+        <main className="flex-1 flex flex-col overflow-hidden bg-nokturo-50 dark:bg-black">
           {/* Sticky top bar */}
-          <div className="sticky top-0 z-30 bg-nokturo-200 dark:bg-nokturo-700">
-            <div className="flex items-center gap-2 px-4 sm:px-6 h-[52px]">
+          <div className="shrink-0 z-30 bg-nokturo-200 dark:bg-black">
+            <div className="flex items-center gap-2 px-4 sm:px-6 h-[60px]">
+              <Link
+                to="/tasks"
+                className="flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
+              >
+                <MyTasksIcon size={16} className="shrink-0 text-nokturo-500 dark:text-nokturo-400" />
+                {t('tasks.myTasks')}
+              </Link>
               <div className="flex-1" />
-              <NotificationCenter />
               <ProfileDropdown />
             </div>
           </div>
-          <ErrorBoundary>
-            <Outlet />
-          </ErrorBoundary>
+          {/* Frame – padding + window stay fixed, content scrolls inside window (no padding for Moodboard) */}
+          <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pl-6 pr-6 pb-6'}`}>
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
+          </div>
         </main>
       </div>
 

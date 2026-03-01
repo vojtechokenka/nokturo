@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { EyeIcon } from './icons/EyeIcon';
+import { EyeOffIcon } from './icons/EyeOffIcon';
 import { INPUT_CLASS } from '../lib/inputStyles';
 
 interface PasswordInputProps
@@ -51,9 +52,9 @@ export function PasswordInput({
         className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-600 dark:hover:text-nokturo-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-nokturo-500 select-none"
       >
         {reveal ? (
-          <Eye className="w-4 h-4" />
+          <EyeIcon className="w-4 h-4" size={16} />
         ) : (
-          <EyeOff className="w-4 h-4" />
+          <EyeOffIcon className="w-4 h-4" size={16} />
         )}
       </button>
     </div>

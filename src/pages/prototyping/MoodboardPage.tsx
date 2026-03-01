@@ -17,20 +17,18 @@ import {
 import {
   Plus,
   X,
-  Upload,
   Loader2,
-  Trash2,
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
   Link2,
-  LayoutGrid,
-  Pencil,
   MoreVertical,
   GripVertical,
-  Images,
 } from 'lucide-react';
-import { INPUT_CLASS } from '../../lib/inputStyles';
+import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
+import { useMentionSuggestions, MentionDropdown } from '../../components/MentionSuggestions';
+import type { MentionProfile } from '../../components/MentionSuggestions';
+import { INPUT_CLASS, MODAL_HEADING_CLASS, TEXTAREA_CLASS } from '../../lib/inputStyles';
 import { distributeToColumns } from '../../utils/masonryColumns';
 
 const inputClass = INPUT_CLASS;
@@ -98,7 +96,7 @@ export default function MoodboardPage() {
   const [uploadNotes, setUploadNotes] = useState('');
   const [uploadComment, setUploadComment] = useState('');
   const [uploadTaggedUsers, setUploadTaggedUsers] = useState<string[]>([]);
-  const [uploadProfiles, setUploadProfiles] = useState<{ id: string; first_name: string | null; last_name: string | null; full_name: string | null }[]>([]);
+  const [uploadProfiles, setUploadProfiles] = useState<MentionProfile[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const [urlError, setUrlError] = useState('');
@@ -352,10 +350,10 @@ export default function MoodboardPage() {
   const fetchUploadProfiles = useCallback(async () => {
     const { data } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, full_name');
+      .select('id, first_name, last_name, full_name, avatar_url');
     const uid = user?.id;
     setUploadProfiles(
-      ((data || []) as { id: string; first_name: string | null; last_name: string | null; full_name: string | null }[])
+      ((data || []) as { id: string; first_name: string | null; last_name: string | null; full_name: string | null; avatar_url?: string | null }[])
         .filter((p) => p.id !== uid)
     );
   }, [user?.id]);
@@ -363,6 +361,17 @@ export default function MoodboardPage() {
   useEffect(() => {
     if (showUpload) fetchUploadProfiles();
   }, [showUpload, fetchUploadProfiles]);
+
+  const uploadMention = useMentionSuggestions(uploadComment, uploadProfiles);
+
+  const handleUploadMentionSelect = useCallback((profile: MentionProfile) => {
+    const newValue = uploadMention.applyMention(profile);
+    setUploadComment(newValue);
+    if (!uploadTaggedUsers.includes(profile.id)) {
+      setUploadTaggedUsers((prev) => [...prev, profile.id]);
+    }
+    uploadMention.closeDropdown();
+  }, [uploadMention, uploadTaggedUsers]);
 
   // Populate edit form when editTarget changes
   useEffect(() => {
@@ -840,45 +849,39 @@ export default function MoodboardPage() {
     <PageShell
       titleKey="pages.moodboard.title"
       descriptionKey="pages.moodboard.description"
-    >
-      {/* ── Action bar ──────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-
-        {/* Category filter (multiselect) */}
-        <div className="shrink-0">
+      bare
+      actionsSlot={
+        <>
+          <button
+            onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
+            className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+            title={t('moodboard.layoutCycle')}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 opacity-50"><path fill="currentColor" d="M3 21v-6h8v6zm10 0V11h8v10zM3 13V3h8v10zm10-4V3h8v6z"/></svg>
+          </button>
           <NotionSelect
             value={categoryFilter}
             onChange={(v) => setCategoryFilter(Array.isArray(v) ? v : v ? [v] : [])}
             options={categories}
+            onOptionsChange={handleCategoriesChange}
             placeholder={t('moodboard.allCategories')}
             optionsI18nKey="moodboard.categories"
             multiple
             filterStyle
           />
-        </div>
-
-        {/* Add button + layout toggle */}
-        <div className="flex gap-3 shrink-0">
-          <button
-            onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
-            className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-lg hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
-            title={t('moodboard.layoutCycle')}
-          >
-            <LayoutGrid className="w-4 h-4" />
-          </button>
           <button
             onClick={() => setShowUpload(true)}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="flex items-center justify-center gap-2 h-9 shrink-0 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="w-4 h-4" />
             {t('moodboard.addItem')}
           </button>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
-        <div className="flex gap-4">
+        <div className="flex gap-4 px-4 sm:px-6">
           {Array.from({ length: Math.max(1, effectiveColumns) }).map((_, colIdx) => (
             <div key={colIdx} className="flex flex-col gap-4 flex-1 min-w-0">
               {Array.from({ length: 4 }).map((_, i) => (
@@ -888,14 +891,14 @@ export default function MoodboardPage() {
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
           <ImageIcon className="w-12 h-12 text-nokturo-600 mb-4" />
           <p className="text-nokturo-600 font-medium">{t('moodboard.noItems')}</p>
           <p className="text-nokturo-500 text-sm mt-1">{t('moodboard.addFirst')}</p>
         </div>
       ) : (
         /* Masonry grid – left-to-right distribution (Pinterest-style) */
-        <div className="flex gap-4">
+        <div className="flex gap-4 px-4 sm:px-6 pb-4">
           {columns.map((col, colIndex) => (
             <div key={colIndex} className="flex flex-col gap-4 flex-1 min-w-0">
               {col.map((item) => (
@@ -907,27 +910,28 @@ export default function MoodboardPage() {
               {/* Unread comments indicator – red dot inside card, top-left */}
               {unreadCounts[item.id] > 0 && (
                 <span
-                  className="absolute top-3 left-3 z-10 w-4 h-4 rounded-full"
+                  className="absolute top-3 left-3 z-10 w-[10px] h-[10px] rounded-full"
                   style={{ backgroundColor: '#FF1A1A' }}
                   aria-hidden
                 />
               )}
-              <div className="relative rounded-lg overflow-hidden">
+              <div className={`moodboard-card-image relative ${cardMenuOpen === item.id ? 'overflow-visible' : 'overflow-hidden'}`}>
                 <img
                   src={item.image_url}
                   alt={item.title || 'Moodboard'}
-                  className="w-full object-cover rounded-lg"
+                  className="w-full object-cover moodboard-card-image"
                   loading="lazy"
                 />
                 {/* Multi-image badge */}
                 {item.sub_images && item.sub_images.length > 0 && (
-                  <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/60 text-white text-xs px-1.5 py-0.5 rounded z-[1]">
-                    <Images className="w-3 h-3" />
-                    <span>{1 + item.sub_images.length}</span>
+                  <div className="absolute bottom-2 left-2 flex items-center justify-center bg-black/60 text-white p-1 rounded-[4px] z-[1]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" className="text-white">
+                      <path fill="currentColor" d="M1 19V5h14v14zm16-8V5h6v6zM4 15h8l-2.625-3.5L7.5 14l-1.375-1.825zm13 4v-6h6v6z" />
+                    </svg>
                   </div>
                 )}
                 {/* Hover overlay – three-dot menu */}
-                <div className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-start justify-end p-2">
+                <div className="moodboard-card-image absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-2">
                   <div className="relative" data-card-menu>
                     <button
                       onClick={(e) => {
@@ -939,20 +943,18 @@ export default function MoodboardPage() {
                       <MoreVertical className="w-4 h-4" />
                     </button>
                     {cardMenuOpen === item.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20" onClick={(e) => e.stopPropagation()}>
+                      <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 px-1 min-w-[120px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => { openEdit(item); setCardMenuOpen(null); }}
-                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
                         >
-                          <Pencil className="w-3 h-3" />
                           {t('common.edit')}
                         </button>
                         {canDelete && (
                           <button
                             onClick={() => { setDeleteTarget(item.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
                           >
-                            <Trash2 className="w-3 h-3" />
                             {t('common.delete')}
                           </button>
                         )}
@@ -968,20 +970,18 @@ export default function MoodboardPage() {
         </div>
       )}
 
-      {/* ── Upload Modal ────────────────────────────────────── */}
+      {/* ── Upload Slide-over ────────────────────────────────────── */}
       {showUpload && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={resetUpload}
-          role="dialog"
-          aria-modal="true"
-        >
+        <>
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" onClick={resetUpload} aria-hidden="true" />
           <div
-            className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-modal-in"
+            className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">{t('moodboard.addItem')}</h3>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
+              <h3 className={MODAL_HEADING_CLASS}>{t('moodboard.addItem')}</h3>
               <button
                 onClick={resetUpload}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
@@ -989,7 +989,7 @@ export default function MoodboardPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
             {/* Hidden multi-file input */}
             <input
               ref={fileInputRef}
@@ -1008,16 +1008,16 @@ export default function MoodboardPage() {
             {uploadImages.length === 0 ? (
               <>
                 <div
+                  role="button"
+                  tabIndex={0}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className="rounded-lg p-8 text-center cursor-pointer bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
+                  onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                  className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
                 >
-                  <Upload className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 mx-auto mb-2" />
-                  <p className="text-nokturo-600 dark:text-nokturo-300 text-sm">{t('moodboard.dropOrClick')}</p>
-                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs mt-1">
-                    {t('moodboard.supportedFormats')}
-                  </p>
+                  <UploadImageIcon className="w-4 h-4" size={16} />
+                  {t('ideas.uploadImage')}
                 </div>
 
                 {/* URL input – below drop zone */}
@@ -1064,13 +1064,13 @@ export default function MoodboardPage() {
                       onDragStart={() => handleImgDragStart(idx)}
                       onDragOver={(e) => handleImgDragOver(e, idx)}
                       onDragEnd={handleImgDragEnd}
-                      className={`relative group rounded-lg overflow-hidden cursor-grab active:cursor-grabbing ${
+                      className={`moodboard-card-image relative group overflow-hidden cursor-grab active:cursor-grabbing ${
                         idx === 0 ? 'ring-2 ring-blue-400' : ''
                       } ${dragImgIdx === idx ? 'opacity-40' : ''}`}
                     >
                       <img src={img.preview} alt="" className="w-full aspect-square object-cover" />
                       {idx === 0 && (
-                        <span className="absolute top-1 left-1 text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-medium leading-tight">
+                        <span className="absolute top-1 left-1 text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-[4px] font-medium leading-tight">
                           Cover
                         </span>
                       )}
@@ -1155,7 +1155,7 @@ export default function MoodboardPage() {
                   onChange={(e) => setUploadNotes(e.target.value)}
                   placeholder={t('moodboard.notesPlaceholder')}
                   rows={2}
-                  className={`${inputClass} resize-none`}
+                  className={`${TEXTAREA_CLASS} min-h-[80px] resize-none`}
                 />
               </div>
 
@@ -1172,6 +1172,7 @@ export default function MoodboardPage() {
                   optionsI18nKey="moodboard.categories"
                   multiple
                   canDelete={canDelete}
+                  inlineChips
                 />
               </div>
 
@@ -1179,37 +1180,31 @@ export default function MoodboardPage() {
                 <label className="block text-sm text-nokturo-700 dark:text-nokturo-300 mb-1">
                   {t('moodboard.commentAndTag')}
                 </label>
-                <textarea
-                  value={uploadComment}
-                  onChange={(e) => setUploadComment(e.target.value)}
-                  placeholder={t('moodboard.tagUserPlaceholder')}
-                  rows={2}
-                  className={`${inputClass} resize-none`}
-                />
-                {uploadProfiles.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {uploadProfiles.map((p) => {
-                      const name = [p.first_name, p.last_name].filter(Boolean).join(' ') || p.full_name || '?';
-                      const selected = uploadTaggedUsers.includes(p.id);
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() =>
-                            setUploadTaggedUsers((prev) =>
-                              selected ? prev.filter((id) => id !== p.id) : [...prev, p.id]
-                            )
-                          }
-                          className={`text-xs px-2 py-1 rounded transition-colors ${
-                            selected ? 'bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900' : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                          }`}
-                        >
-                          {name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                <div className="relative">
+                  {uploadMention.active && (
+                    <MentionDropdown
+                      profiles={uploadMention.filtered}
+                      selectedIdx={uploadMention.selectedIdx}
+                      onSelect={handleUploadMentionSelect}
+                    />
+                  )}
+                  <textarea
+                    value={uploadComment}
+                    onChange={(e) => setUploadComment(e.target.value)}
+                    onKeyDown={(e) => {
+                      const result = uploadMention.handleKeyDown(e);
+                      if (result === 'select') {
+                        const p = uploadMention.getSelectedProfile();
+                        if (p) handleUploadMentionSelect(p);
+                        return;
+                      }
+                      if (result) e.preventDefault();
+                    }}
+                    placeholder={t('moodboard.tagUserPlaceholder')}
+                    rows={2}
+                    className={`${TEXTAREA_CLASS} min-h-[80px] resize-none`}
+                  />
+                </div>
               </div>
             </div>
 
@@ -1237,22 +1232,23 @@ export default function MoodboardPage() {
                 {uploading ? t('moodboard.uploading') : t('moodboard.upload')}
               </button>
             </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* ── Edit Modal ───────────────────────────────────────── */}
       {editTarget && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
           onClick={closeEdit}
         >
           <div
-            className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-modal-in"
+            className="bg-nokturo-900 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto animate-modal-in shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">{t('moodboard.editItem')}</h3>
+              <h3 className={MODAL_HEADING_CLASS}>{t('moodboard.editItem')}</h3>
               <button
                 onClick={closeEdit}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
@@ -1266,7 +1262,7 @@ export default function MoodboardPage() {
                 <img
                   src={editTarget.image_url}
                   alt={editTarget.title || 'Moodboard'}
-                  className="w-full rounded-lg max-h-48 object-cover"
+                  className="moodboard-card-image w-full max-h-48 object-cover"
                 />
               </div>
             </div>
@@ -1294,7 +1290,7 @@ export default function MoodboardPage() {
                   onChange={(e) => setEditNotes(e.target.value)}
                   placeholder={t('moodboard.notesPlaceholder')}
                   rows={2}
-                  className={`${inputClass} resize-none`}
+                  className={`${TEXTAREA_CLASS} min-h-[80px] resize-none`}
                 />
               </div>
 
@@ -1311,6 +1307,7 @@ export default function MoodboardPage() {
                   optionsI18nKey="moodboard.categories"
                   multiple
                   canDelete={canDelete}
+                  inlineChips
                 />
               </div>
             </div>
@@ -1364,7 +1361,7 @@ export default function MoodboardPage() {
         const totalImages = items.reduce((acc, it) => acc + 1 + (it.sub_images?.length || 0), 0);
         return (
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex flex-col lg:flex-row"
+          className="fixed inset-0 z-50 bg-black/80 flex flex-col lg:flex-row"
           onClick={() => setLightboxIndex(null)}
         >
           {/* 1. Photo area (left) */}
@@ -1392,25 +1389,25 @@ export default function MoodboardPage() {
               </>
             )}
 
-            {/\.svg(\?|$)/i.test(lbImageUrl) ? (
-              <img
-                src={lbImageUrl}
-                alt={lbItem.title || 'Moodboard'}
-                width={400}
-                height={400}
-                className="max-w-full max-h-[50vh] lg:max-h-[85vh] object-contain rounded-lg aspect-square shrink-0"
-                style={{ imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] }}
-                loading="eager"
-                onClick={(e) => e.stopPropagation()}
-              />
-            ) : (
-              <img
-                src={lbImageUrl}
-                alt={lbItem.title || 'Moodboard'}
-                className="max-w-full max-h-[50vh] lg:max-h-[85vh] w-auto h-auto object-contain rounded-lg"
-                onClick={(e) => e.stopPropagation()}
-              />
-            )}
+            <div className="moodboard-card-image overflow-hidden max-w-full max-h-[50vh] lg:max-h-[85vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+              {/\.svg(\?|$)/i.test(lbImageUrl) ? (
+                <img
+                  src={lbImageUrl}
+                  alt={lbItem.title || 'Moodboard'}
+                  width={400}
+                  height={400}
+                  className="max-w-full max-h-[50vh] lg:max-h-[85vh] object-contain aspect-square shrink-0"
+                  style={{ imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] }}
+                  loading="eager"
+                />
+              ) : (
+                <img
+                  src={lbImageUrl}
+                  alt={lbItem.title || 'Moodboard'}
+                  className="max-w-full max-h-[50vh] lg:max-h-[85vh] w-auto h-auto object-contain"
+                />
+              )}
+            </div>
 
             {/* Mini-gallery thumbnails */}
             {lbGallery.length > 1 && (
@@ -1452,16 +1449,15 @@ export default function MoodboardPage() {
                   <MoreVertical className="w-5 h-5" />
                 </button>
                 {lightboxMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20">
+                  <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 px-1 min-w-[120px] z-20 overflow-hidden">
                     <button
                       onClick={() => {
                         openEdit(lbItem);
                         setLightboxIndex(null);
                         setLightboxMenuOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
                       {t('common.edit')}
                     </button>
                     {canDelete && (
@@ -1471,9 +1467,8 @@ export default function MoodboardPage() {
                           setLightboxIndex(null);
                           setLightboxMenuOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -1485,30 +1480,34 @@ export default function MoodboardPage() {
 
           {/* 2. Modal: info + comments (right) */}
           <div
-            className="w-full lg:w-80 xl:w-96 bg-white dark:bg-nokturo-800 flex flex-col overflow-hidden shrink-0 max-h-[40vh] lg:max-h-none order-2"
+            className="w-full lg:w-[380px] bg-white dark:bg-black flex flex-col overflow-hidden shrink-0 max-h-[40vh] lg:max-h-none order-2"
             onClick={(e) => e.stopPropagation()}
           >
             {(lbItem.title || lbItem.notes || (lbItem.categories && lbItem.categories.length > 0)) && (
-              <div className="px-4 pt-3 pb-2 shrink-0 space-y-0.5">
-                {lbItem.title && (
-                  <p className="text-nokturo-900 dark:text-nokturo-100 font-medium text-sm truncate">
-                    {lbItem.title}
-                  </p>
-                )}
-                {lbItem.notes && (
-                  <p className="text-nokturo-600 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap mb-2">
-                    {lbItem.notes}
-                  </p>
+              <div className="px-6 pt-6 pb-6 shrink-0 flex flex-col gap-4 bg-white/5">
+                {(lbItem.title || lbItem.notes) && (
+                  <div className="flex flex-col gap-1">
+                    {lbItem.title && (
+                      <p className="text-nokturo-900 dark:text-nokturo-100 font-medium text-sm truncate">
+                        {lbItem.title}
+                      </p>
+                    )}
+                    {lbItem.notes && (
+                      <p className="text-nokturo-600 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap">
+                        {lbItem.notes}
+                      </p>
+                    )}
+                  </div>
                 )}
                 {lbItem.categories && lbItem.categories.length > 0 && (
-                  <div className="flex flex-wrap gap-1 pt-0.5">
+                  <div className="flex flex-wrap gap-1 mt-0 pt-0 pb-0">
                     {lbItem.categories!.map((cat) => {
                       const catOption = categories.find((c) => c.name === cat);
                       const colorClass = TAG_COLORS[catOption?.color ?? 'gray'] ?? TAG_COLORS.gray;
                       return (
                         <span
                           key={cat}
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${colorClass}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium shrink-0 ${colorClass}`}
                         >
                           {t(`moodboard.categories.${cat}`) !== `moodboard.categories.${cat}`
                             ? t(`moodboard.categories.${cat}`)
@@ -1521,7 +1520,7 @@ export default function MoodboardPage() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto min-h-0 flex flex-col px-4 pb-4">
+            <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
               <MoodboardComments
                 moodboardItemId={lbItem.id}
                 hasHeaderAbove={!!(lbItem.title || lbItem.notes || (lbItem.categories && lbItem.categories.length > 0))}
@@ -1534,9 +1533,9 @@ export default function MoodboardPage() {
 
       {/* ── Delete confirmation ─────────────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">{t('common.confirm')}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
               {t('moodboard.deleteConfirm')}
             </p>
@@ -1549,7 +1548,7 @@ export default function MoodboardPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/25 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

@@ -4,6 +4,7 @@ import { useExchangeRates, convertToCzk, CURRENCIES } from '../lib/currency';
 import type { ProductWithMaterials, ProductTechPack } from './ProductSlideOver';
 import { ProductComments } from './ProductComments';
 import { RichTextBlockViewer } from './RichTextBlockViewer';
+import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import type { RichTextBlock } from './RichTextBlockEditor';
 
 // ── Status badge colours ──────────────────────────────────────
@@ -55,15 +56,15 @@ export function ProductTechPack({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel — wider than the form slide-over */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-nokturo-800 border-l border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-2xl bg-nokturo-900 shadow-2xl flex flex-col">
         {/* ── Header ───────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-700 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-white">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0">
+          <h3 className={MODAL_HEADING_CLASS}>
             {t('products.techPack.title')}
           </h3>
           <div className="flex items-center gap-2">
@@ -105,7 +106,7 @@ export function ProductTechPack({
                   )}
                 </div>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${
+                  className={`text-xs px-2 py-0.5 rounded-[4px] font-medium shrink-0 ${
                     STATUS_COLORS[product.status] ?? STATUS_COLORS.concept
                   }`}
                 >

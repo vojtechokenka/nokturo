@@ -15,7 +15,6 @@ import { ProductCard } from '../../components/ProductCard';
 import { FilterGroup } from '../../components/FilterGroup';
 import {
   Plus,
-  Package,
   Loader2,
 } from 'lucide-react';
 
@@ -124,61 +123,60 @@ export default function ProductsPage() {
     <PageShell
       titleKey="pages.products.title"
       descriptionKey="pages.products.description"
-    >
-      {/* ── Action bar ──────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-        {/* Clear filters (when active) */}
-        {hasActiveFilters && (
+      compactContent
+      noHorizontalPadding
+      noContentPadding
+      contentBg="black"
+      actionsSlot={
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+            >
+              {t('common.clearFilters')}
+            </button>
+          )}
+          <FilterGroup
+            titleKey="products.filterTitle"
+            sections={[
+              {
+                labelKey: 'products.filterByCategory',
+                value: categoryFilter,
+                onChange: setCategoryFilter,
+                options: [
+                  { value: 'all', label: t('products.allCategories') },
+                  ...PRODUCT_CATEGORIES.map((cat) => ({
+                    value: cat,
+                    label: t(`products.categories.${cat}`),
+                  })),
+                ],
+              },
+              {
+                labelKey: 'products.filterByStatus',
+                value: statusFilter,
+                onChange: setStatusFilter,
+                options: [
+                  { value: 'all', label: t('products.allStatuses') },
+                  ...PRODUCT_STATUSES.map((s) => ({
+                    value: s,
+                    label: t(`products.statuses.${s}`),
+                  })),
+                ],
+              },
+            ]}
+          />
           <button
-            type="button"
-            onClick={clearFilters}
-            className="text-sm text-nokturo-600 hover:text-nokturo-900 px-2 py-1 rounded hover:bg-nokturo-100 transition-colors shrink-0"
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            {t('common.clearFilters')}
+            <Plus className="w-4 h-4" />
+            {t('products.addProduct')}
           </button>
-        )}
-
-        {/* Filters (merged) */}
-        <FilterGroup
-          titleKey="products.filterTitle"
-          sections={[
-            {
-              labelKey: 'products.filterByCategory',
-              value: categoryFilter,
-              onChange: setCategoryFilter,
-              options: [
-                { value: 'all', label: t('products.allCategories') },
-                ...PRODUCT_CATEGORIES.map((cat) => ({
-                  value: cat,
-                  label: t(`products.categories.${cat}`),
-                })),
-              ],
-            },
-            {
-              labelKey: 'products.filterByStatus',
-              value: statusFilter,
-              onChange: setStatusFilter,
-              options: [
-                { value: 'all', label: t('products.allStatuses') },
-                ...PRODUCT_STATUSES.map((s) => ({
-                  value: s,
-                  label: t(`products.statuses.${s}`),
-                })),
-              ],
-            },
-          ]}
-        />
-
-        {/* Add button */}
-        <button
-          onClick={openAdd}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('products.addProduct')}
-        </button>
-      </div>
-
+        </div>
+      }
+    >
       {/* ── Content area ────────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -186,7 +184,6 @@ export default function ProductsPage() {
         </div>
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Package className="w-12 h-12 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 font-medium">
             {hasActiveFilters ? t('products.noMatch') : t('products.noProducts')}
           </p>

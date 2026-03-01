@@ -6,7 +6,8 @@ import { SelectField } from '../../components/SelectField';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { UserPlus, Loader2, Copy, Check, ArrowLeft } from 'lucide-react';
+import { Loader2, Copy, Check, ArrowLeft } from 'lucide-react';
+import { UsersIcon } from '../../components/icons/UsersIcon';
 import type { Role } from '../../lib/rbac';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
@@ -183,7 +184,7 @@ export default function UsersPage() {
             <ArrowLeft className="w-4 h-4" />
             {t('settings.users.backToSettings')}
           </Link>
-          <h1 className="text-heading-2 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">
+          <h1 className="text-heading-3 font-medium text-nokturo-900 dark:text-nokturo-100 mb-2">
             {t('settings.users.title')}
           </h1>
           <p className="text-nokturo-600 dark:text-nokturo-400">
@@ -204,7 +205,7 @@ export default function UsersPage() {
           <ArrowLeft className="w-4 h-4" />
           {t('settings.users.backToSettings')}
         </Link>
-        <h1 className="text-heading-2 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-1">
+        <h1 className="text-heading-3 font-medium text-nokturo-900 dark:text-nokturo-100 mb-1">
           {t('settings.users.title')}
         </h1>
         <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-6">
@@ -304,7 +305,7 @@ export default function UsersPage() {
                 type="password"
                 value={customPassword}
                 onChange={(e) => setCustomPassword(e.target.value)}
-                className="mt-2 w-full px-3 py-2 rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-400 border border-nokturo-300 dark:border-nokturo-600 focus:outline-none focus:ring-2 focus:ring-nokturo-500 transition-colors"
+                className="mt-2 w-full h-11 px-3 py-2 rounded-[6px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-400 focus:outline-none focus:ring-2 focus:ring-nokturo-500 transition-colors"
                 placeholder={t('settings.users.customPasswordPlaceholder')}
                 minLength={8}
               />
@@ -338,8 +339,8 @@ export default function UsersPage() {
           )}
 
           {result && (
-            <div className="bg-green-50 dark:bg-green-900/30 rounded-lg p-4 space-y-3">
-              <p className="text-sm font-medium text-green-700 dark:text-green-300">
+            <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
                 {t('settings.users.createdSuccess')}
               </p>
               <div className="bg-white dark:bg-nokturo-800 rounded-lg p-3 font-mono text-sm space-y-1">
@@ -381,7 +382,7 @@ export default function UsersPage() {
               </>
             ) : (
               <>
-                <UserPlus className="w-5 h-5" />
+                <UsersIcon className="w-5 h-5" size={20} />
                 {t('settings.users.createUser')}
               </>
             )}

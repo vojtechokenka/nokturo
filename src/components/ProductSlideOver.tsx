@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, Plus, Trash2, Search, Image as ImageIcon, Upload, GripVertical, RefreshCw, Tag, Link2 } from 'lucide-react';
+import { X, Loader2, Plus, Trash2, Search, Image as ImageIcon, GripVertical, RefreshCw, Tag } from 'lucide-react';
 import { NotionSelect } from './NotionSelect';
 import { SelectField } from './SelectField';
 import { RichTextBlockEditor } from './RichTextBlockEditor';
@@ -16,7 +16,9 @@ import type { RichTextBlock } from './RichTextBlockEditor';
 import { ToastContainer } from './Toast';
 import type { ToastData } from './Toast';
 import { useExchangeRates, convertToCzk } from '../lib/currency';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { UploadImageIcon } from './icons/UploadImageIcon';
+import { MoodboardIcon } from './icons/MoodboardIcon';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Constants ─────────────────────────────────────────────────
 export const PRODUCT_CATEGORIES = ['coats', 'jackets', 'trousers'] as const;
@@ -330,7 +332,7 @@ function MaterialSection({
                 onChange={(e) =>
                   onUpdateConsumption(lm.material_id, parseFloat(e.target.value) || 0, version, role)
                 }
-                className="w-16 bg-nokturo-200/60 rounded px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-nokturo-500"
+                className="w-16 h-11 bg-nokturo-200/60 rounded-[6px] px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-nokturo-500"
               />
               <span className="text-xs text-nokturo-500 w-6">{lm.material.unit}</span>
             </div>
@@ -358,7 +360,7 @@ function MaterialSection({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t('products.materials.searchMaterials')}
-                  className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded pl-8 pr-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
+                  className="w-full h-11 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] pl-8 pr-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
                   autoFocus
                 />
               </div>
@@ -782,14 +784,38 @@ export function ProductSlideOver({
     setMoodboardGallery((prev) => [...prev, { url, caption: caption ?? '' }]);
   };
 
-  const setPreviewPhoto = async (file: File) => {
+  const setPreviewPhoto = useCallback(async (file: File) => {
     try {
       const url = await handleUploadImage(file);
       setPreviewPhotoUrl(url);
     } catch (err) {
       addToast({ id: crypto.randomUUID(), type: 'error', message: (err as Error).message });
     }
-  };
+  }, [handleUploadImage, addToast]);
+
+  // Document-level paste for preview photo when slideover is open (Ctrl+V / printscreen)
+  useEffect(() => {
+    if (!open) return;
+    const handlePaste = (e: ClipboardEvent) => {
+      const el = document.activeElement as HTMLElement | null;
+      if (el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable) return;
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            setPreviewPhoto(file);
+            break;
+          }
+        }
+      }
+    };
+    document.addEventListener('paste', handlePaste);
+    return () => document.removeEventListener('paste', handlePaste);
+  }, [open, setPreviewPhoto]);
+
   const updateGalleryCaption = (
     gallery: 'design' | 'moodboard',
     index: number,
@@ -1058,14 +1084,14 @@ export function ProductSlideOver({
 
   const slideOverContent = (
     <>
-      <div className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm" onClick={handleClose} />
+      <div className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm" onClick={handleClose} />
       <div
-        className="fixed inset-y-0 right-0 z-[9999] w-full max-w-2xl bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in"
+        className="fixed inset-y-0 right-0 z-[9999] w-full max-w-2xl bg-nokturo-900 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
           <div className="flex flex-col gap-0.5 min-w-0">
-            <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
+            <h3 className={MODAL_HEADING_CLASS}>
               {product ? t('products.editProduct') : t('products.addProduct')}
             </h3>
             {product && lastSavedAt && (
@@ -1085,7 +1111,7 @@ export function ProductSlideOver({
         <form
           id="product-form"
           onSubmit={handleSubmit}
-          className="flex-1 overflow-y-auto px-6 py-4 space-y-5"
+          className="flex-1 overflow-y-auto px-6 py-4 space-y-5 bg-nokturo-900"
         >
           {/* 1. Name */}
           <div>
@@ -1150,12 +1176,12 @@ export function ProductSlideOver({
                 const next = !form.ready_for_sampling;
                 setForm((prev) => ({ ...prev, ready_for_sampling: next, priority: next ? prev.priority : false }));
               }}
-              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-800 ${
-                form.ready_for_sampling ? 'bg-nokturo-700 dark:bg-nokturo-600' : 'bg-nokturo-200 dark:bg-nokturo-600'
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-900 ${
+                form.ready_for_sampling ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-nokturo-400 dark:bg-nokturo-600'
               }`}
             >
               <span
-                className={`pointer-events-none block h-5 w-5 shrink-0 rounded-full bg-white dark:bg-nokturo-100 transition-transform ${
+                className={`pointer-events-none absolute left-0.5 top-1/2 -translate-y-1/2 block h-5 w-5 shrink-0 rounded-full bg-white shadow transition-all duration-200 ease-out ${
                   form.ready_for_sampling ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
@@ -1171,12 +1197,12 @@ export function ProductSlideOver({
                 role="switch"
                 aria-checked={form.priority}
                 onClick={() => handleChange('priority', !form.priority)}
-                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-800 ${
-                  form.priority ? 'bg-nokturo-700 dark:bg-nokturo-600' : 'bg-nokturo-200 dark:bg-nokturo-600'
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-900 ${
+                  form.priority ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-nokturo-400 dark:bg-nokturo-600'
                 }`}
               >
                 <span
-                  className={`pointer-events-none block h-5 w-5 shrink-0 rounded-full bg-white dark:bg-nokturo-100 transition-transform ${
+                  className={`pointer-events-none absolute left-0.5 top-1/2 -translate-y-1/2 block h-5 w-5 shrink-0 rounded-full bg-white shadow transition-all duration-200 ease-out ${
                     form.priority ? 'translate-x-5' : 'translate-x-0'
                   }`}
                 />
@@ -1227,7 +1253,7 @@ export function ProductSlideOver({
                   <button
                     type="button"
                     onClick={() => setPreviewPhotoUrl(null)}
-                    className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                    className="flex items-center gap-2 text-sm bg-red-500 text-white hover:bg-red-600 px-3 py-2 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     {t('common.delete')}
@@ -1240,13 +1266,17 @@ export function ProductSlideOver({
                 tabIndex={0}
                 onKeyDown={(e) => e.key === 'Enter' && fileInputPreviewPhotoRef.current?.click()}
                 onClick={() => fileInputPreviewPhotoRef.current?.click()}
-                className="rounded-lg p-8 text-center cursor-pointer bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const files = e.dataTransfer?.files;
+                  const file = files?.[0];
+                  if (file?.type.startsWith('image/')) setPreviewPhoto(file);
+                }}
+                className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
               >
-                <Upload className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 mx-auto mb-2" />
-                <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">{t('moodboard.dropOrClick')}</p>
-                <p className="text-nokturo-500 dark:text-nokturo-400 text-xs mt-1">
-                  {t('moodboard.supportedFormats')}
-                </p>
+                <UploadImageIcon className="w-4 h-4" size={16} />
+                {t('ideas.uploadImage')}
               </div>
             )}
           </div>
@@ -1259,7 +1289,7 @@ export function ProductSlideOver({
               onChange={(e) => handleChange('short_description', e.target.value)}
               placeholder={t('products.shortDescriptionPlaceholder')}
               rows={3}
-              className={`${inputClass} text-[20px] font-medium`}
+              className={`${inputClass} h-auto min-h-[80px] text-[20px] font-medium`}
             />
           </div>
 
@@ -1302,7 +1332,7 @@ export function ProductSlideOver({
                       <button
                         type="button"
                         onClick={() => removeVersion(version)}
-                        className="text-xs font-medium px-2 py-1 rounded bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
+                        className="text-xs font-medium px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
                       >
                         {t('common.delete')}
                       </button>
@@ -1467,7 +1497,7 @@ export function ProductSlideOver({
                       value={labelSearch}
                       onChange={(e) => setLabelSearch(e.target.value)}
                       placeholder={t('products.labels.searchLabels')}
-                      className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded pl-8 pr-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
+                      className="w-full h-11 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] pl-8 pr-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
                       autoFocus
                     />
                   </div>
@@ -1646,15 +1676,15 @@ export function ProductSlideOver({
                 e.target.value = '';
               }}
             />
+            <button
+              type="button"
+              onClick={() => fileInputDesignRef.current?.click()}
+              className="w-full h-[60px] mb-3 rounded-[6px] flex items-center justify-center gap-2 text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
+            >
+              <UploadImageIcon className="w-4 h-4" size={16} />
+              <span className="text-sm">{t('products.uploadImages')}</span>
+            </button>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <button
-                type="button"
-                onClick={() => fileInputDesignRef.current?.click()}
-                className="aspect-square rounded-lg flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 hover:text-nokturo-600 dark:hover:text-nokturo-300"
-              >
-                <Upload className="w-6 h-6 mb-1" />
-                <span className="text-xs">Add</span>
-              </button>
               {designGallery.map((img, i) => {
                 const isDragging =
                   galleryDragFrom?.gallery === 'design' && galleryDragFrom?.index === i;
@@ -1692,7 +1722,7 @@ export function ProductSlideOver({
                       isDragging ? 'opacity-50' : ''
                     } ${isDragOver ? 'ring-2 ring-nokturo-400 ring-offset-2 rounded-lg' : ''}`}
                   >
-                    <div className="absolute top-1 left-1 p-1 bg-white/90 dark:bg-nokturo-800/90 rounded z-10">
+                    <div className="absolute top-0 left-0 p-1 bg-nokturo-900 z-10" style={{ borderBottomRightRadius: '8px', paddingBottom: '6px', paddingRight: '6px' }}>
                       <GripVertical className="w-3.5 h-3.5 text-nokturo-500" />
                     </div>
                     <img
@@ -1705,7 +1735,7 @@ export function ProductSlideOver({
                       value={img.caption ?? ''}
                       onChange={(e) => updateGalleryCaption('design', i, e.target.value)}
                       placeholder={t('products.designGalleryCaption')}
-                      className="mt-1 w-full text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded px-2 py-1 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
+                      className="mt-1 w-full h-[40px] text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-4 py-1 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
                     />
                     <div className="absolute top-1 right-1 flex gap-1.5">
                       <button
@@ -1749,23 +1779,25 @@ export function ProductSlideOver({
                 e.target.value = '';
               }}
             />
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="flex gap-3 mb-3">
               <button
                 type="button"
                 onClick={() => fileInputMoodboardRef.current?.click()}
-                className="aspect-square rounded-lg flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 hover:text-nokturo-600 dark:hover:text-nokturo-300"
+                className="flex-1 h-[60px] rounded-[6px] flex items-center justify-center gap-2 text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
               >
-                <Upload className="w-6 h-6 mb-1" />
-                <span className="text-xs">Add</span>
+                <UploadImageIcon className="w-4 h-4" size={16} />
+                <span className="text-sm">{t('products.uploadImages')}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setShowMoodboardPicker(true)}
-                className="aspect-square rounded-lg flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 hover:text-nokturo-600 dark:hover:text-nokturo-300"
+                className="flex-1 h-[60px] rounded-[6px] flex items-center justify-center gap-2 text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
               >
-                <Link2 className="w-6 h-6 mb-1" />
-                <span className="text-xs">{t('products.pickFromMoodboard')}</span>
+                <MoodboardIcon className="w-4 h-4 shrink-0" size={16} />
+                <span className="text-sm">{t('products.pickFromMoodboard')}</span>
               </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {moodboardGallery.map((img, i) => {
                 const isDragging =
                   galleryDragFrom?.gallery === 'moodboard' && galleryDragFrom?.index === i;
@@ -1803,7 +1835,7 @@ export function ProductSlideOver({
                       isDragging ? 'opacity-50' : ''
                     } ${isDragOver ? 'ring-2 ring-nokturo-400 ring-offset-2 rounded-lg' : ''}`}
                   >
-                    <div className="absolute top-1 left-1 p-1 bg-white/90 dark:bg-nokturo-800/90 rounded z-10">
+                    <div className="absolute top-0 left-0 p-1 bg-nokturo-900 z-10" style={{ borderBottomRightRadius: '8px', paddingBottom: '6px', paddingRight: '6px' }}>
                       <GripVertical className="w-3.5 h-3.5 text-nokturo-500" />
                     </div>
                     <img
@@ -1816,14 +1848,14 @@ export function ProductSlideOver({
                       value={img.caption ?? ''}
                       onChange={(e) => updateGalleryCaption('moodboard', i, e.target.value)}
                       placeholder={t('products.designGalleryCaption')}
-                      className="mt-1 w-full text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded px-2 py-1 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
+                      className="mt-1 w-full h-[40px] text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-4 py-1 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
                     />
                     <textarea
                       value={img.notes ?? ''}
                       onChange={(e) => updateMoodboardNotes(i, e.target.value)}
                       placeholder={t('products.moodboardNotesPlaceholder')}
                       rows={2}
-                      className="mt-1 w-full text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded px-2 py-1 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
+                      className="mt-1 w-full h-11 text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-2 py-1 text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500"
                     />
                     <div className="absolute top-1 right-1 flex gap-1.5">
                       <button

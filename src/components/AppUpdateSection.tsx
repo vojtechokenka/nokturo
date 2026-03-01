@@ -85,11 +85,11 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
     window.electronAPI.installUpdate();
   }, []);
 
-  if (!isElectron()) return null;
-
   const containerClass = compact
     ? 'pt-4 mt-4 border-t border-nokturo-200 dark:border-nokturo-700 space-y-2'
     : 'pt-6 border-t border-nokturo-200 dark:border-nokturo-700 space-y-3';
+
+  if (!isElectron()) return null;
 
   return (
     <div className={containerClass}>
@@ -102,7 +102,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleCheck}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             {t('settings.account.checkUpdate', 'Zkontrolovat update')}
@@ -120,7 +120,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleDownload}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-nokturo-700 dark:bg-nokturo-600 text-sm text-white hover:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-nokturo-700 dark:bg-nokturo-600 text-sm text-white hover:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
           >
             <Download className="w-3.5 h-3.5" />
             {t('settings.account.downloadUpdate', 'Stáhnout')} v{newVersion}
@@ -138,7 +138,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleInstall}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-600 text-sm text-white hover:bg-green-500 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-emerald-600 text-sm text-white hover:bg-emerald-500 transition-colors"
           >
             <CheckCircle2 className="w-3.5 h-3.5" />
             {t('settings.account.installUpdate', 'Nainstalovat a restartovat')}
@@ -146,7 +146,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         )}
 
         {status === 'up-to-date' && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-green-600 dark:text-green-400">
+          <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
             <CheckCircle2 className="w-3.5 h-3.5" />
             {t('settings.account.upToDate', 'Máš nejnovější verzi')}
           </span>
@@ -156,7 +156,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleCheck}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-nokturo-700 text-sm text-red-500 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-red-500 text-white text-sm hover:bg-red-600 transition-colors"
           >
             <AlertCircle className="w-3.5 h-3.5" />
             {t('settings.account.retryUpdate', 'Zkusit znovu')}

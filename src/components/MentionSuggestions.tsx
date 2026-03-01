@@ -151,7 +151,7 @@ export function MentionDropdown({
   return (
     <div
       ref={containerRef}
-      className="absolute bottom-full left-0 right-0 mb-1 bg-white dark:bg-nokturo-700 border border-nokturo-200 dark:border-nokturo-600 rounded-lg shadow-lg max-h-36 overflow-y-auto z-50"
+      className="mention-dropdown absolute bottom-full left-0 right-0 mb-1 p-1 bg-white dark:bg-nokturo-700 shadow-lg max-h-36 overflow-y-auto z-50"
     >
       {profiles.map((p, i) => {
         const name = profileDisplayName(p);
@@ -163,16 +163,16 @@ export function MentionDropdown({
               e.preventDefault();
               onSelect(p);
             }}
-            className={`w-full text-left flex items-center gap-2 px-3 py-1.5 text-sm transition-colors ${
+            className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
               i === selectedIdx
                 ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-white'
                 : 'text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600/50'
             }`}
           >
             {p.avatar_url ? (
-              <img src={p.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+              <img src={p.avatar_url} alt="" className="avatar-round w-6 h-6 object-cover shrink-0" />
             ) : (
-              <DefaultAvatar size={24} className="rounded-full overflow-hidden shrink-0 w-6 h-6" />
+              <DefaultAvatar size={24} className="avatar-round overflow-hidden shrink-0 w-6 h-6" />
             )}
             <span>@{name}</span>
           </button>

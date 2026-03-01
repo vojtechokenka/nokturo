@@ -11,11 +11,9 @@ import { INPUT_CLASS } from '../../lib/inputStyles';
 import {
   ArrowLeft,
   Loader2,
-  Save,
   Upload,
-  Trash2,
-  RefreshCw,
 } from 'lucide-react';
+import { SaveIcon } from '../../components/icons/SaveIcon';
 
 export default function MagazineEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +23,9 @@ export default function MagazineEditorPage() {
 
   const [title, setTitle] = useState('');
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
-  const [blocks, setBlocks] = useState<RichTextBlock[]>([]);
+  const [blocks, setBlocks] = useState<RichTextBlock[]>(() =>
+    !id ? [{ id: crypto.randomUUID(), type: 'paragraph', size: 'normal', content: '' }] : []
+  );
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
@@ -117,7 +117,7 @@ export default function MagazineEditorPage() {
         addToast({ id: crypto.randomUUID(), type: 'error', message: error.message });
       } else if (data) {
         addToast({ id: crypto.randomUUID(), type: 'success', message: t('common.saved') });
-        navigate(`/prototyping/magazine/${data.id}/edit`, { replace: true });
+        navigate(`/prototyping/magazine/${data.id}`, { replace: true });
       }
     } else {
       const { error } = await supabase
@@ -130,6 +130,7 @@ export default function MagazineEditorPage() {
         addToast({ id: crypto.randomUUID(), type: 'error', message: error.message });
       } else {
         addToast({ id: crypto.randomUUID(), type: 'success', message: t('common.saved') });
+        navigate(`/prototyping/magazine/${id}`, { replace: true });
       }
     }
   }, [id, isNew, title, thumbnailUrl, blocks, t, navigate, addToast]);
@@ -145,12 +146,11 @@ export default function MagazineEditorPage() {
   }
 
   return (
-    <PageShell titleKey="pages.magazine.title" descriptionKey="pages.magazine.description">
-      <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
-
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl">
-        <div className="min-w-0 flex-1 max-w-3xl space-y-6">
-          {/* Back */}
+    <PageShell
+      titleKey="pages.magazine.title"
+      descriptionKey="pages.magazine.description"
+      actionsSlot={
+        <div className="flex items-center justify-between gap-4 w-full">
           <button
             onClick={() => navigate('/prototyping/magazine')}
             className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
@@ -158,7 +158,26 @@ export default function MagazineEditorPage() {
             <ArrowLeft className="w-4 h-4" />
             {t('common.back')}
           </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 disabled:opacity-60 transition-colors"
+          >
+            {saving ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : (
+              <SaveIcon size={16} />
+            )}
+            {t('common.save')}
+          </button>
+        </div>
+      }
+    >
+      <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
 
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 w-full max-w-6xl">
+        <div className="min-w-0 flex-1 max-w-3xl space-y-6">
           {/* Thumbnail */}
           <div>
             <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
@@ -176,8 +195,8 @@ export default function MagazineEditorPage() {
               }}
             />
             {thumbnailUrl ? (
-              <div className="flex gap-3 items-start">
-                <div className="w-24 shrink-0 aspect-video rounded-lg overflow-hidden bg-nokturo-100 dark:bg-nokturo-700">
+              <div className="relative w-full">
+                <div className="content-panel relative w-full aspect-video overflow-hidden bg-nokturo-100 dark:bg-nokturo-700">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -189,24 +208,22 @@ export default function MagazineEditorPage() {
                       className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                     />
                   </button>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    {t('magazine.replaceThumbnail')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setThumbnailUrl(null)}
-                    className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    {t('common.delete')}
-                  </button>
+                  <div className="absolute bottom-2 right-2 flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
+                      className="px-2 py-1 text-xs text-white bg-black/60 hover:bg-black/80 rounded transition-colors"
+                    >
+                      {t('magazine.replaceThumbnail')}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setThumbnailUrl(null); }}
+                      className="px-2 py-1 text-xs text-white bg-red-500/90 hover:bg-red-600 rounded transition-colors"
+                    >
+                      {t('common.delete')}
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
@@ -217,12 +234,10 @@ export default function MagazineEditorPage() {
                   e.key === 'Enter' && fileInputRef.current?.click()
                 }
                 onClick={() => fileInputRef.current?.click()}
-                className="rounded-lg p-8 text-center cursor-pointer bg-nokturo-100/50 dark:bg-nokturo-700/40 hover:bg-nokturo-200/60 dark:hover:bg-nokturo-600/50 transition-colors"
+                className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
               >
-                <Upload className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400 mx-auto mb-2" />
-                <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
-                  {t('magazine.uploadThumbnail')}
-                </p>
+                <Upload className="w-4 h-4 shrink-0" />
+                {t('magazine.uploadThumbnail')}
               </div>
             )}
           </div>
@@ -243,44 +258,26 @@ export default function MagazineEditorPage() {
               }}
               rows={1}
               placeholder={t('magazine.titlePlaceholder')}
-              className="w-full bg-transparent border-t-0 border-x-0 border-b border-nokturo-300 dark:border-nokturo-600 rounded-none px-0 py-3 text-[32px] sm:text-[40px] font-headline font-extralight text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500 focus:outline-none focus:border-nokturo-500 transition-colors resize-none overflow-hidden leading-[1.2]"
+              className="w-full bg-transparent border-0 px-0 py-3 text-[32px] sm:text-[40px] font-headline font-extralight text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500 focus:outline-none transition-colors resize-none overflow-hidden leading-[1.2]"
             />
           </div>
 
           {/* Rich text editor */}
-          <div className="bg-nokturo-50/50 dark:bg-nokturo-700/30 rounded-lg p-4">
-            <RichTextBlockEditor
-              value={blocks}
-              onChange={setBlocks}
-              onUploadImage={handleUploadImage}
-              onToast={addToast}
-            />
-          </div>
+          <RichTextBlockEditor
+            value={blocks}
+            onChange={setBlocks}
+            onUploadImage={handleUploadImage}
+            onToast={addToast}
+          />
         </div>
 
-        {/* Structure panel */}
+        {/* Structure panel – always visible with placeholder to avoid layout jump */}
         <PageStructurePanel
           blocks={blocks}
           onChange={setBlocks}
-          className="hidden lg:block"
+          inline
+          className="hidden lg:flex"
         />
-      </div>
-
-      {/* Floating save */}
-      <div className="fixed bottom-6 right-6 flex items-center gap-2 z-40">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
-          className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 disabled:opacity-60 shadow-sm"
-        >
-          {saving ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <Save size={16} />
-          )}
-          {t('common.save')}
-        </button>
       </div>
     </PageShell>
   );

@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, ImageIcon, Plus, Search } from 'lucide-react';
+import { X, Loader2, Plus, Search } from 'lucide-react';
+import { UploadImageIcon } from './icons/UploadImageIcon';
 import { NotionSelect, type NotionSelectOption } from './NotionSelect';
 import { SelectField } from './SelectField';
 import { FilterChevronIcon } from './FilterSelect';
 import type { Supplier } from './SupplierSlideOver';
 import { CURRENCIES } from '../lib/currency';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Types shared with MaterialsPage ──────────────────────────
 export interface Material {
@@ -473,15 +474,15 @@ export function MaterialSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
+          <h3 className={MODAL_HEADING_CLASS}>
             {material ? t('materials.editMaterial') : t('materials.addMaterial')}
           </h3>
           <button
@@ -503,28 +504,52 @@ export function MaterialSlideOver({
             <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
               {t('materials.image')}
             </label>
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="relative border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-lg overflow-hidden cursor-pointer hover:border-nokturo-400 dark:hover:border-nokturo-500 transition-colors aspect-[16/9]"
-            >
-              {imagePreview ? (
+            {imagePreview ? (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                className="relative rounded-lg overflow-hidden cursor-pointer"
+              >
                 <img
                   src={imagePreview}
                   alt="Preview"
-                  className="w-full h-full object-cover"
+                  className="w-full aspect-[16/9] object-cover rounded-lg"
                 />
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400">
-                  <ImageIcon className="w-8 h-8 mb-2" />
-                  <span className="text-sm">{t('materials.uploadImage')}</span>
-                </div>
-              )}
-              {uploading && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
-                </div>
-              )}
-            </div>
+                {uploading && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputRef.current?.click()}
+                onKeyDown={(e) => e.key === 'Enter' && fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  const file = e.dataTransfer?.files?.[0];
+                  if (file?.type.startsWith('image/')) {
+                    setImageFile(file);
+                    setImagePreview(URL.createObjectURL(file));
+                  }
+                }}
+                className="relative flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
+              >
+                {uploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <UploadImageIcon className="w-4 h-4" size={16} />
+                    {t('materials.uploadImage')}
+                  </>
+                )}
+              </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -568,7 +593,7 @@ export function MaterialSlideOver({
                 return opt ? (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200 text-xs font-medium"
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200 text-xs font-medium"
                   >
                     {opt.name}
                     <button
@@ -590,7 +615,7 @@ export function MaterialSlideOver({
                   setTargetedSearch('');
                   setTimeout(() => targetedInputRef.current?.focus(), 0);
                 }}
-                className="w-full flex items-center justify-between gap-2 bg-white dark:bg-nokturo-700/60 border border-nokturo-300 dark:border-nokturo-600 rounded-lg px-3 py-2 text-sm text-left text-nokturo-500 dark:text-nokturo-400 focus:outline-none focus:border-nokturo-500 hover:border-nokturo-400 dark:hover:border-nokturo-500"
+                className="w-full h-11 flex items-center justify-between gap-2 bg-white dark:bg-nokturo-700/60 rounded-[6px] px-3 py-2 text-sm text-left text-nokturo-500 dark:text-nokturo-400 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 hover:bg-nokturo-200/60 dark:hover:bg-nokturo-600/60"
               >
                 <span>{t('materials.addTargetedProduct')}</span>
                 <FilterChevronIcon
@@ -615,7 +640,7 @@ export function MaterialSlideOver({
                           if (e.key === 'Escape') setTargetedPickerOpen(false);
                         }}
                         placeholder={t('materials.searchProducts')}
-                        className="w-full bg-white dark:bg-nokturo-700/60 border border-nokturo-300 dark:border-nokturo-600 rounded-lg pl-8 pr-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500 focus:outline-none focus:border-nokturo-500"
+                        className="w-full h-11 bg-white dark:bg-nokturo-700/60 rounded-[6px] pl-8 pr-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50"
                       />
                     </div>
                     <p className="text-nokturo-500 dark:text-nokturo-400 text-xs mt-1">{t('notionSelect.selectOrCreate')}</p>
@@ -634,7 +659,7 @@ export function MaterialSlideOver({
                               onClick={() => addTargeted(opt.id)}
                               className="w-full flex items-center gap-2 rounded-md px-1.5 py-1 text-left hover:bg-nokturo-50 dark:hover:bg-nokturo-700"
                             >
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200">
                                 {opt.name}
                               </span>
                             </button>
@@ -673,7 +698,7 @@ export function MaterialSlideOver({
                     placeholder="%"
                     value={row.pct}
                     onChange={(e) => updateCompositionRow(idx, 'pct', e.target.value)}
-                    className="w-16 bg-white dark:bg-nokturo-700/60 border border-nokturo-300 dark:border-nokturo-600 rounded-lg px-2 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none focus:border-nokturo-500"
+                    className="w-16 h-11 bg-white dark:bg-nokturo-700/60 rounded-[6px] px-2 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50"
                   />
                   <div className="flex-1 min-w-0">
                     <NotionSelect

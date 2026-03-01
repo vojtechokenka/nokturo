@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { Sun, Moon } from 'lucide-react';
+import { LightModeIcon } from './icons/LightModeIcon';
+import { DarkModeIcon } from './icons/DarkModeIcon';
 import { useThemeStore, type Theme } from '../stores/themeStore';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { supabase } from '../lib/supabase';
@@ -31,11 +32,11 @@ export function ThemeToggle({ variant }: ThemeToggleProps) {
   const isDarkVariant = variant === 'dark' || (variant !== 'light' && theme === 'dark');
 
   const groupClass = isDarkVariant
-    ? 'inline-flex w-[177px] rounded-lg bg-nokturo-800 p-0.5'
-    : 'inline-flex w-[177px] rounded-lg bg-nokturo-100 p-0.5 dark:bg-nokturo-800';
+    ? 'inline-flex w-[177px] rounded-[6px] bg-nokturo-800 p-0.5'
+    : 'inline-flex w-[177px] rounded-[6px] bg-nokturo-100 p-0.5 dark:bg-nokturo-800';
 
   const optionBase =
-    'flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-md transition-colors min-w-0';
+    'flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-1.5 text-sm font-medium rounded-[4px] transition-colors min-w-0';
 
   const optionActive = isDarkVariant
     ? 'bg-nokturo-600 text-white'
@@ -57,7 +58,7 @@ export function ThemeToggle({ variant }: ThemeToggleProps) {
         className={`${optionBase} ${theme === 'light' ? optionActive : optionInactive}`}
         title={t('settings.account.themeLight')}
       >
-        <Sun className="w-4 h-4" />
+        <LightModeIcon className="w-4 h-4 shrink-0" />
         {t('settings.account.themeLight')}
       </button>
       <button
@@ -66,7 +67,7 @@ export function ThemeToggle({ variant }: ThemeToggleProps) {
         className={`${optionBase} ${theme === 'dark' ? optionActive : optionInactive}`}
         title={t('settings.account.themeDark')}
       >
-        <Moon className="w-4 h-4" />
+        <DarkModeIcon className="w-4 h-4 shrink-0" />
         {t('settings.account.themeDark')}
       </button>
     </div>

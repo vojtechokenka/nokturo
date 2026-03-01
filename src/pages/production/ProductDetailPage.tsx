@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { useExchangeRates } from '../../lib/currency';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -12,7 +13,9 @@ import {
   type ProductWithMaterials,
   type ProductTechPack as TechPackType,
 } from '../../components/ProductSlideOver';
-import { RichTextBlockViewer } from '../../components/RichTextBlockViewer';
+import { RichTextBlockViewer, extractTags } from '../../components/RichTextBlockViewer';
+import { TableOfContents } from '../../components/TableOfContents';
+import type { TocItem } from '../../components/TableOfContents';
 import { ProductGalleryComments } from '../../components/ProductGalleryComments';
 import { MaterialDetailSlideOver } from '../../components/MaterialDetailSlideOver';
 import type { Material } from '../../components/MaterialSlideOver';
@@ -24,7 +27,6 @@ import {
   Pencil,
   RefreshCw,
   Trash2,
-  Package,
   Scissors,
   Tag,
   X,
@@ -84,8 +86,10 @@ export default function ProductDetailPage() {
     relX: number;
     relY: number;
   } | null>(null);
+  const [imgDimensions, setImgDimensions] = useState<{ w: number; h: number } | null>(null);
   useEffect(() => {
     setLoupe(null);
+    setImgDimensions(null);
   }, [lightbox?.index]);
 
   useEffect(() => {
@@ -172,7 +176,6 @@ export default function ProductDetailPage() {
     return (
       <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
         <div className="flex flex-col items-center justify-center py-32 text-center">
-          <Package className="w-16 h-16 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 font-medium">{t('products.noProducts')}</p>
           <button
             onClick={() => navigate('/production/products')}
@@ -194,10 +197,17 @@ export default function ProductDetailPage() {
   );
   const materials = product.product_materials ?? [];
   const labels = product.product_labels ?? [];
+  const sectionTocItems: TocItem[] = [
+    ...extractTags(descriptionBlocks),
+    ...(materials.length > 0 ? [{ id: 'section-materials', text: t('products.materials.title'), level: 1 as const }] : []),
+    ...(labels.length > 0 ? [{ id: 'section-labels', text: t('products.labels.title'), level: 1 as const }] : []),
+    ...(designGallery.length > 0 ? [{ id: 'section-design-gallery', text: t('products.designGallery'), level: 1 as const }] : []),
+    ...(moodboardGallery.length > 0 ? [{ id: 'section-moodboard-gallery', text: t('products.moodboardGallery'), level: 1 as const }] : []),
+  ];
 
   return (
     <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
-      <div className="max-w-[860px] mx-auto">
+      <div className={`max-w-[860px] mx-auto relative ${sectionTocItems.length > 0 ? 'pr-[264px]' : ''}`}>
         {/* Back + Actions */}
         <div className="flex items-center justify-between mb-8">
           <button
@@ -217,7 +227,7 @@ export default function ProductDetailPage() {
             {pageMenuOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setPageMenuOpen(false)} />
-                <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
                   <button
                     onClick={() => { setEditOpen(true); setPageMenuOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
@@ -228,7 +238,7 @@ export default function ProductDetailPage() {
                   {canDelete && (
                     <button
                       onClick={() => { setDeleteConfirm(true); setPageMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                       {t('common.delete')}
@@ -250,12 +260,12 @@ export default function ProductDetailPage() {
               )}
               <div className="flex flex-wrap gap-2 mt-3">
                 {product.priority && (
-                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-red-600 text-white">
+                  <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-red-600 text-white">
                     {t('products.priority')}
                   </span>
                 )}
                 {product.ready_for_sampling && (
-                  <span className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-600 text-white">
+                  <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-emerald-600 text-white">
                     {t('products.readyForSampling')}
                   </span>
                 )}
@@ -340,7 +350,8 @@ export default function ProductDetailPage() {
                           return (
                             <div
                               key={pm.id ?? idx}
-                              className="flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 rounded-lg min-w-0 border border-nokturo-200/60 dark:border-nokturo-700"
+                              className="flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0"
+                              style={{ borderRadius: '8px' }}
                             >
                               <button
                                 type="button"
@@ -434,9 +445,10 @@ export default function ProductDetailPage() {
                       }
                       className={
                         hasDesign
-                          ? 'w-full flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 rounded-lg min-w-0 text-left hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors cursor-zoom-in border border-nokturo-200/60 dark:border-nokturo-700'
-                          : 'flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 rounded-lg min-w-0 border border-nokturo-200/60 dark:border-nokturo-700'
+                          ? 'w-full flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0 text-left hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors cursor-zoom-in'
+                          : 'flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0'
                       }
+                      style={{ borderRadius: '8px' }}
                     >
                       {hasDesign ? (
                         <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-nokturo-100 flex items-center justify-center">
@@ -662,28 +674,45 @@ export default function ProductDetailPage() {
                       src={url}
                       alt={lightbox.gallery[lightbox.index]?.caption ?? ''}
                       className={imgClass}
+                      onLoad={(e) => {
+                        const img = e.currentTarget;
+                        if (img.naturalWidth && img.naturalHeight) {
+                          setImgDimensions({ w: img.naturalWidth, h: img.naturalHeight });
+                        }
+                      }}
                     />
                   );
                 })()}
-                {loupe && (() => {
+                {loupe && imgDimensions && (() => {
                   const url = lightbox.gallery[lightbox.index]?.url ?? '';
                   const isSvg = /\.svg(\?|$)/i.test(url);
                   const zoom = isSvg ? 10 : 8;
                   const size = 250;
-                  const bgSize = size * zoom;
                   const center = size / 2;
+                  const imgW = imgDimensions.w * zoom;
+                  const imgH = imgDimensions.h * zoom;
+                  const imgLeft = center - loupe.relX * imgW;
+                  const imgTop = center - loupe.relY * imgH;
                   return (
                     <div
                       className="fixed w-[250px] h-[250px] pointer-events-none z-[10000] rounded-full border-2 border-white/80 overflow-hidden"
                       style={{
                         left: loupe.x - size / 2,
                         top: loupe.y - size / 2,
-                        backgroundImage: `url(${url})`,
-                        backgroundSize: `${bgSize}px ${bgSize}px`,
-                        backgroundPosition: `${center - loupe.relX * bgSize}px ${center - loupe.relY * bgSize}px`,
-                        backgroundRepeat: 'no-repeat',
                       }}
-                    />
+                    >
+                      <img
+                        src={url}
+                        alt=""
+                        className="absolute"
+                        style={{
+                          width: imgW,
+                          height: imgH,
+                          left: imgLeft,
+                          top: imgTop,
+                        }}
+                      />
+                    </div>
                   );
                 })()}
               </div>
@@ -748,6 +777,11 @@ export default function ProductDetailPage() {
           )}
       </div>
 
+      {/* TOC – at top, no header offset */}
+      {sectionTocItems.length > 0 && (
+        <TableOfContents items={sectionTocItems} title={t('pages.products.title')} />
+      )}
+
       {/* Edit slide-over */}
       <ProductSlideOver
         open={editOpen}
@@ -769,9 +803,9 @@ export default function ProductDetailPage() {
 
       {/* Delete confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">{t('common.confirm')}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('products.deleteConfirm')}</p>
             <div className="flex gap-3 justify-end">
               <button

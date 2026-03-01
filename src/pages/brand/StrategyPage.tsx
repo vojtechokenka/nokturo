@@ -1,14 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
-import { getUserIdForDb } from '../../stores/authStore';
+import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
+import { hasFeaturePermission } from '../../utils/permissions';
 import { PageShell } from '../../components/PageShell';
 import { PageHeaderImage } from '../../components/PageHeaderImage';
 import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTextBlockEditor';
 import { RichTextBlockViewer, getDefaultTocItems } from '../../components/RichTextBlockViewer';
 import { PageStructurePanel } from '../../components/PageStructurePanel';
 import { ToastContainer, type ToastData } from '../../components/Toast';
-import { Loader2, Pencil, Save } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { EditIcon } from '../../components/icons/EditIcon';
+import { SaveIcon } from '../../components/icons/SaveIcon';
 
 const DEFAULT_TITLE = 'Strategie značky';
 
@@ -31,6 +34,8 @@ function parseContent(raw: unknown): DocContent {
 
 export default function StrategyPage() {
   const { t } = useTranslation();
+  const user = useAuthStore((s) => s.user);
+  const canEditBrand = user?.role ? hasFeaturePermission('canEditBrand', user.role) : false;
   const [docId, setDocId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<RichTextBlock[]>([]);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
@@ -68,6 +73,10 @@ export default function StrategyPage() {
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  useEffect(() => {
+    if (!canEditBrand && mode === 'edit') setMode('view');
+  }, [canEditBrand, mode]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -155,13 +164,18 @@ export default function StrategyPage() {
     <PageShell
       titleKey="pages.strategy.title"
       descriptionKey="pages.strategy.description"
-      headerSlot={
-        <PageHeaderImage
-          imageUrl={headerImage}
-          onUpload={handleUploadImage}
-          onChange={handleHeaderImageChange}
-        />
-      }
+      actionsSlot={canEditBrand && mode === 'view' ? (
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setMode('edit')}
+            className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm"
+          >
+            <EditIcon size={16} />
+            {t('common.edit')}
+          </button>
+        </div>
+      ) : undefined}
     >
       <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
       {loading ? (
@@ -169,18 +183,29 @@ export default function StrategyPage() {
           <Loader2 size={24} className="animate-spin text-nokturo-500" />
         </div>
       ) : (
-        <div className={mode === 'view' ? 'max-w-[860px] mx-auto' : 'grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,860px)_224px_1fr] gap-4 lg:gap-8 w-full max-w-6xl mx-auto'}>
-          {mode === 'view' ? (
-            <RichTextBlockViewer
-              blocks={blocks}
-              tocTitle={t('pages.strategy.title')}
-              defaultTocItems={getDefaultTocItems(t)}
-              headingFont="headline"
-              h3Large
+        <>
+          {(mode === 'edit' || headerImage) && (
+          <div className="-ml-9 -mt-6 w-[calc(100%+4.5rem)] box-border mb-4">
+            <PageHeaderImage
+              imageUrl={headerImage}
+              onUpload={handleUploadImage}
+              onChange={handleHeaderImageChange}
+              editMode={mode === 'edit'}
             />
-          ) : (
-            <>
-              <div className="min-w-0 lg:col-start-2">
+          </div>
+          )}
+          <div className={mode === 'view' ? 'max-w-[1124px] mx-auto' : 'relative'}>
+            {mode === 'view' ? (
+              <RichTextBlockViewer
+                blocks={blocks}
+                tocTitle={t('pages.strategy.title')}
+                defaultTocItems={getDefaultTocItems(t)}
+                headingFont="headline"
+                h3Large
+              />
+            ) : (
+              <>
+              <div className="min-w-0 lg:pr-[264px] max-w-[860px] mx-auto">
                 <RichTextBlockEditor
                   value={blocks}
                   onChange={setBlocks}
@@ -193,33 +218,35 @@ export default function StrategyPage() {
               <PageStructurePanel
                 blocks={blocks}
                 onChange={setBlocks}
-                className="hidden lg:block lg:col-start-3"
+                footerSlot={
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={saving}
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 disabled:opacity-60 shadow-sm"
+                  >
+                    {saving ? <Loader2 size={16} className="animate-spin" /> : <SaveIcon size={16} />}
+                    {t('common.save')}
+                  </button>
+                }
+                className="hidden lg:flex"
               />
+              {/* Mobile: floating Save button (panel hidden) */}
+              <div className="fixed bottom-6 right-6 left-6 z-40 lg:hidden">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full max-w-[240px] mx-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 disabled:opacity-60 shadow-sm"
+                >
+                  {saving ? <Loader2 size={16} className="animate-spin" /> : <SaveIcon size={16} />}
+                  {t('common.save')}
+                </button>
+              </div>
             </>
-          )}
-          <div className="fixed bottom-6 right-6 z-40">
-            {mode === 'edit' ? (
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 disabled:opacity-60 shadow-sm"
-              >
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                {t('common.save')}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setMode('edit')}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 shadow-sm"
-              >
-                <Pencil size={16} />
-                {t('common.edit')}
-              </button>
             )}
           </div>
-        </div>
+        </>
       )}
     </PageShell>
   );

@@ -101,7 +101,7 @@ export default function CommentsPage() {
                     )}
                   </div>
                   <span
-                    className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${
+                    className={`text-xs px-2 py-0.5 rounded-[4px] font-medium shrink-0 ${
                       STATUS_COLORS[product.status] ?? STATUS_COLORS.concept
                     }`}
                   >

@@ -9,7 +9,7 @@ import {
   NotionSelect,
   type NotionSelectOption,
 } from '../components/NotionSelect';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS_DARK, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Types ────────────────────────────────────────────────────
 export interface Supplier {
@@ -191,26 +191,26 @@ export function SupplierSlideOver({
   // ── Render ─────────────────────────────────────────────────
   if (!open) return null;
 
-  const inputClass = INPUT_CLASS;
+  const inputClass = INPUT_CLASS_DARK;
 
   return (
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0">
+          <h3 className={MODAL_HEADING_CLASS}>
             {supplier ? t('suppliers.editSupplier') : t('suppliers.addSupplier')}
           </h3>
           <button
             onClick={onClose}
-            className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+            className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
           >
             <X className="w-5 h-5" />
           </button>
@@ -223,10 +223,10 @@ export function SupplierSlideOver({
           formNoValidate
           className="flex flex-1 flex-col min-h-0 overflow-hidden"
         >
-          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 text-white">
           {/* ── Name ──────────────────────────────────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.name')} *
             </label>
             <input
@@ -240,7 +240,7 @@ export function SupplierSlideOver({
 
           {/* ── Nationality (country of origin) ─────────────────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.nationality')}
             </label>
             <div className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export function SupplierSlideOver({
 
           {/* ── Category (editable options like moodboard) ───────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.category')}
             </label>
             <NotionSelect
@@ -277,7 +277,7 @@ export function SupplierSlideOver({
 
           {/* ── Contact Person ─────────────────────────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.contactPerson')}
             </label>
             <input
@@ -290,7 +290,7 @@ export function SupplierSlideOver({
 
           {/* ── Email ──────────────────────────────────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.email')}
             </label>
             <input
@@ -303,7 +303,7 @@ export function SupplierSlideOver({
 
           {/* ── Phone ─────────────────────────────────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.phone')}
             </label>
             <input
@@ -316,7 +316,7 @@ export function SupplierSlideOver({
 
           {/* ── Website (SEO title fetched automatically) ───────── */}
           <div>
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
+            <label className="block text-sm text-nokturo-400 mb-1.5">
               {t('suppliers.website')}
             </label>
             <div className="relative">
@@ -328,13 +328,13 @@ export function SupplierSlideOver({
                 className={inputClass}
               />
               {fetchingTitle && (
-                <span className="absolute right-0 top-1/2 -translate-y-1/2 text-nokturo-400">
+                <span className="absolute right-0 top-1/2 -translate-y-1/2 text-nokturo-500">
                   <Loader2 className="w-4 h-4 animate-spin" />
                 </span>
               )}
             </div>
             {form.website_title && !fetchingTitle && (
-              <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-1 truncate" title={form.website_title}>
+              <p className="text-xs text-nokturo-400 mt-1 truncate" title={form.website_title}>
                 → {form.website_title}
               </p>
             )}
@@ -342,9 +342,9 @@ export function SupplierSlideOver({
           </div>
 
           {/* Footer */}
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-white dark:bg-nokturo-800 border-t border-nokturo-200 dark:border-nokturo-600">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
+              <div className="text-red-300 text-sm bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
                 {error}
               </div>
             )}
@@ -352,7 +352,7 @@ export function SupplierSlideOver({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
+              className="px-4 py-2 text-sm text-nokturo-400 hover:text-white transition-colors"
             >
               {t('common.cancel')}
             </button>
@@ -366,7 +366,7 @@ export function SupplierSlideOver({
                 }
                 handleSubmit({ preventDefault: () => {} } as React.FormEvent);
               }}
-              className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-5 py-2 text-sm bg-white text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {saving && <Loader2 className="w-4 h-4 animate-spin" />}
               {t('common.save')}

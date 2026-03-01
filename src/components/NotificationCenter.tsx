@@ -1,9 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { Bell, Check, CheckCircle2, Clock, UserPlus, Trash2 } from 'lucide-react';
 
 export interface Notification {
   id: string;
@@ -22,36 +21,13 @@ export interface Notification {
   read_at?: string | null;
 }
 
-const ICON_MAP: Partial<Record<Notification['type'], typeof Bell>> = {
-  task_assigned: UserPlus,
-  task_completed: CheckCircle2,
-  task_comment: Bell,
-  deadline_7d: Clock,
-  deadline_48h: Clock,
-  deadline_24h: Clock,
-  mention: Bell,
-  comment: Bell,
-};
-
-const COLOR_MAP: Record<Notification['type'], string> = {
-  task_assigned: 'text-blue-500 dark:text-blue-400',
-  task_completed: 'text-green-500 dark:text-green-400',
-  task_comment: 'text-purple-500 dark:text-purple-400',
-  deadline_7d: 'text-nokturo-500 dark:text-nokturo-400',
-  deadline_48h: 'text-amber-500 dark:text-amber-400',
-  deadline_24h: 'text-red-500 dark:text-red-400',
-};
-
-export function NotificationCenter() {
+export function useNotifications() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const userId = getUserIdForDb();
-  const user = useAuthStore((s) => s.user);
 
-  const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -124,16 +100,6 @@ export function NotificationCenter() {
     checkDeadlineReminders(userId);
   }, [userId]);
 
-  // Close on outside click
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
   const markRead = async (id: string) => {
     const readAt = new Date().toISOString();
     await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('id', id);
@@ -153,7 +119,7 @@ export function NotificationCenter() {
     await supabase.from('notifications').delete().eq('recipient_id', userId);
   };
 
-  const handleNotificationClick = (n: Notification) => {
+  const handleNotificationClick = (n: Notification, onClose?: () => void) => {
     markRead(n.id);
     const targetLink = n.link ?? (n.reference_type === 'task' && n.reference_id ? `/tasks?task=${n.reference_id}` : null);
     if (targetLink) {
@@ -161,7 +127,7 @@ export function NotificationCenter() {
       const itemId = parsed.searchParams.get('item');
       const isMoodboard = parsed.pathname.includes('moodboard');
       navigate(targetLink);
-      setOpen(false);
+      onClose?.();
       // Dispatch after navigation so MoodboardPage is mounted and listening
       if (itemId && isMoodboard) {
         setTimeout(() => {
@@ -169,7 +135,7 @@ export function NotificationCenter() {
         }, 150);
       }
     } else {
-      setOpen(false);
+      onClose?.();
     }
   };
 
@@ -184,104 +150,103 @@ export function NotificationCenter() {
     return `${days}d`;
   };
 
+  return {
+    notifications,
+    loading,
+    unreadCount,
+    fetchNotifications,
+    markRead,
+    markAllRead,
+    clearAll,
+    handleNotificationClick,
+    formatTime,
+  };
+}
+
+export function NotificationPanel({
+  notifications,
+  unreadCount,
+  markAllRead,
+  clearAll,
+  handleNotificationClick,
+  formatTime,
+  onClose,
+}: {
+  notifications: Notification[];
+  unreadCount: number;
+  markAllRead: () => void;
+  clearAll: () => void;
+  handleNotificationClick: (n: Notification, onClose?: () => void) => void;
+  formatTime: (iso: string) => string;
+  onClose?: () => void;
+}) {
+  const { t } = useTranslation();
+
   return (
-    <div ref={ref} className="relative">
-      <button
-        type="button"
-        onClick={() => {
-          setOpen((o) => !o);
-          if (!open) fetchNotifications();
-        }}
-        className="relative inline-flex items-center justify-center w-8 h-8 text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-300/50 dark:hover:bg-nokturo-600 rounded-lg transition-all duration-150 hover:opacity-80 active:scale-95"
-      >
-        <Bell className="w-4 h-4" />
-        {unreadCount > 0 && (
-          <span
-            className="notification-badge absolute top-4 left-4 w-3 h-3 rounded-full bg-[#FF1A1A]"
-            aria-hidden
-          />
-        )}
-      </button>
+    <>
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 py-3 dark:bg-white/5">
+        <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 flex items-center gap-2">
+          {t('notifications.title')}
+          {unreadCount > 0 && (
+            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 bg-[#FF1A1A] text-[10px] font-semibold text-white leading-none" style={{ borderRadius: 9999 }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </span>
+        <div className="flex items-center gap-2">
+          {notifications.length > 0 && (
+            <button
+              onClick={clearAll}
+              className="p-1 text-nokturo-400 dark:text-nokturo-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+              title={t('notifications.clearAll')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0">
+                <path fill="currentColor" d="M9 17h2V8H9zm4 0h2V8h-2zm-8 4V6H4V4h5V3h6v1h5v2h-1v15z" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden />
-          <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white dark:bg-nokturo-800 rounded-xl shadow-xl z-20 overflow-hidden animate-notification-panel">
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-nokturo-200/60 dark:border-nokturo-700/60">
-              <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100">
-                {t('notifications.title')}
-              </span>
-              <div className="flex items-center gap-2">
-                {unreadCount > 0 && (
-                  <button
-                    onClick={markAllRead}
-                    className="text-xs text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-200 transition-colors"
-                  >
-                    {t('notifications.markAllRead')}
-                  </button>
-                )}
-                {notifications.length > 0 && (
-                  <button
-                    onClick={clearAll}
-                    className="p-1 text-nokturo-400 dark:text-nokturo-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                    title={t('notifications.clearAll')}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* List */}
-            <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="py-10 text-center text-sm text-nokturo-500 dark:text-nokturo-500">
-                  {t('notifications.empty')}
-                </div>
-              ) : (
-                notifications.map((n) => {
-                  const dr = (n.metadata as { deadlineReminder?: string })?.deadlineReminder;
-                  const displayType = (dr ? `deadline_${dr}` : n.type) as Notification['type'];
-                  const Icon = ICON_MAP[displayType] || Bell;
-                  const iconColor = COLOR_MAP[displayType] || 'text-nokturo-500';
-
-                  return (
-                    <button
-                      key={n.id}
-                      onClick={() => handleNotificationClick(n)}
-                      className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all duration-150 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 hover:opacity-90 active:scale-[0.99] ${
-                        !n.read ? 'bg-blue-50/50 dark:bg-blue-900/10' : ''
-                      }`}
-                    >
-                      <div className={`mt-0.5 shrink-0 ${iconColor}`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm leading-snug ${!n.read ? 'font-medium text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-700 dark:text-nokturo-300'}`}>
-                          {n.title}
-                        </p>
-                        {n.message && (
-                          <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5 line-clamp-1">
-                            {n.message}
-                          </p>
-                        )}
-                        <span className="text-[10px] text-nokturo-400 dark:text-nokturo-500 mt-1 block">
-                          {formatTime(n.created_at)}
-                        </span>
-                      </div>
-                      {!n.read && (
-                        <span className="mt-1.5 shrink-0 w-2 h-2 rounded-full bg-[#FF1A1A]" />
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
+      {/* List */}
+      <div className="max-h-80 overflow-y-auto p-3">
+      <div className="flex flex-col gap-2">
+        {notifications.length === 0 ? (
+          <div className="py-10 text-center text-sm text-nokturo-500 dark:text-nokturo-500">
+            {t('notifications.empty')}
           </div>
-        </>
-      )}
-    </div>
+        ) : (
+          notifications.map((n) => (
+              <button
+                key={n.id}
+                onClick={() => handleNotificationClick(n, onClose)}
+                className={`w-full flex items-start gap-3 px-4 py-3 text-left transition-all duration-150 hover:bg-nokturo-50/20 dark:hover:bg-white/[0.03] hover:opacity-[0.98] active:scale-[0.99] rounded-[10px] ${
+                  !n.read ? 'bg-blue-50/50 dark:bg-white/5' : ''
+                }`}
+              >
+                <span
+                  className={`mt-1.5 shrink-0 w-2 h-2 rounded-[50%] ${!n.read ? 'bg-[#FF1A1A]' : 'bg-nokturo-400 dark:bg-nokturo-500'}`}
+                />
+                <div className={`flex-1 min-w-0 ${n.read ? 'opacity-50' : ''}`}>
+                  <p className={`text-sm leading-snug whitespace-nowrap ${!n.read ? 'font-medium text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-600 dark:text-nokturo-500'}`}>
+                    {n.title}
+                  </p>
+                  {n.message && (
+                    <p className={`text-xs mt-0.5 line-clamp-1 ${!n.read ? 'text-nokturo-500 dark:text-nokturo-400' : 'text-nokturo-400 dark:text-nokturo-600'}`}>
+                      {n.message}
+                    </p>
+                  )}
+                  <span className={`text-[10px] mt-1 block ${!n.read ? 'text-nokturo-400 dark:text-nokturo-500' : 'text-nokturo-400 dark:text-nokturo-600'}`}>
+                    {formatTime(n.created_at)}
+                  </span>
+                </div>
+              </button>
+            ))
+        )}
+      </div>
+      </div>
+    </>
   );
 }
 

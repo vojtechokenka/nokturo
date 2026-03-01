@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -9,11 +10,8 @@ import {
   type Label,
 } from '../../components/LabelSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
-import { FilterSelect } from '../../components/FilterSelect';
 import {
   Plus,
-  Pencil,
-  Trash2,
   Tag,
   Loader2,
   MoreVertical,
@@ -40,8 +38,6 @@ export default function LabelsPage() {
   const [loading, setLoading] = useState(true);
   const [typOptions, setTypOptions] = useState<NotionSelectOption[]>([]);
 
-  const [typFilter, setTypFilter] = useState<string[]>([]);
-
   const [slideOverOpen, setSlideOverOpen] = useState(false);
   const [editingLabel, setEditingLabel] = useState<Label | null>(null);
 
@@ -59,22 +55,16 @@ export default function LabelsPage() {
   const fetchLabels = useCallback(async () => {
     setLoading(true);
 
-    let query = supabase
+    const { data, error } = await supabase
       .from('labels')
       .select('*')
       .order('created_at', { ascending: false });
-
-    if (typFilter.length > 0) {
-      query = query.in('typ', typFilter);
-    }
-
-    const { data, error } = await query;
 
     if (!error && data) {
       setLabels(data as Label[]);
     }
     setLoading(false);
-  }, [typFilter]);
+  }, []);
 
   useEffect(() => {
     fetchLabels();
@@ -203,46 +193,24 @@ export default function LabelsPage() {
     <PageShell
       titleKey="pages.labelsLibrary.title"
       descriptionKey="pages.labelsLibrary.description"
-    >
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-        {typFilter.length > 0 && (
+      actionsSlot={
+        <div className="flex justify-end">
           <button
-            type="button"
-            onClick={() => setTypFilter([])}
-            className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            {t('common.clearFilters')}
+            <Plus className="w-4 h-4" />
+            {t('labels.addLabel')}
           </button>
-        )}
-        <FilterSelect
-          value={typFilter}
-          onChange={setTypFilter}
-          titleKey="labels.filterTitle"
-          options={[
-            { value: 'all', label: t('labels.allTypes') },
-            ...typOptions.map((opt) => ({
-              value: opt.name,
-              label: t(`labels.types.${opt.name}`) !== `labels.types.${opt.name}` ? t(`labels.types.${opt.name}`) : opt.name,
-            })),
-          ]}
-        />
-
-        <button
-          onClick={openAdd}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('labels.addLabel')}
-        </button>
-      </div>
-
+        </div>
+      }
+    >
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
         </div>
       ) : labels.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Tag className="w-12 h-12 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 font-medium">
             {t('labels.noLabels')}
           </p>
@@ -284,22 +252,20 @@ export default function LabelsPage() {
                       <MoreVertical className="w-4 h-4" />
                     </button>
                     {cardMenuOpen === lbl.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20">
+                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-xl shadow-lg py-1 min-w-[120px] z-20 overflow-hidden">
                         <button
                           type="button"
                           onClick={() => { openEdit(lbl); setCardMenuOpen(null); }}
-                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
                         >
-                          <Pencil className="w-3 h-3" />
                           {t('common.edit')}
                         </button>
                         {canDelete && (
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(lbl.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
                           >
-                            <Trash2 className="w-3 h-3" />
                             {t('common.delete')}
                           </button>
                         )}
@@ -312,7 +278,7 @@ export default function LabelsPage() {
                   const typOpt = typOptions.find((o) => o.name === lbl.typ);
                   const colorCls = typOpt ? TAG_BADGE_CLASSES[typOpt.color] ?? TAG_BADGE_CLASSES.gray : TAG_BADGE_CLASSES.gray;
                   return (
-                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded font-medium ${colorCls}`}>
+                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-[4px] font-medium ${colorCls}`}>
                       {t(`labels.types.${lbl.typ}`) !== `labels.types.${lbl.typ}` ? t(`labels.types.${lbl.typ}`) : lbl.typ}
                     </span>
                   );
@@ -344,9 +310,9 @@ export default function LabelsPage() {
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
               {t('common.confirm')}
             </h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">

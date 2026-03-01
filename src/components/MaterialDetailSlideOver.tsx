@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import { X, Package, Pencil, Copy, Trash2, MoreVertical } from 'lucide-react';
+import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import type { Material } from './MaterialSlideOver';
 
 interface Supplier {
@@ -86,15 +87,15 @@ export function MaterialDetailSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
+          <h3 className={MODAL_HEADING_CLASS}>
             {material.name}
           </h3>
           <div className="flex items-center gap-2">
@@ -108,7 +109,7 @@ export function MaterialDetailSlideOver({
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                  <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
                     <button
                       onClick={() => { onEdit(material); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
@@ -128,7 +129,7 @@ export function MaterialDetailSlideOver({
                     {canDelete && onDelete && (
                       <button
                         onClick={() => { onDelete(material.id); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         {t('common.delete')}
@@ -293,7 +294,7 @@ export function MaterialDetailSlideOver({
                   {targetedProducts.map((p) => (
                     <span
                       key={p.id}
-                      className="inline-flex px-2 py-0.5 rounded bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200 text-xs font-medium"
+                      className="inline-flex px-2 py-0.5 rounded-[4px] bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200 text-xs font-medium"
                     >
                       {p.name}
                     </span>

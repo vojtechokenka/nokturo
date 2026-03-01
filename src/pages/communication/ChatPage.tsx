@@ -3,12 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { PageShell } from '../../components/PageShell';
-import {
-  Send,
-  Hash,
-  Loader2,
-  MessageCircle,
-} from 'lucide-react';
+import { Hash, Loader2, MessageCircle } from 'lucide-react';
+import { SendArrowIcon } from '../../components/icons/SendArrowIcon';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { renderContentWithMentions } from '../../lib/renderMentions';
 import { INPUT_CLASS } from '../../lib/inputStyles';
@@ -315,10 +311,10 @@ export default function ChatPage() {
                         <img
                           src={msg.profile.avatar_url}
                           alt={name}
-                          className="w-8 h-8 rounded-full object-cover shrink-0 mt-0.5"
+                          className="avatar-round w-8 h-8 object-cover shrink-0 mt-0.5"
                         />
                       ) : (
-                        <div className="w-8 h-8 rounded-full overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-black">
+                        <div className="avatar-round w-8 h-8 overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-black">
                           <DefaultAvatar size={32} />
                         </div>
                       )}
@@ -369,7 +365,7 @@ export default function ChatPage() {
                 {sending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <Send className="w-4 h-4" />
+                  <SendArrowIcon className="w-4 h-4" />
                 )}
               </button>
             </div>

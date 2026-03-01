@@ -11,7 +11,7 @@ import { TableOfContents } from '../../components/TableOfContents';
 import type { TocItem } from '../../components/TableOfContents';
 import type { ProductWithMaterials, ProductTechPack as TechPackType } from '../../components/ProductSlideOver';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
-import { ArrowLeft, ArrowRight, Loader2, Package, Scissors, Tag, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Loader2, Scissors, Tag, X } from 'lucide-react';
 import { ProductGalleryComments } from '../../components/ProductGalleryComments';
 
 /** Syncs TOC items when description is empty but sections (materials, labels, etc.) exist */
@@ -195,7 +195,6 @@ export default function SamplingDetailPage() {
         descriptionKey="pages.readyForSampling.description"
       >
         <div className="flex flex-col items-center justify-center py-32 text-center">
-          <Package className="w-16 h-16 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">{t('products.noProducts')}</p>
           <button
             onClick={() => navigate('/production/sampling')}
@@ -219,8 +218,8 @@ export default function SamplingDetailPage() {
       titleKey="pages.readyForSampling.title"
       descriptionKey="pages.readyForSampling.description"
     >
-      <div className="max-w-[860px] mx-auto flex gap-12">
-        <div className="min-w-0 flex-1">
+      <div className="max-w-[860px] mx-auto relative">
+        <div className="min-w-0 flex-1 pr-[252px]">
           {/* Back */}
           <div className="flex items-center justify-between mb-8">
             <button
@@ -242,12 +241,12 @@ export default function SamplingDetailPage() {
                 )}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {product.priority && (
-                    <span className="text-xs px-2 py-0.5 rounded font-medium bg-red-600 text-white">
+                    <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-red-600 text-white">
                       {t('products.priority')}
                     </span>
                   )}
                   {product.ready_for_sampling && (
-                    <span className="text-xs px-2 py-0.5 rounded font-medium bg-emerald-600 text-white">
+                    <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-emerald-600 text-white">
                       {t('products.readyForSampling')}
                     </span>
                   )}
@@ -321,7 +320,7 @@ export default function SamplingDetailPage() {
                                 key={pm.id ?? idx}
                                 type="button"
                                 onClick={() => mat && setViewingMaterial(mat as Material)}
-                                className="w-full flex items-start gap-4 p-4 bg-white/80 dark:bg-nokturo-700/50 rounded-lg min-w-0 text-left hover:bg-white dark:hover:bg-nokturo-600 transition-colors cursor-pointer"
+                                className="w-full flex items-start gap-4 p-4 bg-white/5 dark:bg-nokturo-700/50 rounded-lg min-w-0 text-left hover:bg-white/10 dark:hover:bg-nokturo-600 transition-colors cursor-pointer"
                               >
                                 <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-nokturo-100 dark:bg-nokturo-600 flex items-center justify-center">
                                   {mat?.image_url ? (
@@ -397,8 +396,8 @@ export default function SamplingDetailPage() {
                       }
                       className={
                         hasDesign
-                          ? 'w-full flex items-start gap-4 p-4 bg-white/80 dark:bg-nokturo-700/50 rounded-lg min-w-0 text-left hover:bg-white dark:hover:bg-nokturo-600 transition-colors cursor-zoom-in'
-                          : 'flex items-start gap-4 p-4 bg-white/80 dark:bg-nokturo-700/50 rounded-lg min-w-0'
+                          ? 'w-full flex items-start gap-4 p-4 bg-white/5 dark:bg-nokturo-700/50 rounded-lg min-w-0 text-left hover:bg-white/10 dark:hover:bg-nokturo-600 transition-colors cursor-zoom-in'
+                          : 'flex items-start gap-4 p-4 bg-white/5 dark:bg-nokturo-700/50 rounded-lg min-w-0'
                       }
                     >
                       {hasDesign ? (
@@ -726,7 +725,7 @@ export default function SamplingDetailPage() {
 
         {/* TOC – pinned to top, aligned with header */}
         {tocItems.length > 0 && (
-          <TableOfContents items={tocItems} title={t('pages.readyForSampling.title')} alignWithHeader />
+          <TableOfContents items={tocItems} title={t('pages.readyForSampling.title')} />
         )}
       </div>
 

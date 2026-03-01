@@ -38,11 +38,11 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
-      className={`cursor-pointer hover:bg-nokturo-100/60 dark:hover:bg-nokturo-800/60 transition-colors ${index % 2 === 1 ? 'bg-black/10 dark:bg-nokturo-800/30' : ''}`}
+      className={`cursor-pointer hover:bg-nokturo-100/60 dark:hover:bg-nokturo-800/60 transition-colors ${index % 2 === 0 ? 'bg-white/5' : ''}`}
     >
-      <td className="py-2.5 pl-4 pr-6 align-middle">
+      <td className="py-2.5 pl-6 pr-6 align-middle">
         <span
-          className={`inline-block text-xs px-2 py-0.5 rounded font-medium whitespace-nowrap ${
+          className={`inline-block text-xs px-2 py-0.5 rounded-[4px] font-medium whitespace-nowrap ${
             TAG_BADGE_CLASSES[ORDER_STATUS_COLORS[order.order_status] ?? 'gray'] ?? TAG_BADGE_CLASSES.gray
           }`}
         >
@@ -59,7 +59,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-[4px] font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition-colors truncate max-w-full"
           >
             <ExternalLink className="w-3 h-3 shrink-0" />
             <span className="truncate">{order.eshop_link.replace(/^https?:\/\//, '').slice(0, 14)}…</span>
@@ -73,7 +73,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
           {order.note?.trim() ? order.note : ''}
         </span>
       </td>
-      <td className="py-2.5 pl-6 align-middle text-right whitespace-nowrap text-sm text-nokturo-900 dark:text-nokturo-100">
+      <td className="py-2.5 pl-6 pr-6 align-middle text-right whitespace-nowrap text-sm text-nokturo-900 dark:text-nokturo-100">
         {formatValueInCzk(order.order_value, order.order_currency || 'EUR')}
       </td>
     </tr>

@@ -8,7 +8,7 @@ import {
   type NotionSelectOption,
 } from './NotionSelect';
 import { SimpleDropdown } from './SimpleDropdown';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Types ────────────────────────────────────────────────────
 export interface AccountingOrder {
@@ -299,10 +299,10 @@ export function AccountingSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
+          <h3 className={MODAL_HEADING_CLASS}>
             {order?.id ? t('accounting.editOrder') : t('accounting.addOrder')}
           </h3>
           <div className="flex items-center gap-1">
@@ -313,7 +313,7 @@ export function AccountingSlideOver({
                   onDelete(order.id);
                   onClose();
                 }}
-                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/30 transition-colors rounded-lg"
+                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red-500 hover:text-white transition-colors rounded-lg"
                 title={t('common.delete')}
               >
                 <Trash2 className="w-5 h-5" />
@@ -424,7 +424,7 @@ export function AccountingSlideOver({
                   type="checkbox"
                   checked={form.monthly_payment}
                   onChange={(e) => handleChange('monthly_payment', e.target.checked)}
-                  className="w-4 h-4 rounded border-nokturo-300 text-nokturo-900 focus:ring-nokturo-500"
+                  className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-900 focus:ring-nokturo-500"
                 />
                 <span className="text-sm text-nokturo-700 dark:text-nokturo-400">{t('accounting.monthlyPayment')}</span>
               </label>
@@ -450,7 +450,7 @@ export function AccountingSlideOver({
                   type="checkbox"
                   checked={form.yearly_payment}
                   onChange={(e) => handleChange('yearly_payment', e.target.checked)}
-                  className="w-4 h-4 rounded border-nokturo-300 text-nokturo-900 focus:ring-nokturo-500"
+                  className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-900 focus:ring-nokturo-500"
                 />
                 <span className="text-sm text-nokturo-700 dark:text-nokturo-400">{t('accounting.yearlyPayment')}</span>
               </label>
@@ -522,7 +522,7 @@ export function AccountingSlideOver({
                 value={form.note}
                 onChange={(e) => handleChange('note', e.target.value)}
                 rows={3}
-                className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 border border-nokturo-300 dark:border-nokturo-600 rounded-lg px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/40 focus:border-nokturo-400 dark:focus:border-nokturo-500 transition-colors resize-none"
+                className="w-full min-h-[44px] bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/40 transition-colors resize-none"
               />
             </div>
 
@@ -539,7 +539,7 @@ export function AccountingSlideOver({
                     <button
                       type="button"
                       onClick={removeInvoice}
-                      className="text-sm text-red-600 hover:text-red-700"
+                      className="text-sm bg-red-500 text-white hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       {t('common.delete')}
                     </button>
@@ -559,7 +559,7 @@ export function AccountingSlideOver({
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-white dark:bg-nokturo-800 border-t border-nokturo-200 dark:border-nokturo-600">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
             {error && (
               <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
                 {error}

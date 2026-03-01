@@ -32,40 +32,58 @@ interface RichTextBlockViewerProps {
   tocTitle?: string;
   /** Výchozí položky TOC, když v obsahu nejsou žádné nadpisy */
   defaultTocItems?: TocItem[];
+  /** Optional footer slot for TOC (e.g. Edit button) – full width at bottom */
+  tocFooterSlot?: React.ReactNode;
   /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
   headingFont?: HeadingFontFamily;
   /** When true, H3 uses 32px (About Nokturo); otherwise 20px */
   h3Large?: boolean;
+  /** Optional header image rendered above article content (scrolls with content) */
+  headerImageSlot?: React.ReactNode;
 }
 
-export function extractHeadings(blocks: RichTextBlock[]): TocItem[] {
-  const headings: TocItem[] = [];
+/** Extract TOC items from Tag blocks (anchors). Tags replace headings as TOC source. */
+export function extractTags(blocks: RichTextBlock[]): TocItem[] {
+  const items: TocItem[] = [];
   for (const block of blocks) {
-    if (block.type === 'heading' && block.text?.trim()) {
-      headings.push({ id: block.id, text: block.text.trim(), level: block.level });
+    if (block.type === 'tag' && block.text?.trim()) {
+      items.push({ id: block.id, text: block.text.trim(), level: 2 });
     }
   }
-  return headings;
+  return items;
 }
 
-export function RichTextBlockViewer({ blocks, className = '', showToc = true, tocTitle, defaultTocItems, headingFont = 'headline', h3Large = false }: RichTextBlockViewerProps) {
+/** @deprecated Use extractTags. Kept for backwards compatibility. */
+export function extractHeadings(blocks: RichTextBlock[]): TocItem[] {
+  return extractTags(blocks);
+}
+
+export function RichTextBlockViewer({ blocks, className = '', showToc = true, tocTitle, defaultTocItems, tocFooterSlot, headerImageSlot, headingFont = 'headline', h3Large = false }: RichTextBlockViewerProps) {
   const { t } = useTranslation();
-  const tocItems = extractHeadings(blocks);
+  const tocItems = extractTags(blocks);
   const effectiveTocItems = tocItems.length > 0 ? tocItems : (defaultTocItems ?? []);
   const useDefaultToc = tocItems.length === 0 && defaultTocItems && defaultTocItems.length > 0 && blocks?.length > 0;
 
   if (!blocks?.length) {
+    const emptyHeaderWrapper = headerImageSlot ? (
+      <div className="-ml-[3.75rem] w-[calc(100%+3.75rem)]">
+        {headerImageSlot}
+      </div>
+    ) : null;
     return (
-      <div className={`text-nokturo-500 dark:text-nokturo-400 text-center py-12 ${className}`}>
-        {t('richText.noContent')}
+      <div className={className}>
+        {emptyHeaderWrapper}
+        <div className="text-nokturo-500 dark:text-nokturo-400 text-center py-12">
+          {t('richText.noContent')}
+        </div>
       </div>
     );
   }
 
   const content = (
     <article className="font-body">
-      {blocks.map((block) => (
-        <BlockView key={block.id} block={block} headingFont={headingFont} h3Large={h3Large} />
+      {blocks.map((block, index) => (
+        <BlockView key={block.id} block={block} prevBlock={blocks[index - 1]} nextBlock={blocks[index + 1]} headingFont={headingFont} h3Large={h3Large} />
       ))}
       {useDefaultToc &&
         defaultTocItems!.map((item, idx) => (
@@ -77,20 +95,54 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
     </article>
   );
 
+  const headerImageWrapper = headerImageSlot ? (
+    <div className="-ml-[3.75rem] w-[calc(100%+3.75rem)]">
+      {headerImageSlot}
+    </div>
+  ) : null;
+
   if (showToc && effectiveTocItems.length > 0) {
     return (
-      <div className={`flex gap-12 items-start ${className}`}>
-        <div className="min-w-0 flex-1">{content}</div>
-        <TableOfContents items={effectiveTocItems} title={tocTitle} alignWithFirstHeading />
+      <div className={`flex gap-6 ${className}`}>
+        <div className="min-w-0 flex-1 max-w-[860px]">
+          {headerImageWrapper}
+          {content}
+        </div>
+        <TableOfContents
+          items={effectiveTocItems}
+          title={tocTitle}
+          footerSlot={tocFooterSlot}
+          alignWithFirstHeading
+          sticky
+        />
       </div>
     );
   }
 
-  return <div className={className}>{content}</div>;
+  return (
+    <div className={className}>
+      {headerImageWrapper}
+      {content}
+    </div>
+  );
 }
 
-function BlockView({ block, headingFont = 'headline', h3Large = false }: { block: RichTextBlock; headingFont?: HeadingFontFamily; h3Large?: boolean }) {
+function BlockView({ block, prevBlock, nextBlock, headingFont = 'headline', h3Large = false }: { block: RichTextBlock; prevBlock?: RichTextBlock; nextBlock?: RichTextBlock; headingFont?: HeadingFontFamily; h3Large?: boolean }) {
   switch (block.type) {
+    case 'tag':
+      if (!block.text?.trim()) return null;
+      const tagMb = nextBlock?.type === 'heading' && block.visible !== false ? 'mb-3' : 'mb-1';
+      return (
+        <span
+          id={block.id}
+          data-block-id={block.id}
+          className={`block scroll-mt-6 ${block.visible !== false ? `text-[12px] uppercase tracking-[0.2em] text-nokturo-500 dark:text-nokturo-400 font-normal mt-[80px] ${tagMb}` : 'sr-only mt-[80px]'}`}
+          aria-hidden={block.visible === false}
+        >
+          — {block.text}
+        </span>
+      );
+
     case 'heading':
       if (!block.text.trim()) return null;
       const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
@@ -100,17 +152,18 @@ function BlockView({ block, headingFont = 'headline', h3Large = false }: { block
       const hSizeClass =
         block.level === 1
           ? isHeadline
-            ? 'text-[48px]'
+            ? 'text-[56px]'
             : 'text-[30px]'
           : block.level === 2
             ? isHeadline
               ? 'text-[40px]'
               : 'text-[24px]'
             : h3Size;
+      const headingMt = prevBlock?.type === 'tag' && prevBlock.visible !== false ? 'mt-0' : block.level === 1 ? 'mt-8' : block.level === 2 ? 'mt-12' : 'mt-8';
       const headingClass = {
-        1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-4 scroll-mt-6 leading-[1.1]`,
-        2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-12 mb-4 scroll-mt-6 leading-[1.2]`,
-        3: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-3 scroll-mt-6`,
+        1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-4 scroll-mt-6 leading-[1.1]`,
+        2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-4 scroll-mt-6 leading-[1.2]`,
+        3: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-3 scroll-mt-6`,
       }[block.level];
       return (
         <Tag id={block.id} className={headingClass}>

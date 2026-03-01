@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -107,39 +108,36 @@ export default function MagazinePage() {
     <PageShell
       titleKey="pages.magazine.title"
       descriptionKey="pages.magazine.description"
-    >
-      {/* Action bar */}
-      <div className="flex items-center gap-3 mb-6">
-        {isFounder && (
+      actionsSlot={
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+          {isFounder && (
+            <button
+              type="button"
+              onClick={() => setShowHidden((v) => !v)}
+              className={`flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] transition-colors ${
+                showHidden
+                  ? 'bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100'
+                  : 'text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
+              }`}
+            >
+              {showHidden ? (
+                <Eye className="w-4 h-4" />
+              ) : (
+                <EyeOff className="w-4 h-4" />
+              )}
+              {t('magazine.hiddenArticles')}
+            </button>
+          )}
           <button
-            type="button"
-            onClick={() => setShowHidden((v) => !v)}
-            className={`flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-lg transition-colors ${
-              showHidden
-                ? 'bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100'
-                : 'text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
-            }`}
+            onClick={() => navigate('/prototyping/magazine/new')}
+            className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            {showHidden ? (
-              <Eye className="w-4 h-4" />
-            ) : (
-              <EyeOff className="w-4 h-4" />
-            )}
-            {t('magazine.hiddenArticles')}
+            <Plus className="w-4 h-4" />
+            {t('magazine.addNew')}
           </button>
-        )}
-
-        <div className="flex-1" />
-
-        <button
-          onClick={() => navigate('/prototyping/magazine/new')}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('magazine.addNew')}
-        </button>
-      </div>
-
+        </div>
+      }
+    >
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -147,7 +145,6 @@ export default function MagazinePage() {
         </div>
       ) : visibleArticles.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <FileText className="w-12 h-12 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">
             {showHidden
               ? t('magazine.noHiddenArticles')
@@ -217,7 +214,7 @@ export default function MagazinePage() {
                     <MoreVertical className="w-4 h-4" />
                   </button>
                   {menuOpen === article.id && (
-                    <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                    <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
                       <button
                         type="button"
                         onClick={() => {
@@ -254,7 +251,7 @@ export default function MagazinePage() {
                             setMenuOpen(null);
                             setDeleteTarget(article.id);
                           }}
-                          className="w-full px-3 py-2 text-left text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                           {t('common.delete')}
@@ -271,9 +268,9 @@ export default function MagazinePage() {
 
       {/* Delete confirmation */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
               {t('common.confirm')}
             </h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">

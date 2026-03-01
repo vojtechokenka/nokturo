@@ -9,10 +9,11 @@ import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
 import type { RichTextBlock } from './RichTextBlockEditor';
 import { getAspectClass } from './RichTextBlockEditor';
-import { extractHeadings, type HeadingFontFamily } from './RichTextBlockViewer';
+import { extractTags, type HeadingFontFamily } from './RichTextBlockViewer';
 import type { TocItem } from './TableOfContents';
 import { TableOfContents } from './TableOfContents';
-import { MessageSquare, Send, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MessageSquare, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS } from '../lib/inputStyles';
@@ -94,7 +95,7 @@ function highlightTextMultiple(text: string, comments: TextComment[]): React.Rea
       <mark
         key={seg.commentId}
         data-comment-id={seg.commentId}
-        className="bg-amber-200 dark:bg-white/10 rounded px-0 cursor-pointer hover:bg-amber-300/80 dark:hover:bg-white/20 text-black dark:text-white transition-colors"
+        className="bg-[#FFDD00]/50 rounded px-0 cursor-pointer hover:bg-[#FFDD00]/65 text-black dark:text-white transition-colors"
       >
         {text.slice(seg.start, seg.end)}
       </mark>
@@ -124,11 +125,15 @@ function highlightPendingSelection(text: string, selectedText: string, blockId: 
 // ── Block with comment support ─────────────────────────────────
 function CommentableBlockView({
   block,
+  prevBlock,
+  nextBlock,
   blockComments,
   pendingSelection,
   headingFont = 'headline',
 }: {
   block: RichTextBlock;
+  prevBlock?: RichTextBlock;
+  nextBlock?: RichTextBlock;
   comments: TextComment[];
   blockComments: TextComment[];
   pendingSelection: { blockId: string; selectedText: string } | null;
@@ -139,17 +144,32 @@ function CommentableBlockView({
   const hFont = isHeadline ? 'font-headline' : 'font-body';
   const hSizeClass =
     block.level === 1
-      ? isHeadline ? 'text-[48px]' : 'text-[30px]'
+      ? isHeadline ? 'text-[56px]' : 'text-[30px]'
       : block.level === 2
         ? isHeadline ? 'text-[40px]' : 'text-[24px]'
         : 'text-[20px]';
 
+  if (block.type === 'tag' && block.text?.trim()) {
+    const tagMb = nextBlock?.type === 'heading' && block.visible !== false ? 'mb-3' : 'mb-1';
+    return (
+      <span
+        id={block.id}
+        className={`block scroll-mt-6 ${block.visible !== false ? `text-[12px] uppercase tracking-[0.2em] text-nokturo-500 dark:text-nokturo-400 font-normal mt-[80px] ${tagMb}` : 'sr-only mt-[80px]'}`}
+        aria-hidden={block.visible === false}
+        data-block-id={block.id}
+      >
+        — {block.text}
+      </span>
+    );
+  }
+
   if (block.type === 'heading' && block.text?.trim()) {
     const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
+    const headingMt = prevBlock?.type === 'tag' && prevBlock.visible !== false ? 'mt-0' : block.level === 1 ? 'mt-16' : block.level === 2 ? '' : 'mt-8';
     const headingClass = {
-      1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-16 mb-4 scroll-mt-6 leading-[1.1]`,
-      2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mb-4 scroll-mt-6 leading-[1.2]`,
-      3: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 mt-8 mb-3 scroll-mt-6`,
+      1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-4 scroll-mt-6 leading-[1.1]`,
+      2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-4 scroll-mt-6 leading-[1.2]`,
+      3: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-3 scroll-mt-6`,
     }[block.level];
     const text = block.text;
     const display = isPendingBlock
@@ -211,7 +231,7 @@ function CommentableBlockView({
       for (const { comment } of toReplace) {
         const escaped = comment.selected_text!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
         html = html.replace(new RegExp(escaped), (match) =>
-          `<mark data-comment-id="${comment.id}" class="bg-amber-200 dark:bg-white/10 rounded px-0 cursor-pointer hover:bg-amber-300/80 dark:hover:bg-white/20 text-black dark:text-white">${match}</mark>`
+          `<mark data-comment-id="${comment.id}" class="bg-[#FFDD00]/50 rounded px-0 cursor-pointer hover:bg-[#FFDD00]/65 text-black dark:text-white">${match}</mark>`
         );
       }
     }
@@ -347,7 +367,7 @@ function CommentableBlockView({
                     ? 'border-b-2 border-nokturo-300 dark:border-nokturo-500'
                     : 'border-b border-nokturo-200 dark:border-nokturo-600'
               } ${
-                isHeader ? 'bg-nokturo-100 dark:bg-nokturo-700 font-semibold text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-700 dark:text-nokturo-300'
+                isHeader ? 'bg-white/5 font-semibold text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-700 dark:text-nokturo-300'
               }`}
             >
               {cell.type === 'text' ? (
@@ -399,6 +419,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   const [addError, setAddError] = useState<string | null>(null);
   const [popoverPosition, setPopoverPosition] = useState<{ top: number; left: number } | null>(null);
   const [threadPopoverPosition, setThreadPopoverPosition] = useState<{ top?: number; bottom?: number; left: number } | null>(null);
+  const [viewportSize, setViewportSize] = useState(() => ({ w: window.innerWidth, h: window.innerHeight }));
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [displayParentOverrides, setDisplayParentOverrides] = useState<Record<string, string>>({});
   const [profiles, setProfiles] = useState<ProfileOption[]>([]);
@@ -415,6 +436,12 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   useEffect(() => {
     fetchProfiles();
   }, [fetchProfiles]);
+
+  useEffect(() => {
+    const onResize = () => setViewportSize({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const mention = useMentionSuggestions(commentInput, profiles as MentionProfile[]);
 
@@ -551,6 +578,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     const centerY = anchorRect.top + anchorRect.height / 2;
     const popoverWidth = 384; // w-96
     const popoverMinHeight = 280;
+    const maxPopoverHeight = window.innerHeight - 128; // max-h-[calc(100vh-8rem)]
     const gap = 8;
     const padding = 16;
 
@@ -609,8 +637,17 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
         break;
     }
 
+    // Clamp to viewport so popover never overflows
+    left = Math.max(padding, Math.min(window.innerWidth - popoverWidth - padding, left));
+    if (top !== undefined) {
+      top = Math.max(padding, Math.min(window.innerHeight - maxPopoverHeight - padding, top));
+    }
+    if (bottom !== undefined) {
+      bottom = Math.max(padding, Math.min(window.innerHeight - maxPopoverHeight, bottom));
+    }
+
     setThreadPopoverPosition({ top, left, bottom });
-  }, [activeThreadId]);
+  }, [activeThreadId, viewportSize]);
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (!canComment) return;
@@ -873,7 +910,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     }
   }, [comments, getCommentAnchor]);
 
-  const tocItems = [...extractHeadings(blocks), ...(sectionTocItems ?? [])];
+  const tocItems = [...extractTags(blocks), ...(sectionTocItems ?? [])];
   const showTocSidebar = showToc && tocItems.length > 0;
 
   useEffect(() => {
@@ -890,10 +927,12 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
             {shortDescriptionDisplay}
           </p>
         )}
-        {blocks.map((block) => (
+        {blocks.map((block, index) => (
           <CommentableBlockView
             key={block.id}
             block={block}
+            prevBlock={blocks[index - 1]}
+            nextBlock={blocks[index + 1]}
             comments={comments}
             blockComments={blockCommentsMap[block.id] || []}
             pendingSelection={selectionState ? { blockId: selectionState.blockId, selectedText: selectionState.selectedText } : null}
@@ -904,8 +943,8 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   );
 
   const mainContent = showTocSidebar && !renderTocExternally ? (
-    <div className={`flex gap-12 items-start ${className}`}>
-      <div className="min-w-0 flex-1">
+    <div className={`relative ${className}`}>
+      <div className="min-w-0 flex-1 pr-[252px]">
         {content}
         {sections}
       </div>
@@ -972,7 +1011,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
               disabled={!commentInput.trim() || sending}
               className="w-9 h-9 flex items-center justify-center shrink-0 bg-nokturo-900 text-white rounded hover:bg-nokturo-800 disabled:opacity-50"
             >
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendArrowIcon className="w-4 h-4" />}
             </button>
           </div>
           {addError && (
@@ -1090,7 +1129,7 @@ function CommentThreadPopover({
     return (
       <div
         key={c.id}
-        className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 ${isOwn ? 'ml-6 bg-nokturo-100 dark:bg-white/20 text-nokturo-900 dark:text-white' : 'mr-6 bg-nokturo-50 dark:bg-white/10 text-nokturo-700 dark:text-white'}`}
+        className={`group flex flex-col py-2 px-2 rounded-[12px] min-w-0 ${isOwn ? 'ml-6 bg-nokturo-100 dark:bg-white/20 text-nokturo-900 dark:text-white' : 'mr-6 bg-nokturo-50 dark:bg-white/10 text-nokturo-700 dark:text-white'}`}
       >
         {parentPreviewTruncated && (
           <p className="text-xs text-black/40 dark:text-nokturo-400/80 -mx-2 px-3 mb-1 truncate" title={parentPreview}>
@@ -1101,7 +1140,7 @@ function CommentThreadPopover({
           {isEditing ? (
             <div className="flex flex-col gap-1.5">
               <textarea
-                className="w-full text-sm bg-white dark:bg-nokturo-700 border border-nokturo-300 dark:border-nokturo-600 rounded px-2 py-1.5 text-nokturo-900 dark:text-white resize-none focus:outline-none focus:ring-1 focus:ring-nokturo-500"
+                className="w-full h-11 text-sm bg-white dark:bg-nokturo-700 rounded-[6px] px-2 py-1.5 text-nokturo-900 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-nokturo-500/50"
                 rows={2}
                 value={editContent}
                 onChange={(e) => setEditContent(e.target.value)}
@@ -1131,7 +1170,7 @@ function CommentThreadPopover({
               </div>
             </div>
           ) : (
-            <p className="text-base font-normal break-words text-inherit">
+            <p className="text-sm font-normal break-words text-inherit">
               {renderContentWithMentions(c.content, isOwn, currentUserDisplayName)}
             </p>
           )}
@@ -1139,9 +1178,9 @@ function CommentThreadPopover({
         <div className="flex justify-between items-center mt-4 min-w-0 gap-2">
           <div className="flex gap-2 items-center min-w-0 flex-1">
             {c.profile?.avatar_url ? (
-              <img src={c.profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+              <img src={c.profile.avatar_url} alt="" className="avatar-round w-7 h-7 object-cover shrink-0" />
             ) : (
-              <DefaultAvatar size={28} className="rounded-full overflow-hidden shrink-0" />
+              <DefaultAvatar size={28} className="avatar-round overflow-hidden shrink-0" />
             )}
             <div className="flex flex-col min-w-0">
               <span className="text-sm font-medium truncate text-inherit">{name}</span>
@@ -1209,7 +1248,7 @@ function CommentThreadPopover({
                           if (isRoot && !window.confirm(t('comments.deleteRootConfirm'))) return;
                           onDelete(c.id);
                         }}
-                        className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                       >
                         <Trash2 className="w-3 h-3" />
                         {t('common.delete')}
@@ -1279,7 +1318,7 @@ function CommentThreadPopover({
             .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
             .map((c) => renderComment(c, threadComments))}
         </div>
-        <div className="flex gap-2 mt-3 pt-3 border-t border-nokturo-200 dark:border-nokturo-600 shrink-0 relative">
+        <div className="flex gap-2 shrink-0 relative">
           <div className="flex-1 min-w-0 relative">
             {replyMention.active && (
               <MentionDropdown
@@ -1312,9 +1351,9 @@ function CommentThreadPopover({
           <button
             onClick={() => onReply(replyTo ?? rootComment.id)}
             disabled={!replyContent.trim() || sending}
-            className="size-9 flex items-center justify-center bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="size-11 aspect-square flex items-center justify-center bg-white text-nokturo-900 rounded-lg hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 dark:bg-white dark:text-nokturo-900 dark:hover:bg-nokturo-100"
           >
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendArrowIcon className="w-4 h-4" />}
           </button>
         </div>
       </div>

@@ -132,7 +132,7 @@ function LinkPopover({
         onChange={(e) => setUrl(e.target.value)}
         placeholder="https://..."
         onKeyDown={(e) => e.key === 'Enter' && submit()}
-        className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-lg px-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 focus:outline-none"
+        className="w-full h-11 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50"
       />
       <input
         type="text"
@@ -140,7 +140,7 @@ function LinkPopover({
         onChange={(e) => setText(e.target.value)}
         placeholder={t('richText.linkTextPlaceholder') || 'Link text'}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
-        className="w-full bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-lg px-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 focus:outline-none"
+        className="w-full h-11 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-3 py-1.5 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-400 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50"
       />
       <div className="flex items-center justify-end gap-2">
         <button
@@ -653,7 +653,7 @@ export function RichTextArea({
   const activeBlock = getActiveBlock(editorRef.current);
 
   return (
-    <div className="rounded-lg bg-nokturo-200/60 dark:bg-nokturo-700/60 overflow-hidden focus-within:ring-2 focus-within:ring-nokturo-500/30 transition-shadow">
+    <div className="rich-text-area rounded-xl bg-nokturo-200/60 dark:bg-nokturo-700/60 overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-nokturo-300/40 dark:border-nokturo-600/40 relative flex-wrap">
         <ToolbarButton

@@ -5,7 +5,7 @@ import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { X, Loader2, Trash2 } from 'lucide-react';
 import { SimpleDropdown } from './SimpleDropdown';
 import { RichTextArea } from './RichTextArea';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import { createNotification } from './NotificationCenter';
 
 export interface Task {
@@ -223,10 +223,10 @@ export function TaskSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 tracking-tight">
+          <h3 className={MODAL_HEADING_CLASS}>
             {task?.id ? t('tasks.editTask') : t('tasks.addTask')}
           </h3>
           <div className="flex items-center gap-1">
@@ -237,7 +237,7 @@ export function TaskSlideOver({
                   onDelete(task.id);
                   onClose();
                 }}
-                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-100/80 dark:hover:bg-red-900/30 transition-colors rounded-lg"
+                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red-500 hover:text-white transition-colors rounded-lg"
                 title={t('common.delete')}
               >
                 <Trash2 className="w-5 h-5" />
@@ -311,7 +311,7 @@ export function TaskSlideOver({
                 <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">
                   {t('tasks.assignees')}
                 </label>
-                <div className="flex flex-wrap gap-2 mt-1">
+                <div className="flex flex-wrap gap-6 mt-1">
                   {profiles.map((p) => {
                     const selected = form.assignee_ids.includes(p.id);
                     return (
@@ -319,20 +319,20 @@ export function TaskSlideOver({
                         key={p.id}
                         type="button"
                         onClick={() => toggleAssignee(p.id)}
-                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-colors ${
+                        className={`inline-flex items-center gap-1.5 text-sm transition-colors ${
                           selected
-                            ? 'bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900'
-                            : 'bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-300/60 dark:hover:bg-nokturo-600/60'
+                            ? 'text-white opacity-100'
+                            : 'text-nokturo-400 opacity-50'
                         }`}
                       >
                         {p.avatar_url ? (
                           <img
                             src={p.avatar_url}
                             alt=""
-                            className="w-5 h-5 rounded-full object-cover"
+                            className="avatar-round w-5 h-5 object-cover"
                           />
                         ) : (
-                          <span className="w-5 h-5 rounded-full bg-nokturo-400 dark:bg-nokturo-500 flex items-center justify-center text-[10px] text-white font-medium">
+                          <span className="avatar-round w-5 h-5 bg-nokturo-400 dark:bg-nokturo-500 flex items-center justify-center text-[10px] text-white font-medium">
                             {(p.first_name?.[0] || p.full_name?.[0] || '?').toUpperCase()}
                           </span>
                         )}
@@ -363,7 +363,7 @@ export function TaskSlideOver({
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-white dark:bg-nokturo-800 border-t border-nokturo-200 dark:border-nokturo-600">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
             {error && (
               <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
                 {error}

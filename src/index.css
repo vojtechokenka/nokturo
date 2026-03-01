@@ -2,6 +2,196 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Globally remove border radius */
+.rounded,
+.rounded-sm,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-2xl,
+.rounded-3xl,
+.rounded-full {
+  border-radius: 0 !important;
+}
+
+/* Mention dropdown – parent 8px, child buttons 4px */
+.mention-dropdown {
+  border-radius: 8px !important;
+}
+.mention-dropdown button {
+  border-radius: 4px !important;
+}
+
+/* Profile dropdown – corner radius, hide overflow */
+.profile-dropdown {
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+/* Context/dropdown menus (Edit, Delete, etc.) – corner radius */
+.dropdown-menu {
+  border-radius: 8px !important;
+}
+
+/* Moodboard card images – corner radius */
+.moodboard-card-image {
+  border-radius: 8px !important;
+}
+
+/* Content panels / cards – corner radius */
+.content-panel {
+  border-radius: 8px !important;
+}
+
+/* Rich text editor – corner radius */
+.rich-text-area {
+  border-radius: 12px !important;
+}
+
+/* Badge pills (deadline, status, etc.) – corner radius */
+.badge-pill {
+  border-radius: 9999px !important;
+}
+
+/* Buttons – 6px corner radius (override above for buttons) */
+button.rounded,
+button.rounded-sm,
+button.rounded-md,
+button.rounded-lg,
+button.rounded-xl,
+button.rounded-2xl,
+button.rounded-3xl,
+button:not(.rounded-full):not(.avatar-round):not(.rounded-none) {
+  border-radius: 6px !important;
+}
+/* Buttons with rounded-none – no corner radius */
+button.rounded-none {
+  border-radius: 0 !important;
+}
+
+/* Switch (role="switch") – full rounded pill shape */
+button[role="switch"] {
+  border-radius: 9999px !important;
+}
+button[role="switch"] > span {
+  border-radius: 9999px !important;
+}
+
+/* Global checkboxes – match task row style (rounded-[4px], nokturo/green) */
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+  background: rgba(229, 229, 229, 0.6);
+}
+input[type="checkbox"]:hover {
+  background: #d4d4d4;
+}
+input[type="checkbox"]:checked {
+  background: #059669;
+}
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4px;
+  height: 8px;
+  margin-left: -2px;
+  margin-top: -4px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.dark input[type="checkbox"] {
+  background: rgba(64, 64, 64, 0.6);
+}
+.dark input[type="checkbox"]:hover {
+  background: #525252;
+}
+.dark input[type="checkbox"]:checked {
+  background: #10b981;
+}
+.dark input[type="checkbox"]:checked::after {
+  border-color: #fff;
+}
+
+/* Login form – 6px corner radius on inputs and button */
+.login-form input[type="email"],
+.login-form input[type="password"],
+.login-form button[type="submit"] {
+  border-radius: 6px !important;
+}
+
+/* Auth/Login checkbox – light gray when checked, white checkmark (override global green) */
+input[type="checkbox"].checkbox-auth:checked {
+  background: #c4c4c4;
+}
+.dark input[type="checkbox"].checkbox-auth:checked {
+  background: #737373;
+}
+
+/* Global radio buttons – no border, inner shadow states */
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: box-shadow 0.15s, background 0.15s;
+  position: relative;
+  background: rgba(229, 229, 229, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+input[type="radio"]:hover {
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 0.5);
+}
+input[type="radio"]:checked {
+  box-shadow: inset 0 0 0 4px rgba(255, 255, 255, 1);
+}
+.dark input[type="radio"] {
+  background: rgba(64, 64, 64, 0.6);
+}
+
+/* Filter dropdown – override with its own style */
+.filter-dropdown input[type="checkbox"] {
+  border: none !important;
+  border-width: 0 !important;
+  outline: none !important;
+  box-shadow: none !important;
+  border-radius: 4px !important;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.filter-dropdown input[type="checkbox"]:checked {
+  background-color: rgba(255, 255, 255, 0.3);
+  background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
+  background-size: 100%;
+  background-position: center;
+}
+.filter-dropdown input[type="checkbox"]:checked::after {
+  content: none;
+}
+
+/* Avatars – keep circular everywhere */
+.avatar-round,
+.avatar-round img,
+img.avatar-round,
+.avatar-round svg {
+  border-radius: 9999px !important;
+}
+
 /* NProgress top bar – thin red indicator */
 #nprogress .bar {
   background: #EF4444 !important;
@@ -55,12 +245,30 @@ body {
   color: inherit;
 }
 
-/* Comment highlights in dark mode */
-.dark .commentable-select mark {
-  background-color: rgba(255, 255, 255, 0.2);
+/* Comment highlights: #FFDD00 50% opacity (light + dark) */
+.commentable-select mark[data-comment-id] {
+  background-color: rgba(255, 221, 0, 0.5);
+}
+.commentable-select mark[data-comment-id]:hover {
+  background-color: rgba(255, 221, 0, 0.65);
+}
+.dark .commentable-select mark[data-comment-id] {
+  background-color: rgba(255, 221, 0, 0.5);
+}
+.dark .commentable-select mark[data-comment-id]:hover {
+  background-color: rgba(255, 221, 0, 0.65);
 }
 .dark .commentable-select [data-pending-selection] {
   background-color: rgba(115, 115, 115, 0.5);
+}
+
+/* Hide scrollbar but keep scroll (PageShell content area) */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Scrollbar styling */
@@ -75,7 +283,7 @@ body {
 }
 ::-webkit-scrollbar-thumb {
   background: #d4d4d4;
-  border-radius: 3px;
+  border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #b8b8b8;
@@ -179,12 +387,12 @@ body {
   position: relative;
   margin: 8px 0;
   user-select: none;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
 }
 .rta-img-wrapper img {
   display: block;
-  border-radius: 8px;
+  border-radius: 0;
 }
 .rta-img-wrapper[data-img-fit="fill"] img {
   width: 100%;
@@ -212,7 +420,7 @@ body {
   padding: 2px 8px;
   font-size: 11px;
   font-weight: 500;
-  border-radius: 6px;
+  border-radius: 0;
   border: none;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -253,44 +461,9 @@ body {
   gap: 8px;
   padding: 3px 0;
 }
+/* rta-checklist – inherits global checkbox style, add alignment */
 .rta-checklist li input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  border: 1.5px solid #a3a3a3;
-  border-radius: 3px;
-  cursor: pointer;
   margin-top: 2px;
-  transition: all 0.15s;
-  position: relative;
-  background: transparent;
-}
-.rta-checklist li input[type="checkbox"]:checked {
-  background: #171717;
-  border-color: #171717;
-}
-.rta-checklist li input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-.dark .rta-checklist li input[type="checkbox"] {
-  border-color: #737373;
-}
-.dark .rta-checklist li input[type="checkbox"]:checked {
-  background: #fff;
-  border-color: #fff;
-}
-.dark .rta-checklist li input[type="checkbox"]:checked::after {
-  border-color: #171717;
 }
 .rta-checklist li.checked > span {
   text-decoration: line-through;

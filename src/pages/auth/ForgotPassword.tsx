@@ -69,7 +69,7 @@ export default function ForgotPassword() {
           {sent ? (
             /* Success state */
             <div className="text-center">
-              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
               <h2 className="text-heading-4 font-extralight text-nokturo-900 mb-2">
                 {t('auth.resetEmailSent')}
               </h2>

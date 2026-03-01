@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { LanguageToggle } from '../../components/LanguageToggle';
-import { Lock, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { LockIcon } from '../../components/icons/LockIcon';
 import { PasswordInput } from '../../components/PasswordInput';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 
@@ -67,7 +68,7 @@ export default function ResetPassword() {
           {success ? (
             /* Success state */
             <div className="text-center">
-              <CheckCircle className="w-12 h-12 text-green-400 mx-auto mb-4" />
+              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
               <h2 className="font-body text-heading-4 font-extralight text-nokturo-900 mb-2">
                 {t('auth.passwordResetSuccess')}
               </h2>
@@ -96,7 +97,7 @@ export default function ResetPassword() {
                     {t('auth.newPassword')}
                   </label>
                   <PasswordInput
-                    leftIcon={<Lock className="w-4 h-4" />}
+                    leftIcon={<LockIcon className="w-4 h-4" size={16} />}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -112,7 +113,7 @@ export default function ResetPassword() {
                     {t('auth.confirmPassword')}
                   </label>
                   <PasswordInput
-                    leftIcon={<Lock className="w-4 h-4" />}
+                    leftIcon={<LockIcon className="w-4 h-4" size={16} />}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required

@@ -38,6 +38,8 @@ export interface NotionSelectProps {
   canDelete?: boolean;
   /** Z-index for dropdown when inside modal/slide-over (default 100) */
   dropdownZIndex?: number;
+  /** When true: render inline chips (no dropdown), wrap, faded when unselected */
+  inlineChips?: boolean;
 }
 
 // Notion-style tag colors
@@ -70,6 +72,7 @@ export function NotionSelect({
   filterStyle = false,
   canDelete = true,
   dropdownZIndex = 100,
+  inlineChips = false,
 }: NotionSelectProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
@@ -356,6 +359,29 @@ export function NotionSelect({
       ? [options.find((o) => o.name === value)!]
       : [];
 
+  // Inline chips: no dropdown, wrap horizontally, faded when unselected
+  if (inlineChips) {
+    return (
+      <div ref={containerRef} className={`flex flex-wrap gap-2 ${className}`}>
+        {options.map((opt) => {
+          const isSelected = multiple ? selectedValues.includes(opt.name) : value === opt.name;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => handleSelect(opt.name)}
+              className={`inline-flex items-center px-2 py-1 rounded-[6px] text-xs font-medium transition-opacity cursor-pointer ${
+                getTagClass(opt.color)
+              } ${isSelected ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
+            >
+              {getDisplayName(opt.name)}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef} className={`relative ${filterStyle ? 'w-fit' : ''} ${className}`}>
       {/* Trigger */}
@@ -363,10 +389,10 @@ export function NotionSelect({
         type="button"
         onClick={() => !disabled && setOpen((o) => !o)}
         disabled={disabled}
-        className={`rounded-lg px-3 text-sm text-left focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+        className={`rounded-[6px] px-3 text-sm text-left focus:outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
           filterStyle
             ? 'bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 h-9 font-medium inline-flex items-center gap-2 w-fit'
-            : 'w-full flex items-center justify-between gap-2 py-1.5 bg-nokturo-200/60 dark:bg-nokturo-700/80 focus:ring-2 focus:ring-nokturo-500 ' + (selectedOptions.length === 0 ? 'text-nokturo-400 dark:text-nokturo-500' : 'text-nokturo-900 dark:text-nokturo-100')
+            : 'w-full flex items-center justify-between gap-2 h-11 bg-nokturo-200/60 dark:bg-nokturo-700/80 focus:ring-2 focus:ring-nokturo-500 ' + (selectedOptions.length === 0 ? 'text-nokturo-400 dark:text-nokturo-500' : 'text-nokturo-900 dark:text-nokturo-100')
         }`}
       >
         <span className="flex flex-wrap items-center gap-2 min-w-0">
@@ -381,7 +407,7 @@ export function NotionSelect({
             selectedOptions.map((opt) => (
               <span
                 key={opt.id}
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${getTagClass(opt.color)}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium shrink-0 ${getTagClass(opt.color)}`}
               >
                 {getDisplayName(opt.name)}
               </span>
@@ -454,7 +480,7 @@ export function NotionSelect({
                   return (
                   <div
                     key={opt.id}
-                    className={`relative flex items-center gap-2 rounded-md px-1.5 py-1 group ${
+                    className={`relative flex items-center gap-2 rounded-[6px] px-1.5 py-1 group ${
                       (multiple ? selectedValues.includes(opt.name) : value === opt.name)
                         ? 'bg-nokturo-200 dark:bg-nokturo-600'
                         : 'hover:bg-nokturo-50 dark:hover:bg-nokturo-700'
@@ -526,7 +552,7 @@ export function NotionSelect({
                         className="flex-1 flex items-center gap-2 min-w-0 text-left"
                       >
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium shrink-0 ${getTagClass(opt.color)}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium shrink-0 ${getTagClass(opt.color)}`}
                         >
                           {getDisplayName(opt.name)}
                         </span>
@@ -556,7 +582,7 @@ export function NotionSelect({
                   <button
                     type="button"
                     onClick={handleCreate}
-                    className="w-full flex items-center gap-2 rounded-md px-1.5 py-1 text-left text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 hover:text-nokturo-800 dark:hover:text-nokturo-200"
+                    className="w-full flex items-center gap-2 rounded-[6px] px-1.5 py-1 text-left text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 hover:text-nokturo-800 dark:hover:text-nokturo-200"
                   >
                     <span className="text-nokturo-500">+</span>
                     {t('notionSelect.createOption', { name: search.trim() })}
@@ -605,7 +631,7 @@ export function NotionSelect({
                   key={c}
                   type="button"
                   onClick={() => handleUpdateColor(openOpt.id, c)}
-                  className={`w-5 h-5 rounded-full ${getTagClass(c)} ${
+                  className={`w-5 h-5 avatar-round ${getTagClass(c)} ${
                     openOpt.color === c ? 'ring-2 ring-nokturo-900 dark:ring-nokturo-300 ring-offset-1 ring-offset-white dark:ring-offset-nokturo-800' : ''
                   }`}
                   title={c}
@@ -618,7 +644,7 @@ export function NotionSelect({
                 <button
                   type="button"
                   onClick={() => handleDelete(openOpt.id)}
-                  className="w-full px-2.5 py-1 text-left text-sm text-red-400 dark:text-red-300 hover:bg-red-500/15 dark:hover:bg-red-900/30 flex items-center gap-2"
+                  className="w-full px-2.5 py-1 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                 >
                   <X className="w-3 h-3" />
                   {t('common.delete')}

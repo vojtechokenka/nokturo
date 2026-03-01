@@ -15,7 +15,7 @@ export function renderContentWithMentions(
   const parts = content.split(/(@[\w\u00C0-\u024F]+(?:\s+[\w\u00C0-\u024F]+){0,1})(?=\s|$|[,.!?;:])/g);
   const currentNameNorm = currentUserDisplayName?.trim().toLowerCase();
   const mentionOfMeClass =
-    'font-medium text-inherit px-1 py-0.5 rounded bg-mention/20 dark:bg-mention/20';
+    'font-medium text-inherit px-1 py-0.5 rounded-[4px] bg-nokturo-400/20 dark:bg-white/10';
   const mentionByMeClass = 'font-semibold text-inherit px-0.5 py-0.5';
   const mentionOtherClass = 'font-medium text-inherit px-0.5 py-0.5';
   return parts.map((part, i) => {

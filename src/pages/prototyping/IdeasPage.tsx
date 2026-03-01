@@ -12,16 +12,12 @@ import {
   Plus,
   X,
   Loader2,
-  Trash2,
-  Pencil,
   Lightbulb,
-  Image as ImageIcon,
-  ChevronLeft,
-  ChevronRight,
   MoreHorizontal,
 } from 'lucide-react';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
-import { INPUT_CLASS } from '../../lib/inputStyles';
+import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 
 const inputClass = INPUT_CLASS;
 
@@ -523,74 +519,73 @@ export default function IdeasPage() {
     <PageShell
       titleKey="pages.ideas.title"
       descriptionKey="pages.ideas.description"
+      bare
+      actionsSlot={
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-between w-full">
+          {categories.length > 0 ? (
+            <div className="flex flex-wrap gap-2 justify-start">
+              <button
+                onClick={() => setFilterCategories([])}
+                className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
+                  !isFiltering
+                    ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                    : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+                }`}
+              >
+                {t('ideas.filterAll')}
+              </button>
+              {categories.map(cat => {
+                const active = filterCategories.includes(cat.name);
+                const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setFilterCategories(prev =>
+                      active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
+                    )}
+                    className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
+                      active
+                        ? ''
+                        : 'opacity-40 hover:opacity-70'
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <div />
+          )}
+          <button
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-nokturo-700 dark:hover:bg-nokturo-600 transition-colors shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {t('ideas.quickCapture')}
+          </button>
+        </div>
+      }
     >
-      {/* ── Action bar: filters (left) + Quick Capture (right) ───────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-between">
-        {/* Tag filter – left */}
-        {categories.length > 0 ? (
-          <div className="flex flex-wrap gap-2 justify-start">
-            <button
-              onClick={() => setFilterCategories([])}
-              className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${
-                !isFiltering
-                  ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
-                  : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
-              }`}
-            >
-              {t('ideas.filterAll')}
-            </button>
-            {categories.map(cat => {
-              const active = filterCategories.includes(cat.name);
-              const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
-              return (
-                <button
-                  key={cat.id}
-                  onClick={() => setFilterCategories(prev =>
-                    active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
-                  )}
-                  className={`text-xs px-3 py-1 rounded-full font-medium transition-all ${colorCls} ${
-                    active
-                      ? ''
-                      : 'opacity-40 hover:opacity-70'
-                  }`}
-                >
-                  {cat.name}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div />
-        )}
-        {/* Quick capture button – right */}
-        <button
-          onClick={openAdd}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('ideas.quickCapture')}
-        </button>
-      </div>
-
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
+        <div className="flex items-center justify-center py-20 px-4 sm:px-6">
           <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
         </div>
       ) : ideas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
           <Lightbulb className="w-12 h-12 text-nokturo-600 mb-4" />
           <p className="text-nokturo-600 font-medium">{t('ideas.noIdeas')}</p>
           <p className="text-nokturo-500 text-sm mt-1">{t('ideas.addFirst')}</p>
         </div>
       ) : filteredIdeas.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
           <Lightbulb className="w-12 h-12 text-nokturo-600 mb-4" />
           <p className="text-nokturo-600 font-medium">{t('ideas.noFilterResults')}</p>
         </div>
       ) : (
         <div
-          className="min-h-[400px] columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6"
+          className="min-h-[400px] columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-3 px-4 sm:px-6 pb-4"
           onDragLeave={(e) => {
               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                 setDragDropIndex(null);
@@ -649,7 +644,7 @@ export default function IdeasPage() {
                   if (fromIndex !== toIndex) handleReorder(fromIndex, toIndex);
                 }}
                 title={t('ideas.dragToReorder')}
-                className={`group ${colorClass} text-slate-800 transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] ${
+                className={`group ${colorClass} text-slate-800 transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
                   isDragging ? 'opacity-50 scale-95' : ''
                 } hover:-translate-y-0.25`}
               >
@@ -664,19 +659,19 @@ export default function IdeasPage() {
                       setLightboxIndex(idx >= 0 ? idx : null);
                     }}
                     onPointerDown={(e) => e.stopPropagation()}
-                    className="aspect-square bg-slate-200/50 overflow-hidden w-full block cursor-pointer"
+                    className="aspect-square bg-slate-200/50 overflow-hidden rounded-none w-full block cursor-pointer"
                   >
                     <img
                       src={idea.image_url}
                       alt={idea.title}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover rounded-none"
                       loading="lazy"
                     />
                   </button>
                 )}
 
                 {/* Body */}
-                <div className="p-4 rounded bg-amber-200/80">
+                <div className="p-4 rounded-none bg-amber-200/80">
                   {(() => {
                     const validNames = new Set(categories.map(c => c.name));
                     const cats = (idea.categories ?? (idea.category ? [idea.category] : [])).filter(c => validNames.has(c));
@@ -688,7 +683,7 @@ export default function IdeasPage() {
                           return (
                             <span
                               key={c}
-                              className={`text-xs px-2 py-0.5 rounded font-medium shrink-0 ${colorCls}`}
+                              className={`text-xs px-2 py-0.5 rounded-[4px] font-medium shrink-0 ${colorCls}`}
                             >
                               {c}
                             </span>
@@ -717,10 +712,10 @@ export default function IdeasPage() {
                         <img
                           src={idea.author.avatar_url}
                           alt=""
-                          className="w-7 h-7 rounded-full object-cover shrink-0"
+                          className="avatar-round w-7 h-7 object-cover shrink-0"
                         />
                       ) : (
-                        <DefaultAvatar size={28} className="rounded-full overflow-hidden shrink-0" />
+                        <DefaultAvatar size={28} className="avatar-round overflow-hidden shrink-0" />
                       )}
                       <div className="flex flex-col min-w-0">
                         <span className="text-xs truncate opacity-90 [color:inherit]">
@@ -748,20 +743,18 @@ export default function IdeasPage() {
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
                       {cardMenuOpen === idea.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[120px] z-20" onClick={(e) => e.stopPropagation()}>
+                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-xl shadow-lg py-1 min-w-[120px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                           <button
                             onClick={() => { openEdit(idea); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
                           >
-                            <Pencil className="w-3 h-3" />
                             {t('common.edit')}
                           </button>
                           {canDelete && (
                             <button
                               onClick={() => { setDeleteTarget(idea.id); setCardMenuOpen(null); }}
-                              className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                              className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
                             >
-                              <Trash2 className="w-3 h-3" />
                               {t('common.delete')}
                             </button>
                           )}
@@ -784,60 +777,34 @@ export default function IdeasPage() {
       {/* ── Lightbox: fotka ve fullscreen při kliku ───────────── */}
       {lightboxIndex !== null && ideasWithImages[lightboxIndex] && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
           onClick={() => setLightboxIndex(null)}
         >
-          {ideasWithImages.length > 1 && (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxIndex((prev) =>
-                    prev !== null && prev > 0 ? prev - 1 : ideasWithImages.length - 1
-                  );
-                }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
-              >
-                <ChevronLeft className="w-8 h-8" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightboxIndex((prev) =>
-                    prev !== null && prev < ideasWithImages.length - 1 ? prev + 1 : 0
-                  );
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
-              >
-                <ChevronRight className="w-8 h-8" />
-              </button>
-            </>
-          )}
-          {/\.svg(\?|$)/i.test(ideasWithImages[lightboxIndex].image_url!) ? (
-            <img
-              src={ideasWithImages[lightboxIndex].image_url!}
-              alt={ideasWithImages[lightboxIndex].title}
-              width={400}
-              height={400}
-              className="max-w-full max-h-[90vh] object-contain rounded-lg aspect-square shrink-0"
-              style={{ imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] }}
-              loading="eager"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <img
-              src={ideasWithImages[lightboxIndex].image_url!}
-              alt={ideasWithImages[lightboxIndex].title}
-              className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
+          <div className="relative z-0" onClick={(e) => e.stopPropagation()}>
+            {/\.svg(\?|$)/i.test(ideasWithImages[lightboxIndex].image_url!) ? (
+              <img
+                src={ideasWithImages[lightboxIndex].image_url!}
+                alt={ideasWithImages[lightboxIndex].title}
+                width={400}
+                height={400}
+                className="max-w-full max-h-[90vh] object-contain rounded-lg aspect-square shrink-0"
+                style={{ imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] }}
+                loading="eager"
+              />
+            ) : (
+              <img
+                src={ideasWithImages[lightboxIndex].image_url!}
+                alt={ideasWithImages[lightboxIndex].title}
+                className="max-w-full max-h-[90vh] w-auto h-auto object-contain rounded-lg"
+              />
+            )}
+          </div>
           <button
             onClick={(e) => {
               e.stopPropagation();
               setLightboxIndex(null);
             }}
-            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors z-10"
+            className="absolute top-4 right-4 p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors z-[60]"
           >
             <X className="w-5 h-5" />
           </button>
@@ -846,10 +813,10 @@ export default function IdeasPage() {
 
       {/* ── Quick Capture Modal ─────────────────────────────── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">
+              <h3 className="text-heading-5 font-normal text-nokturo-900 dark:text-nokturo-100">
                 {editingIdea ? t('ideas.editIdea') : t('ideas.quickCapture')}
               </h3>
               <button
@@ -888,7 +855,7 @@ export default function IdeasPage() {
                   onKeyDown={handleContentKeyDown}
                   placeholder={t('ideas.contentPlaceholder')}
                   rows={4}
-                  className={`${inputClass} resize-none`}
+                  className={`${inputClass} resize-none min-h-[80px]`}
                 />
               </div>
 
@@ -906,6 +873,7 @@ export default function IdeasPage() {
                   optionsI18nKey="ideas.categories"
                   multiple
                   canDelete={canDelete}
+                  inlineChips
                 />
               </div>
 
@@ -935,9 +903,9 @@ export default function IdeasPage() {
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg text-nokturo-500 dark:text-nokturo-400 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center"
+                    className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center"
                   >
-                    <ImageIcon className="w-4 h-4" />
+                    <UploadImageIcon className="w-4 h-4" size={16} />
                     {t('ideas.uploadImage')}
                   </button>
                 )}
@@ -984,9 +952,9 @@ export default function IdeasPage() {
 
       {/* ── Delete confirmation ─────────────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">{t('common.confirm')}</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('ideas.deleteConfirm')}</p>
             <div className="flex gap-3 justify-end">
               <button
@@ -997,7 +965,7 @@ export default function IdeasPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/25 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

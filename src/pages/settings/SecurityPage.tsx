@@ -3,7 +3,9 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
-import { Lock, Loader2, CheckCircle, Shield, ArrowLeft } from 'lucide-react';
+import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
+import { SecurityIcon } from '../../components/icons/SecurityIcon';
+import { LockIcon } from '../../components/icons/LockIcon';
 import { PasswordInput } from '../../components/PasswordInput';
 
 export default function SecurityPage() {
@@ -64,8 +66,8 @@ export default function SecurityPage() {
         {/* Change Password */}
         <div className="pt-6">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-nokturo-600 dark:text-nokturo-400" />
+            <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center">
+              <SecurityIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-400" size={20} />
             </div>
             <div>
               <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">
@@ -84,7 +86,7 @@ export default function SecurityPage() {
                 {t('settings.security.newPassword')}
               </label>
               <PasswordInput
-                leftIcon={<Lock className="w-4 h-4" />}
+                leftIcon={<LockIcon className="w-4 h-4" size={16} />}
                 value={password}
                 onChange={(e) => {
                   setPassword(e.target.value);
@@ -101,7 +103,7 @@ export default function SecurityPage() {
                 {t('settings.security.confirmPassword')}
               </label>
               <PasswordInput
-                leftIcon={<Lock className="w-4 h-4" />}
+                leftIcon={<LockIcon className="w-4 h-4" size={16} />}
                 value={confirmPassword}
                 onChange={(e) => {
                   setConfirmPassword(e.target.value);
@@ -121,7 +123,7 @@ export default function SecurityPage() {
 
             {/* Success message */}
             {success && (
-              <div className="text-green-700 dark:text-green-300 text-sm bg-green-50 dark:bg-green-900/30 rounded-lg px-4 py-2.5 flex items-center gap-2">
+              <div className="text-emerald-700 dark:text-emerald-300 text-sm bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-4 py-2.5 flex items-center gap-2">
                 <CheckCircle className="w-4 h-4 shrink-0" />
                 {success}
               </div>

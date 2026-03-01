@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Pencil, Trash2, ExternalLink, MoreVertical } from 'lucide-react';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import type { Supplier } from './SupplierSlideOver';
+import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import type { NotionSelectOption } from './NotionSelect';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
@@ -45,28 +46,28 @@ export function SupplierDetailSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 truncate min-w-0">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0">
+          <h3 className={MODAL_HEADING_CLASS}>
             {supplier.name}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((p) => !p)}
-                className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+                className="p-2 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                  <div className="absolute right-0 top-full mt-1 bg-nokturo-800 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
                     <button
                       onClick={() => { onEdit(supplier); setMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-200 hover:bg-nokturo-700 flex items-center gap-2"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       {t('common.edit')}
@@ -74,7 +75,7 @@ export function SupplierDetailSlideOver({
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(supplier.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         {t('common.delete')}
@@ -86,7 +87,7 @@ export function SupplierDetailSlideOver({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 shrink-0"
+              className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -94,7 +95,7 @@ export function SupplierDetailSlideOver({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-white">
           {/* Nationality + Category */}
           <div className="flex items-center gap-3">
             {supplier.nationality && (
@@ -104,7 +105,7 @@ export function SupplierDetailSlideOver({
             )}
             {supplier.category && (
               <span
-                className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${
+                className={`inline-block text-xs px-2 py-0.5 rounded-[4px] font-medium ${
                   TAG_BADGE_CLASSES[categoryColor] ?? TAG_BADGE_CLASSES.gray
                 }`}
               >
@@ -116,22 +117,22 @@ export function SupplierDetailSlideOver({
           {/* Contact person */}
           {supplier.contact_name && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('suppliers.contactPerson')}
               </label>
-              <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">{supplier.contact_name}</p>
+              <p className="text-base font-medium text-white">{supplier.contact_name}</p>
             </div>
           )}
 
           {/* Email */}
           {supplier.email && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('suppliers.email')}
               </label>
               <a
                 href={`mailto:${supplier.email}`}
-                className="text-base font-medium text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
+                className="text-base font-medium text-nokturo-300 hover:text-white"
               >
                 {supplier.email}
               </a>
@@ -141,12 +142,12 @@ export function SupplierDetailSlideOver({
           {/* Phone */}
           {supplier.phone && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('suppliers.phone')}
               </label>
               <a
                 href={`tel:${supplier.phone}`}
-                className="text-base font-medium text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
+                className="text-base font-medium text-nokturo-300 hover:text-white"
               >
                 {supplier.phone}
               </a>
@@ -156,10 +157,10 @@ export function SupplierDetailSlideOver({
           {/* Address */}
           {(supplier.address || supplier.country) && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('suppliers.address')}
               </label>
-              <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">
+              <p className="text-base font-medium text-white">
                 {[supplier.address, supplier.country].filter(Boolean).join(', ')}
               </p>
             </div>
@@ -168,14 +169,14 @@ export function SupplierDetailSlideOver({
           {/* Website */}
           {supplier.website && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('suppliers.website')}
               </label>
               <a
                 href={supplier.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-base font-medium text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
+                className="inline-flex items-center gap-1.5 text-base font-medium text-nokturo-300 hover:text-white"
               >
                 <ExternalLink className="w-4 h-4" />
                 {supplier.website.replace(/^https?:\/\//, '')}
@@ -191,18 +192,18 @@ export function SupplierDetailSlideOver({
             !supplier.country &&
             !supplier.website &&
             !supplier.notes && (
-              <p className="text-nokturo-500 dark:text-nokturo-400 text-sm">{t('suppliers.noContactInfo')}</p>
+              <p className="text-nokturo-400 text-sm">{t('suppliers.noContactInfo')}</p>
             )}
 
           {/* Notes */}
           {supplier.notes && (
             <>
-              <hr className="border-nokturo-200 dark:border-nokturo-600" />
+              <hr className="border-nokturo-600" />
               <div>
-                <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+                <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                   {t('suppliers.notes')}
                 </label>
-                <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 whitespace-pre-wrap leading-relaxed">
+                <p className="text-base font-medium text-white whitespace-pre-wrap leading-relaxed">
                   {supplier.notes}
                 </p>
               </div>

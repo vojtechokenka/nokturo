@@ -1,19 +1,14 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { useToastStore } from '../stores/toastStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
-import {
-  Send,
-  Loader2,
-  Check,
-  X,
-  MoreHorizontal,
-} from 'lucide-react';
+import { Loader2, Check, X, MoreHorizontal } from 'lucide-react';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
@@ -66,8 +61,24 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   const [editSaving, setEditSaving] = useState(false);
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement | null>(null);
   const addToast = useToastStore((s) => s.addToast);
+
+  // Position comment menu for portal (avoids overflow clipping and stacking behind input)
+  useLayoutEffect(() => {
+    if (!commentMenuOpen || !menuTriggerRef.current) {
+      setMenuPosition(null);
+      return;
+    }
+    const rect = menuTriggerRef.current.getBoundingClientRect();
+    const DROPDOWN_WIDTH = 100;
+    setMenuPosition({
+      top: rect.bottom + 4,
+      left: rect.right - DROPDOWN_WIDTH,
+    });
+  }, [commentMenuOpen]);
 
   const mention = useMentionSuggestions(newComment, profiles as MentionProfile[]);
 
@@ -349,7 +360,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     return (
       <div
         key={comment.id}
-        className={`group flex flex-col py-2 px-2 rounded-lg min-w-0 animate-fade-in-item ${isOwn ? 'ml-6 bg-white/20 text-white' : 'mr-6 bg-white/10 text-white'}`}
+        className={`group flex flex-col py-2 px-2 rounded-[12px] min-w-0 animate-fade-in-item ${isOwn ? 'ml-6 bg-white/20 text-white' : 'mr-6 bg-white/10 text-white'}`}
       >
         {isEditing ? (
           <div className="flex flex-col gap-2 -mx-2 px-3 py-2">
@@ -385,7 +396,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
         ) : (
           <>
             <div className="-mx-2 px-3 pt-1 pb-2">
-              <p className="text-base break-words pr-0 text-inherit">
+              <p className="text-sm font-light break-words pr-0 text-inherit opacity-80">
                 {renderContentWithMentions(
                   comment.content,
                   isOwn,
@@ -396,9 +407,9 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
             <div className="flex justify-between items-center mt-4 min-w-0 gap-2">
               <div className="flex gap-2 items-center min-w-0 flex-1">
                 {comment.profile?.avatar_url ? (
-                  <img src={comment.profile.avatar_url} alt="" className="w-7 h-7 rounded-full object-cover shrink-0" />
+                  <img src={comment.profile.avatar_url} alt="" className="avatar-round w-7 h-7 object-cover shrink-0" />
                 ) : (
-                  <DefaultAvatar size={28} className="rounded-full overflow-hidden shrink-0" />
+                  <DefaultAvatar size={28} className="avatar-round overflow-hidden shrink-0" />
                 )}
                 <div className="flex flex-col min-w-0">
                   <span className="text-sm font-medium truncate text-inherit">{name}</span>
@@ -419,45 +430,27 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        setCommentMenuOpen(commentMenuOpen === comment.id ? null : comment.id);
+                        if (commentMenuOpen === comment.id) {
+                          setCommentMenuOpen(null);
+                        } else {
+                          menuTriggerRef.current = e.currentTarget;
+                          setCommentMenuOpen(comment.id);
+                        }
                       }}
                       className={`p-1 rounded text-white/60 hover:text-white/90 hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     >
                       <MoreHorizontal className="w-4 h-4" />
                     </button>
-                    {commentMenuOpen === comment.id && (
-                      <>
-                        <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
-                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[100px] z-20" onClick={(e) => e.stopPropagation()}>
-                          {isOwn && (
-                            <button
-                              type="button"
-                              onClick={() => { startEdit(comment); setCommentMenuOpen(null); }}
-                              className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
-                            >
-                              {t('common.edit')}
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
-                          >
-                            {t('common.delete')}
-                          </button>
-                        </div>
-                      </>
-                    )}
                   </div>
                 )}
-                {canComment && (
+                {canComment && !isOwn && (
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleReplyTo(comment);
                     }}
-                    className="shrink-0 px-2 py-1 rounded text-xs border-none text-white/90 bg-white/10"
+                    className="shrink-0 px-2 py-1 rounded-[4px] text-xs border-none text-white/90 bg-white/10"
                   >
                     {t('comments.reply')}
                   </button>
@@ -471,13 +464,13 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
   };
 
   return (
-    <section className={`flex-1 flex flex-col min-h-0 ${hasHeaderAbove ? 'mt-4 pt-4 border-t border-nokturo-200 dark:border-nokturo-700' : ''}`}>
-      <div className="flex-1 overflow-y-auto min-h-0">
+    <section className="flex-1 flex flex-col min-h-0 w-full pt-0 px-0">
+      <div className="flex-1 overflow-y-auto scrollbar-hide min-h-0">
         {loading ? (
           <div className="space-y-3 py-4">
             {[1, 2, 3].map((i) => (
               <div key={i} className="flex gap-3 animate-pulse">
-                <div className="w-7 h-7 rounded-full bg-nokturo-200/60 dark:bg-nokturo-700/60 shrink-0" />
+                <div className="avatar-round w-7 h-7 bg-nokturo-200/60 dark:bg-nokturo-700/60 shrink-0" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded w-3/4" />
                   <div className="h-3 bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded w-1/2" />
@@ -486,7 +479,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
             ))}
           </div>
         ) : comments.length === 0 ? null : (
-          <div className="space-y-2 pt-4 mb-4">
+          <div className="space-y-4 mb-4 mr-4 ml-4 mt-4">
             {comments.map(renderComment)}
           </div>
         )}
@@ -494,8 +487,8 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
 
       {/* New comment input with tag picker - fixed at bottom (only if role can comment) */}
       {canComment && (
-      <div className="flex flex-col gap-2 shrink-0 pt-3">
-        <div className="relative flex gap-2">
+      <div className="flex flex-col gap-2 shrink-0 pt-0">
+        <div className="relative flex gap-2 p-3 bg-white/5">
           <div className="flex-1 relative">
             {mention.active && (
               <MentionDropdown
@@ -523,15 +516,15 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                 }
               }}
               placeholder={t('comments.placeholder')}
-              className={INPUT_CLASS}
+              className="w-full h-11 bg-white/5 rounded-[6px] px-3 py-2 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 transition-shadow duration-150"
             />
           </div>
           <button
             onClick={handlePost}
             disabled={!newComment.trim() || sending}
-            className="size-9 flex items-center justify-center bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
+            className="px-4 flex items-center justify-center h-11 bg-[#ffffff] text-nokturo-900 rounded-lg hover:bg-[#f5f5f5] transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 text-sm font-medium"
           >
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('chat.send')}
           </button>
         </div>
         {postError && (
@@ -540,21 +533,57 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       </div>
       )}
 
+      {/* Comment menu dropdown – portaled to avoid overflow clipping and stacking behind input */}
+      {commentMenuOpen && menuPosition && (() => {
+        const comment = comments.find((c) => c.id === commentMenuOpen);
+        if (!comment) return null;
+        return createPortal(
+          <>
+            <div
+              className="fixed inset-0 z-[55]"
+              onClick={() => setCommentMenuOpen(null)}
+              aria-hidden
+            />
+            <div
+              className="fixed z-[56] bg-white dark:bg-nokturo-700 rounded-[8px] p-1 min-w-[100px] shadow-lg overflow-hidden"
+              style={{ top: menuPosition.top, left: menuPosition.left }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => { startEdit(comment); setCommentMenuOpen(null); }}
+                className="w-full flex flex-col justify-center items-center p-1 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 rounded-[4px]"
+              >
+                {t('common.edit')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
+                className="w-full flex flex-col justify-center items-center p-1 text-xs bg-red-500 text-white hover:bg-red-600 rounded-[4px]"
+              >
+                {t('common.delete')}
+              </button>
+            </div>
+          </>,
+          document.body
+        );
+      })()}
+
       {deleteTarget && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">{t('common.confirm')}</h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('comments.deleteConfirm')}</p>
-            <div className="flex gap-3 justify-end">
+          <div className="bg-white dark:bg-nokturo-800 rounded-[8px] p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2 text-center`}>{t('common.confirm')}</h3>
+            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4 text-center">{t('comments.deleteConfirm')}</p>
+            <div className="flex gap-3 justify-center items-center">
               <button
                 onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
+                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors bg-white/10"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500/20 text-red-400 hover:bg-red-500/25 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

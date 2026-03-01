@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { X, Pencil, Copy, Trash2, FileText, ExternalLink, MoreVertical } from 'lucide-react';
 import { convertToCzk } from '../lib/currency';
 import type { AccountingOrder } from './AccountingSlideOver';
+import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import type { NotionSelectOption } from './NotionSelect';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
@@ -64,28 +65,28 @@ export function AccountingDetailSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 truncate min-w-0">
+        <div className="flex items-center justify-between px-6 py-4 shrink-0">
+          <h3 className={MODAL_HEADING_CLASS}>
             {order.order_number ?? t('accounting.orderNumber')}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
             <div className="relative">
               <button
                 onClick={() => setMenuOpen((p) => !p)}
-                className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+                className="p-2 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
               >
                 <MoreVertical className="w-5 h-5" />
               </button>
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
+                  <div className="absolute right-0 top-full mt-1 bg-nokturo-800 rounded-lg shadow-lg py-1 min-w-[140px] z-20">
                     <button
                       onClick={() => { onEdit(order); setMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-200 hover:bg-nokturo-700 flex items-center gap-2"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                       {t('common.edit')}
@@ -93,7 +94,7 @@ export function AccountingDetailSlideOver({
                     {onDuplicate && (
                       <button
                         onClick={() => { onDuplicate(order); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-200 hover:bg-nokturo-700 flex items-center gap-2"
                       >
                         <Copy className="w-3.5 h-3.5" />
                         {t('common.duplicate')}
@@ -102,7 +103,7 @@ export function AccountingDetailSlideOver({
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(order.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                         {t('common.delete')}
@@ -114,7 +115,7 @@ export function AccountingDetailSlideOver({
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 shrink-0"
+              className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 shrink-0"
             >
               <X className="w-5 h-5" />
             </button>
@@ -122,14 +123,14 @@ export function AccountingDetailSlideOver({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6 text-white">
           {/* Status */}
           <div>
-            <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+            <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
               {t('accounting.orderStatus')}
             </label>
             <span
-              className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${
+              className={`inline-block text-xs px-2 py-0.5 rounded-[4px] font-medium ${
                 TAG_BADGE_CLASSES[ORDER_STATUS_COLORS[order.order_status] ?? 'gray'] ?? TAG_BADGE_CLASSES.gray
               }`}
             >
@@ -139,48 +140,48 @@ export function AccountingDetailSlideOver({
 
           {/* Category */}
           <div>
-            <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+            <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
               {t('accounting.category')}
             </label>
-            <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">{categoryLabel}</p>
+            <p className="text-base font-medium text-white">{categoryLabel}</p>
           </div>
 
           {/* Supplier */}
           {order.supplier?.name && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('accounting.supplier')}
               </label>
-              <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">{order.supplier.name}</p>
+              <p className="text-base font-medium text-white">{order.supplier.name}</p>
             </div>
           )}
 
-          <hr className="border-nokturo-200 dark:border-nokturo-600" />
+          <hr className="border-nokturo-600" />
 
           {/* Order value */}
           <div>
-            <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+            <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
               {t('accounting.orderValue')}
             </label>
-            <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">
+            <p className="text-base font-medium text-white">
               {formatValueInCzk(order.order_value, order.order_currency || 'EUR')}
             </p>
           </div>
 
           {/* Order date */}
           <div>
-            <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+            <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
               {t('accounting.orderDate')}
             </label>
-            <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">{formatDate(order.order_date)}</p>
+            <p className="text-base font-medium text-white">{formatDate(order.order_date)}</p>
           </div>
 
           {/* Payment method */}
           <div>
-            <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+            <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
               {t('accounting.paymentMethod')}
             </label>
-            <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">
+            <p className="text-base font-medium text-white">
               {order.payment_method
                 ? t(`accounting.paymentMethods.${order.payment_method}`) !== `accounting.paymentMethods.${order.payment_method}`
                   ? t(`accounting.paymentMethods.${order.payment_method}`)
@@ -194,20 +195,20 @@ export function AccountingDetailSlideOver({
             <div className="grid grid-cols-2 gap-6">
               {order.monthly_payment && (
                 <div>
-                  <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+                  <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                     {t('accounting.monthlyPayment')}
                   </label>
-                  <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">
+                  <p className="text-base font-medium text-white">
                     {formatValueInCzk(order.monthly_value, order.order_currency || 'EUR')}
                   </p>
                 </div>
               )}
               {order.yearly_payment && (
                 <div>
-                  <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+                  <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                     {t('accounting.yearlyPayment')}
                   </label>
-                  <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100">
+                  <p className="text-base font-medium text-white">
                     {formatValueInCzk(order.yearly_value, order.order_currency || 'EUR')}
                   </p>
                 </div>
@@ -218,16 +219,16 @@ export function AccountingDetailSlideOver({
           {/* E-shop link */}
           {order.eshop_link && (
             <>
-              <hr className="border-nokturo-200 dark:border-nokturo-600" />
+              <hr className="border-nokturo-600" />
               <div>
-                <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+                <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                   {t('accounting.eshopLink')}
                 </label>
                 <a
                   href={order.eshop_link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-base font-medium text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
+                  className="inline-flex items-center gap-1.5 text-base font-medium text-nokturo-300 hover:text-white"
                 >
                   <ExternalLink className="w-4 h-4" />
                   {order.eshop_link.replace(/^https?:\/\//, '')}
@@ -239,14 +240,14 @@ export function AccountingDetailSlideOver({
           {/* Invoice PDF */}
           {order.invoice_pdf_url && (
             <div>
-              <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+              <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                 {t('accounting.invoicePdf')}
               </label>
               <a
                 href={order.invoice_pdf_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 rounded-lg transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-nokturo-200 hover:text-white bg-nokturo-800 hover:bg-nokturo-700 rounded-lg transition-colors"
               >
                 <FileText className="w-4 h-4" />
                 {t('accounting.downloadInvoice')}
@@ -257,12 +258,12 @@ export function AccountingDetailSlideOver({
           {/* Note */}
           {order.note && (
             <>
-              <hr className="border-nokturo-200 dark:border-nokturo-600" />
+              <hr className="border-nokturo-600" />
               <div>
-                <label className="block text-[14px] font-normal text-nokturo-700 dark:text-nokturo-400 mb-2 opacity-70">
+                <label className="block text-[14px] font-normal text-nokturo-400 mb-2 opacity-70">
                   {t('accounting.note')}
                 </label>
-                <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 whitespace-pre-wrap leading-relaxed">
+                <p className="text-base font-medium text-white whitespace-pre-wrap leading-relaxed">
                   {order.note}
                 </p>
               </div>

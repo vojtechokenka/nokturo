@@ -14,6 +14,7 @@ import AuthCallback from './pages/auth/AuthCallback';
 import AccountPage from './pages/settings/AccountPage';
 import SecurityPage from './pages/settings/SecurityPage';
 import UsersPage from './pages/settings/UsersPage';
+import StyleGuidePage from './pages/settings/StyleGuidePage';
 
 // Brand
 import StrategyPage from './pages/brand/StrategyPage';
@@ -103,6 +104,7 @@ const routes = [
           { path: 'settings/account', element: <AccountPage /> },
           { path: 'settings/security', element: <SecurityPage /> },
           { path: 'settings/users', element: <ProtectedRoute allowedRoles={['founder']}><UsersPage /></ProtectedRoute> },
+          { path: 'settings/style-guide', element: <ProtectedRoute allowedRoles={['founder']}><StyleGuidePage /></ProtectedRoute> },
         ],
       },
     ],

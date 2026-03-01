@@ -221,9 +221,24 @@ export default function CostingPage() {
     <PageShell
       titleKey="pages.costingCalculator.title"
       descriptionKey="pages.costingCalculator.description"
+      actionsSlot={
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+          <button
+            onClick={fetchCostingData}
+            disabled={loading}
+            className="flex items-center gap-2 text-sm text-nokturo-600 hover:text-nokturo-800 transition-colors disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+            />
+            {t('costing.refresh')}
+          </button>
+        </div>
+      }
     >
-      {/* ── Summary cards ───────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* ── Summary cards (sticky at top) ───────────────────── */}
+      <div className="sticky top-0 z-10 -mx-9 -mt-6 pt-6 px-9 pb-6 bg-white/5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg p-4">
           <p className="text-nokturo-500 text-xs uppercase tracking-wider mb-1">
             {t('costing.totalProducts')}
@@ -255,19 +270,6 @@ export default function CostingPage() {
           </p>
         </div>
       </div>
-
-      {/* ── Refresh button ──────────────────────────────────── */}
-      <div className="flex justify-end mb-4">
-        <button
-          onClick={fetchCostingData}
-          disabled={loading}
-          className="flex items-center gap-2 text-sm text-nokturo-600 hover:text-nokturo-800 transition-colors disabled:opacity-50"
-        >
-          <RefreshCw
-            className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-          />
-          {t('costing.refresh')}
-        </button>
       </div>
 
       {/* ── Table ───────────────────────────────────────────── */}

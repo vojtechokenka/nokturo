@@ -10,7 +10,7 @@ import {
   type NotionSelectOption,
 } from './NotionSelect';
 import { SelectField } from './SelectField';
-import { INPUT_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Types shared with ComponentsPage ─────────────────────────
 export interface Component {
@@ -224,15 +224,15 @@ export function ComponentSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col animate-slide-in">
+      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
-          <h3 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100">
+          <h3 className={MODAL_HEADING_CLASS}>
             {component ? t('components.editComponent') : t('components.addComponent')}
           </h3>
           <button

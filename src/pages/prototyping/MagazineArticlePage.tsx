@@ -5,12 +5,8 @@ import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import { RichTextBlockViewer } from '../../components/RichTextBlockViewer';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
-import {
-  ArrowLeft,
-  Loader2,
-  FileText,
-  Pencil,
-} from 'lucide-react';
+import { ArrowLeft, Loader2, FileText } from 'lucide-react';
+import { EditIcon } from '../../components/icons/EditIcon';
 
 interface MagazineArticle {
   id: string;
@@ -77,10 +73,11 @@ export default function MagazineArticlePage() {
   }
 
   return (
-    <PageShell titleKey="pages.magazine.title" descriptionKey="pages.magazine.description">
-      <div className="max-w-3xl">
-        {/* Back + Edit */}
-        <div className="flex items-center justify-between mb-8">
+    <PageShell
+      titleKey="pages.magazine.title"
+      descriptionKey="pages.magazine.description"
+      actionsSlot={
+        <div className="flex items-center justify-between gap-4 w-full">
           <button
             onClick={() => navigate('/prototyping/magazine')}
             className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
@@ -90,13 +87,15 @@ export default function MagazineArticlePage() {
           </button>
           <button
             onClick={() => navigate(`/prototyping/magazine/${id}/edit`)}
-            className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-3 py-1.5 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+            className="flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 bg-white/10 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
           >
-            <Pencil className="w-3.5 h-3.5" />
+            <EditIcon size={16} />
             {t('common.edit')}
           </button>
         </div>
-
+      }
+    >
+      <div className="max-w-3xl">
         {/* Thumbnail */}
         {article.thumbnail_url && (
           <div className="mb-8 rounded-lg overflow-hidden">

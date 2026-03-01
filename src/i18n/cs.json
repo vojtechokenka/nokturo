@@ -232,6 +232,10 @@
       "currentPasswordNote": "Zadejte nov\u00e9 heslo pro sv\u016fj \u00fa\u010det.",
       "newPassword": "Nov\u00e9 heslo",
       "confirmPassword": "Potvrzen\u00ed nov\u00e9ho hesla"
+    },
+    "styleGuide": {
+      "title": "Příručka stylu",
+      "description": "UI primitivy a komponenty použité v aplikaci"
     }
   },
   "materials": {
@@ -360,6 +364,7 @@
     "design": "Design",
     "uploadDesign": "Nahrát design",
     "changeDesign": "Změnit design",
+    "replaceDesign": "Nahradit",
     "material": "Materiál",
     "noMaterial": "— Bez materiálu —",
     "searchPlaceholder": "Hledat etikety...",
@@ -463,6 +468,7 @@
       "selectPlacement": "Vybrat umístění"
     },
     "designGallery": "Galerie návrhů",
+    "uploadImages": "Nahrát obrázky",
     "designGalleryCaption": "Přidat popisek",
     "previewPhoto": "Náhledová fotka",
     "previewPhotoUpload": "Nahrát náhledovou fotku",
@@ -808,6 +814,9 @@
     "chooseBlock": "Vyberte typ bloku",
     "heading": "Nadpis",
     "paragraph": "Odstavec",
+    "tag": "Tag",
+    "tagPlaceholder": "Popisek kotvy pro obsah...",
+    "tagVisible": "Viditelný",
     "paragraphNormal": "Norm\u00e1ln\u00ed",
     "paragraphLarge": "Velk\u00fd",
     "paragraphSmall": "Mal\u00fd",
@@ -828,6 +837,7 @@
     "aspectRatio169": "16:9",
     "gapRow": "Mezera řádků",
     "gapCol": "Mezera sloupců",
+    "gap": "Mezera",
     "gapLocked": "Mezery jsou propojené – změna jednoho změní oba",
     "gapUnlocked": "Mezery jsou nezávislé – klikněte pro propojení",
     "captionPlaceholder": "Popisek obrázku...",
@@ -863,8 +873,8 @@
     "tableOfContents": "Obsah",
     "pageStructure": "Struktura stránky",
     "defaultToc": {
-      "seamFinishing": "Způsob zakončení švů",
-      "hardware": "Hardware"
+      "seamFinishing": "Placeholder",
+      "hardware": "Placeholder"
     }
   },
   "magazine": {
@@ -913,6 +923,9 @@
     "autoDeleteIn": "Automatické smazání za",
     "days": "dní",
     "day": "den",
+    "daysLeft": "zbývá {{count}} dní",
+    "daysLeftOne": "zbývá 1 den",
+    "dueToday": "Dnes",
     "addFirstTask": "Vytvořte svůj první úkol.",
     "completedOn": "Dokončeno",
     "due": "Termín",

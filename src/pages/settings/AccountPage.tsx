@@ -4,7 +4,13 @@ import { PageShell } from '../../components/PageShell';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { NavLink } from 'react-router-dom';
-import { Globe, Shield, ChevronRight, Loader2, Camera, X, UserPlus, Moon } from 'lucide-react';
+import { ChevronRight, Loader2, X } from 'lucide-react';
+import { LanguageIcon } from '../../components/icons/LanguageIcon';
+import { LightModeIcon } from '../../components/icons/LightModeIcon';
+import { SecurityIcon } from '../../components/icons/SecurityIcon';
+import { UsersIcon } from '../../components/icons/UsersIcon';
+import { StyleGuideIcon } from '../../components/icons/StyleGuideIcon';
+import { CameraIcon } from '../../components/icons/CameraIcon';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { supabase } from '../../lib/supabase';
@@ -251,11 +257,11 @@ export default function AccountPage() {
       <div className="max-w-lg space-y-8">
         {/* Profile section */}
         <section>
-          <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-4">{t('settings.account.profile')}</h3>
+          <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100 mb-4">{t('settings.account.profile')}</h3>
           <div className="space-y-4">
             {/* Avatar */}
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full overflow-hidden bg-nokturo-100 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
+              <div className="avatar-round w-20 h-20 overflow-hidden bg-nokturo-100 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
@@ -263,7 +269,7 @@ export default function AccountPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <DefaultAvatar size={80} className="rounded-full" />
+                  <DefaultAvatar size={80} className="avatar-round" />
                 )}
               </div>
               <input
@@ -291,7 +297,7 @@ export default function AccountPage() {
                       {uploadingAvatar ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
                       ) : (
-                        <Camera className="w-4 h-4" />
+                        <CameraIcon className="w-4 h-4 shrink-0 opacity-50" size={16} />
                       )}
                       {avatarUrl ? t('settings.account.changePhoto') : t('settings.account.uploadPhoto')}
                     </button>
@@ -299,7 +305,7 @@ export default function AccountPage() {
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50/70 dark:hover:bg-nokturo-600 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 transition-colors"
                       >
                         <X className="w-4 h-4" />
                         {t('settings.account.removePhoto')}
@@ -366,7 +372,7 @@ export default function AccountPage() {
             </div>
 
             {/* Position (read-only info) */}
-            <div className="p-4 rounded-lg bg-nokturo-100 dark:bg-nokturo-800 flex items-center justify-between gap-4">
+            <div className="rounded-lg flex items-center justify-between gap-4">
               <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
                 {t('settings.account.positionAssigned')}
               </p>
@@ -383,11 +389,11 @@ export default function AccountPage() {
         <section className="py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center">
-                <Globe className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" />
+              <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center">
+                <LanguageIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
               </div>
               <div>
-                <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">
+                <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
                   {t('common.language')}
                 </h3>
                 <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
@@ -403,11 +409,11 @@ export default function AccountPage() {
         <section className="py-3">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center">
-                <Moon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" />
+              <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center">
+                <LightModeIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
               </div>
               <div>
-                <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">
+                <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
                   {t('settings.account.theme')}
                 </h3>
                 <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
@@ -421,12 +427,12 @@ export default function AccountPage() {
 
         {/* Security shortcut */}
         <NavLink to="/settings/security" className="block py-1">
-          <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-lg hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
-            <div className="w-10 h-10 rounded-lg bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
-              <Shield className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" />
+          <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-[8px] hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
+            <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
+              <SecurityIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">
+              <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
                 {t('settings.security.title')}
               </h3>
               <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
@@ -440,16 +446,36 @@ export default function AccountPage() {
         {/* Create user (founder only) */}
         {user?.role === 'founder' && (
           <NavLink to="/settings/users" className="block py-1">
-            <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-lg hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
-              <div className="w-10 h-10 rounded-lg bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
-                <UserPlus className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" />
+            <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-[8px] hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
+              <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
+                <UsersIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">
+                <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
                   {t('settings.users.title')}
                 </h3>
                 <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
                   {t('settings.users.description')}
+                </p>
+              </div>
+              <ChevronRight className="w-5 h-5 text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
+            </div>
+          </NavLink>
+        )}
+
+        {/* Style guide (founder only) */}
+        {user?.role === 'founder' && (
+          <NavLink to="/settings/style-guide" className="block py-1">
+            <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-[8px] hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
+              <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
+                <StyleGuideIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
+                  {t('settings.styleGuide.title')}
+                </h3>
+                <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
+                  {t('settings.styleGuide.description')}
                 </p>
               </div>
               <ChevronRight className="w-5 h-5 text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
@@ -489,7 +515,7 @@ export default function AccountPage() {
       {toast && (
         <div
           className={`fixed bottom-6 right-6 px-4 py-3 rounded-lg z-50 ${
-              toast.type === 'success' ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+              toast.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
           }`}
         >
           {toast.msg}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -180,103 +181,97 @@ export default function MaterialsPage() {
     if (!error) fetchMaterials();
   };
 
-  // ── Helpers ────────────────────────────────────────────────
-  const fmtStock = (qty: number, unit: string) => {
-    const n = qty % 1 === 0 ? qty.toString() : qty.toFixed(2);
-    return `${n} ${t(`materials.units.${unit}`)}`;
-  };
-
   // ── Render ─────────────────────────────────────────────────
   return (
     <PageShell
       titleKey="pages.materialLibrary.title"
       descriptionKey="pages.materialLibrary.description"
+      bare
+      actionsSlot={
+        <div className="w-full flex flex-col sm:flex-row gap-2 items-center justify-between">
+          <div className="flex items-center gap-2">
+            <CompositionFilter
+              fibers={uniqueFibers}
+              selectedFibers={compositionFilters}
+              onChange={setCompositionFilters}
+              titleKey="materials.filterTitle"
+              emptyLabelKey="materials.filterEmpty"
+              targetProducts={uniqueTargetProducts}
+              selectedTargetProductIds={targetProductFilters}
+              onTargetProductsChange={setTargetProductFilters}
+              targetProductTitleKey="materials.filterTargetProduct"
+              targetProductEmptyLabelKey="materials.filterTargetProductEmpty"
+              activeCount={compositionFilters.length + targetProductFilters.length}
+            />
+            {(compositionFilters.length > 0 || targetProductFilters.length > 0) && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCompositionFilters([]);
+                  setTargetProductFilters([]);
+                }}
+                className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+              >
+                {t('common.clearFilters')}
+              </button>
+            )}
+          </div>
+          <button
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            {t('materials.addMaterial')}
+          </button>
+        </div>
+      }
     >
-      {/* ── Overview stats ─────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+      {/* ── Overview stats (sticky at top) ───────────────────── */}
+      <div className="sticky top-0 z-20 bg-nokturo-50 dark:bg-black">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-0 pb-6">
+        <div className="bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.totalStock')}
           </p>
-          <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
+          <p className="text-xl font-medium text-white">
             {totalMeters.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m
           </p>
         </div>
-        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.avgPricePerM')}
           </p>
-          <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
+          <p className="text-xl font-medium text-white">
             {avgPricePerMCzk.toFixed(2)} {t('materials.overview.perM')}
           </p>
         </div>
-        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.totalStockValue')}
           </p>
-          <p className="text-xl font-medium text-emerald-600">
+          <p className="text-xl font-medium text-emerald-400">
             {totalInventoryValueCzk.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
           </p>
         </div>
-        <div className="bg-white dark:bg-nokturo-800 rounded-lg p-4">
-          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.materialCount')}
           </p>
-          <p className="text-xl font-medium text-nokturo-900 dark:text-nokturo-100">
+          <p className="text-xl font-medium text-white">
             {filteredMaterials.length}
           </p>
         </div>
       </div>
-
-      {/* ── Action bar ────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-        {/* Composition + Target product filter */}
-        <div className="flex items-center gap-2">
-          <CompositionFilter
-            fibers={uniqueFibers}
-            selectedFibers={compositionFilters}
-            onChange={setCompositionFilters}
-            titleKey="materials.filterTitle"
-            emptyLabelKey="materials.filterEmpty"
-            targetProducts={uniqueTargetProducts}
-            selectedTargetProductIds={targetProductFilters}
-            onTargetProductsChange={setTargetProductFilters}
-            targetProductTitleKey="materials.filterTargetProduct"
-            targetProductEmptyLabelKey="materials.filterTargetProductEmpty"
-            activeCount={compositionFilters.length + targetProductFilters.length}
-          />
-          {(compositionFilters.length > 0 || targetProductFilters.length > 0) && (
-            <button
-              type="button"
-              onClick={() => {
-                setCompositionFilters([]);
-                setTargetProductFilters([]);
-              }}
-              className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
-            >
-              {t('common.clearFilters')}
-            </button>
-          )}
-        </div>
-
-        {/* Add button */}
-        <button
-          onClick={openAdd}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('materials.addMaterial')}
-        </button>
       </div>
 
       {/* ── Content area ──────────────────────────────────── */}
+      <div className="px-0 pb-4">
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
         </div>
       ) : filteredMaterials.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Package className="w-12 h-12 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 font-medium">
             {compositionFilters.length > 0 || targetProductFilters.length > 0
               ? t('materials.noMatch')
@@ -300,7 +295,8 @@ export default function MaterialsPage() {
                   openDetail(mat);
                 }
               }}
-              className="group bg-white dark:bg-nokturo-800 rounded-lg overflow-hidden transition-all cursor-pointer"
+              className="group bg-white dark:bg-nokturo-800 transition-all cursor-pointer"
+              style={{ borderRadius: '8px', overflow: 'hidden' }}
             >
               {/* Swatch image */}
               <div className="aspect-[4/3] bg-nokturo-100 dark:bg-nokturo-700 relative overflow-hidden">
@@ -325,12 +321,12 @@ export default function MaterialsPage() {
                         e.stopPropagation();
                         setCardMenuOpen(cardMenuOpen === mat.id ? null : mat.id);
                       }}
-                      className={`p-1.5 rounded transition-all ${cardMenuOpen === mat.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
+                      className={`p-1.5 rounded transition-all ${cardMenuOpen === mat.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-white' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
                       <MoreVertical className="w-4 h-4" />
                     </button>
                     {cardMenuOpen === mat.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 min-w-[130px] z-20" onClick={(e) => e.stopPropagation()}>
+                      <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[130px] z-20" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={() => { openEdit(mat); setCardMenuOpen(null); }}
@@ -351,7 +347,7 @@ export default function MaterialsPage() {
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(mat.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
                           >
                             <Trash2 className="w-3 h-3" />
                             {t('common.delete')}
@@ -365,7 +361,7 @@ export default function MaterialsPage() {
 
               {/* Card body */}
               <div className="p-3">
-                <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 truncate">
+                <h3 className="text-heading-5 font-medium text-white truncate">
                   {mat.name}
                 </h3>
 
@@ -374,30 +370,18 @@ export default function MaterialsPage() {
                     {mat.composition}
                   </p>
                 )}
-
-                <div className="flex items-center justify-between mt-2 text-xs">
-                  <span className="text-nokturo-600 dark:text-nokturo-400">
-                    {fmtStock(mat.stock_qty, mat.unit)}
-                  </span>
-                  <span className="text-nokturo-600 dark:text-nokturo-400 text-right">
-                    {mat.currency === 'CZK' || !CURRENCIES.includes(mat.currency as (typeof CURRENCIES)[number]) ? (
-                      `${Math.round(mat.price_per_unit ?? 0)} CZK/${mat.unit}`
-                    ) : (
-                      <>≈ {Math.round(convertToCzk(mat.price_per_unit ?? 0, mat.currency))} CZK/{mat.unit}</>
-                    )}
-                  </span>
-                </div>
               </div>
             </div>
           ))}
         </div>
       )}
+      </div>
 
       {/* ── Delete confirmation dialog ────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
               {t('common.confirm')}
             </h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">

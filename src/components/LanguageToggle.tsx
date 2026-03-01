@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
-import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
+import { useThemeStore } from '../stores/themeStore';
 import { LANGUAGE_KEY } from '../i18n';
 import { safeGetStorage } from '../lib/storage';
 import { supabase } from '../lib/supabase';
@@ -11,12 +11,13 @@ interface LanguageToggleProps {
 
 /**
  * Segmented control for language selection – two options (English / Česky),
- * active one highlighted. Matches ThemeToggle width for consistency.
+ * active one highlighted. Matches ThemeToggle styling for consistency.
  */
 export function LanguageToggle({ variant }: LanguageToggleProps) {
   const { i18n } = useTranslation();
   const theme = useThemeStore((s) => s.theme);
   const currentLang = i18n.language?.split('-')[0] ?? 'en';
+  const isDarkVariant = variant === 'dark' || (variant !== 'light' && theme === 'dark');
 
   const setLang = (lang: 'en' | 'cs') => {
     if (lang === currentLang) return;
@@ -35,22 +36,20 @@ export function LanguageToggle({ variant }: LanguageToggleProps) {
     }
   };
 
-  const isDark = variant === 'dark' || (variant !== 'light' && theme === 'dark');
-
-  const groupClass = isDark
-    ? 'inline-flex w-[177px] rounded-lg bg-nokturo-800 p-0.5'
-    : 'inline-flex w-[177px] rounded-lg bg-nokturo-100 p-0.5';
+  const groupClass = isDarkVariant
+    ? 'inline-flex w-[177px] rounded-[6px] bg-nokturo-800 p-0.5'
+    : 'inline-flex w-[177px] rounded-[6px] bg-nokturo-100 p-0.5 dark:bg-nokturo-800';
 
   const optionBase =
-    'flex-1 inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium rounded-md transition-colors min-w-0';
+    'flex-1 inline-flex items-center justify-center px-4 py-1.5 text-sm font-medium rounded-[4px] transition-colors min-w-0';
 
-  const optionActive = isDark
-    ? 'bg-nokturo-600 text-white '
-    : 'bg-white text-nokturo-900 ';
+  const optionActive = isDarkVariant
+    ? 'bg-nokturo-600 text-white'
+    : 'bg-white text-nokturo-900 dark:bg-nokturo-600 dark:text-white shadow-sm';
 
-  const optionInactive = isDark
+  const optionInactive = isDarkVariant
     ? 'text-nokturo-400 hover:text-nokturo-300'
-    : 'text-nokturo-600 hover:text-nokturo-800';
+    : 'text-nokturo-600 hover:text-nokturo-800 dark:text-nokturo-400 dark:hover:text-nokturo-300';
 
   return (
     <div

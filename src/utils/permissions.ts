@@ -25,6 +25,7 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/communication/comments': ['founder', 'engineer', 'viewer'],
   '/settings/account': ['founder', 'engineer', 'viewer', 'client', 'host'],
   '/settings/security': ['founder', 'engineer', 'viewer', 'client', 'host'],
+  '/settings/style-guide': ['founder'],
 };
 
 // Feature permissions – which roles can use which features
@@ -51,6 +52,9 @@ export const FEATURE_PERMISSIONS = {
 
   canExportData: ['founder', 'engineer'] as Role[],
   canViewAnalytics: ['founder', 'engineer'] as Role[],
+
+  /** Edit Brand Identity & Strategy pages – founder only */
+  canEditBrand: ['founder'] as Role[],
 } as const;
 
 export type FeatureAction = keyof typeof FEATURE_PERMISSIONS;

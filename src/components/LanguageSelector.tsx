@@ -34,7 +34,7 @@ export function LanguageSelector() {
       <button
         type="button"
         onClick={() => setLang('cs')}
-        className={`px-1.5 py-0.5 rounded transition-colors ${
+        className={`px-1.5 py-0.5 rounded-[4px] transition-colors ${
           isCs
             ? 'text-nokturo-900 dark:text-white font-medium'
             : 'text-nokturo-500 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-400'
@@ -49,7 +49,7 @@ export function LanguageSelector() {
       <button
         type="button"
         onClick={() => setLang('en')}
-        className={`px-1.5 py-0.5 rounded transition-colors ${
+        className={`px-1.5 py-0.5 rounded-[4px] transition-colors ${
           !isCs
             ? 'text-nokturo-900 dark:text-white font-medium'
             : 'text-nokturo-500 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-400'

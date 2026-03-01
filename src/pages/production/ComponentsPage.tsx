@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -177,42 +178,39 @@ export default function ComponentsPage() {
     <PageShell
       titleKey="pages.componentsLibrary.title"
       descriptionKey="pages.componentsLibrary.description"
-    >
-      {/* ── Action bar ────────────────────────────────────── */}
-      <div className="flex flex-col sm:flex-row gap-3 mb-6 items-center justify-end">
-        {typeFilter.length > 0 && (
+      actionsSlot={
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+          {typeFilter.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setTypeFilter([])}
+              className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+            >
+              {t('common.clearFilters')}
+            </button>
+          )}
+          <FilterSelect
+            value={typeFilter}
+            onChange={setTypeFilter}
+            titleKey="components.filterTitle"
+            options={[
+              { value: 'all', label: t('components.allTypes') },
+              ...categories.map((cat) => ({
+                value: cat.name,
+                label: t(`components.types.${cat.name}`) !== `components.types.${cat.name}` ? t(`components.types.${cat.name}`) : cat.name,
+              })),
+            ]}
+          />
           <button
-            type="button"
-            onClick={() => setTypeFilter([])}
-            className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            {t('common.clearFilters')}
+            <Plus className="w-4 h-4" />
+            {t('components.addComponent')}
           </button>
-        )}
-        {/* Type filter */}
-        <FilterSelect
-          value={typeFilter}
-          onChange={setTypeFilter}
-          titleKey="components.filterTitle"
-          options={[
-            { value: 'all', label: t('components.allTypes') },
-            ...categories.map((cat) => ({
-              value: cat.name,
-              label: t(`components.types.${cat.name}`) !== `components.types.${cat.name}` ? t(`components.types.${cat.name}`) : cat.name,
-            })),
-          ]}
-        />
-
-        {/* Add button */}
-        <button
-          onClick={openAdd}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          {t('components.addComponent')}
-        </button>
-      </div>
-
+        </div>
+      }
+    >
       {/* ── Content area ──────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -220,7 +218,6 @@ export default function ComponentsPage() {
         </div>
       ) : components.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Package className="w-12 h-12 text-nokturo-400 mb-4" />
           <p className="text-nokturo-600 font-medium">
             {t('components.noComponents')}
           </p>
@@ -274,7 +271,7 @@ export default function ComponentsPage() {
                   const catOpt = categories.find((o) => o.name === comp.type);
                   const colorCls = catOpt ? TAG_BADGE_CLASSES[catOpt.color] ?? TAG_BADGE_CLASSES.gray : TAG_BADGE_CLASSES.gray;
                   return (
-                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded font-medium ${colorCls}`}>
+                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-[4px] font-medium ${colorCls}`}>
                       {t(`components.types.${comp.type}`) !== `components.types.${comp.type}` ? t(`components.types.${comp.type}`) : comp.type}
                     </span>
                   );
@@ -314,9 +311,9 @@ export default function ComponentsPage() {
 
       {/* ── Delete confirmation dialog ────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-nokturo-900/40 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-2">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
               {t('common.confirm')}
             </h3>
             <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">

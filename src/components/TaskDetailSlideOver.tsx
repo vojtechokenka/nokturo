@@ -2,19 +2,15 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   X,
+  ArrowLeft,
   MoreVertical,
   Pencil,
   Trash2,
   Check,
   CheckCircle2,
   RotateCcw,
-  Calendar,
-  Clock,
-  AlertTriangle,
-  User,
 } from 'lucide-react';
 import type { Task, TaskProfile } from './TaskSlideOver';
-import { TaskComments } from './TaskComments';
 
 interface TaskDetailSlideOverProps {
   open: boolean;
@@ -26,6 +22,8 @@ interface TaskDetailSlideOverProps {
   onReopen: (id: string) => void;
   onDelete?: (id: string) => void;
   onDescriptionChange?: (taskId: string, description: string) => void;
+  /** When true: render inline (no overlay), with back button instead of close */
+  inline?: boolean;
 }
 
 export function TaskDetailSlideOver({
@@ -38,6 +36,7 @@ export function TaskDetailSlideOver({
   onReopen,
   onDelete,
   onDescriptionChange,
+  inline = false,
 }: TaskDetailSlideOverProps) {
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -90,14 +89,6 @@ export function TaskDetailSlideOver({
     return new Date(task.deadline) < today;
   })();
 
-  const isRecentlyOverdue = (() => {
-    if (!task.deadline || task.status !== 'active') return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const daysPast = (today.getTime() - new Date(task.deadline).getTime()) / 86_400_000;
-    return daysPast > 0 && daysPast <= 7;
-  })();
-
   const isUrgent = (() => {
     if (!task.deadline || task.status !== 'active' || isOverdue) return false;
     const diff = new Date(task.deadline).getTime() - Date.now();
@@ -119,29 +110,41 @@ export function TaskDetailSlideOver({
     });
   };
 
+  const daysUntilDeadline = (deadline: string | null): number => {
+    if (!deadline) return 0;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dl = new Date(deadline);
+    dl.setHours(0, 0, 0, 0);
+    return Math.max(0, Math.ceil((dl.getTime() - today.getTime()) / 86_400_000));
+  };
+
   const creatorProfile = task.created_by ? profileMap[task.created_by] : null;
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 flex animate-slide-in" style={{ maxWidth: 'calc(100vw - 60px)' }}>
-        {/* Comments panel */}
-        <div className="hidden md:flex w-80 lg:w-96 bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex-col shrink-0">
-          <TaskComments taskId={task.id} taskCreatorId={task.created_by} taskTitle={task.title} />
-        </div>
-
-        {/* Task detail panel */}
-        <div className="w-full min-w-[480px] max-w-[640px] bg-white dark:bg-nokturo-800 border-l border-nokturo-200 dark:border-nokturo-700 flex flex-col">
+      {!inline && <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />}
+      <div className={`flex flex-col ${inline ? 'flex-1 min-h-0 bg-transparent' : 'fixed top-12 bottom-0 left-1/2 -translate-x-1/2 z-50 w-[80vw] max-w-[860px] bg-nokturo-900 shadow-2xl min-h-0'}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0 gap-3">
           <div className="flex items-center gap-3 min-w-0">
+            {inline && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 -ml-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 shrink-0"
+                title={t('common.back')}
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
             <button
               type="button"
               onClick={() => task.status === 'completed' ? onReopen(task.id) : onMarkCompleted(task.id)}
               className={`shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors ${
                 task.status === 'completed'
-                  ? 'bg-green-600 dark:bg-green-500 text-white'
-                  : 'border-[1.5px] border-nokturo-300 dark:border-nokturo-500 hover:border-green-500 dark:hover:border-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
+                  ? 'bg-emerald-600 text-white'
+                  : 'border-[1.5px] border-nokturo-300 dark:border-nokturo-500 hover:border-emerald-500 dark:hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
               }`}
               title={task.status === 'completed' ? t('tasks.reopen') : t('tasks.markCompleted')}
             >
@@ -154,6 +157,12 @@ export function TaskDetailSlideOver({
             }`}>
               {task.title}
             </h3>
+            <span
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-sm font-medium bg-emerald-600 text-white`}
+            >
+              {task.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5" />}
+              {t(`tasks.${task.status}`)}
+            </span>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             <div className="relative">
@@ -166,7 +175,7 @@ export function TaskDetailSlideOver({
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-lg shadow-lg py-1 w-max z-20">
+                  <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 w-max z-20">
                     <button
                       onClick={() => { onEdit(task); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
@@ -194,7 +203,7 @@ export function TaskDetailSlideOver({
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(task.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 flex items-center gap-2 whitespace-nowrap"
+                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2 whitespace-nowrap"
                       >
                         <Trash2 className="w-3.5 h-3.5 shrink-0" />
                         {t('common.delete')}
@@ -204,31 +213,19 @@ export function TaskDetailSlideOver({
                 </>
               )}
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            {!inline && (
+              <button
+                onClick={onClose}
+                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
-          {/* Status */}
-          <div>
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium ${
-                task.status === 'completed'
-                  ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                  : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-              }`}
-            >
-              {task.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5" />}
-              {t(`tasks.${task.status}`)}
-            </span>
-          </div>
-
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide px-6 py-6 space-y-6">
           {/* Deadline */}
           {task.deadline && (
             <div>
@@ -236,23 +233,29 @@ export function TaskDetailSlideOver({
                 {t('tasks.deadline')}
               </label>
               <span
-                className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
-                  isRecentlyOverdue
-                    ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
-                    : isOverdue || isUrgent
-                      ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300'
+                className={`inline-flex items-center gap-1 text-xs h-6 px-2 rounded-[4px] ${
+                  isOverdue
+                    ? 'bg-red-600 text-[#ffc2c2]'
+                    : isUrgent
+                      ? 'bg-amber-600 text-[rgb(254,229,200)]'
                       : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
                 }`}
               >
-                {isRecentlyOverdue ? (
-                  <AlertTriangle className="w-3 h-3" />
-                ) : isOverdue || isUrgent ? (
-                  <Clock className="w-3 h-3" />
+                {isOverdue ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M1 21L12 2l11 19zm11.713-3.287Q13 17.425 13 17t-.288-.712T12 16t-.712.288T11 17t.288.713T12 18t.713-.288M11 15h2v-5h-2z"/></svg>
+                ) : isUrgent ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 22V4h3V2h2v2h8V2h2v2h3v7.675q-.475-.225-.975-.375T19 11.075V10H5v10h6.3q.175.55.413 1.05t.562.95zm11.463-.462Q13 20.075 13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23t-3.537-1.463m5.212-1.162l.7-.7L18.5 17.8V15h-1v3.2z"/></svg>
                 ) : (
-                  <Calendar className="w-3 h-3" />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 22V4h3V2h2v2h8V2h2v2h3v18zm2-2h14V10H5z"/></svg>
                 )}
-                {isOverdue && `${t('tasks.overdue')}: `}
-                {formatDate(task.deadline)}
+                {isOverdue
+                  ? `${t('tasks.overdue')}: ${formatDate(task.deadline)}`
+                  : (() => {
+                      const days = daysUntilDeadline(task.deadline);
+                      if (days === 0) return t('tasks.dueToday');
+                      if (days === 1) return t('tasks.daysLeftOne');
+                      return t('tasks.daysLeft', { count: days });
+                    })()}
               </span>
             </div>
           )}
@@ -269,12 +272,12 @@ export function TaskDetailSlideOver({
                   return (
                     <div
                       key={a.user_id}
-                      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-nokturo-100 dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-300"
+                      className="inline-flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-300"
                     >
                       {p?.avatar_url ? (
-                        <img src={p.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
+                        <img src={p.avatar_url} alt="" className="avatar-round w-5 h-5 object-cover" />
                       ) : (
-                        <span className="w-5 h-5 rounded-full bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center text-[10px] text-white font-medium">
+                        <span className="avatar-round w-5 h-5 bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center text-[10px] text-white font-medium">
                           {(p?.first_name?.[0] || '?').toUpperCase()}
                         </span>
                       )}
@@ -289,16 +292,20 @@ export function TaskDetailSlideOver({
           {/* Created by */}
           {creatorProfile && (
             <div>
-              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-1">
+              <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-2">
                 {t('tasks.createdBy')}
               </label>
-              <div className="inline-flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-300">
-                {creatorProfile.avatar_url ? (
-                  <img src={creatorProfile.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover" />
-                ) : (
-                  <User className="w-4 h-4 text-nokturo-400" />
-                )}
-                {profileName(task.created_by!)}
+              <div className="flex flex-wrap gap-2">
+                <div className="inline-flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-300">
+                  {creatorProfile.avatar_url ? (
+                    <img src={creatorProfile.avatar_url} alt="" className="avatar-round w-5 h-5 object-cover" />
+                  ) : (
+                    <span className="avatar-round w-5 h-5 bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center text-[10px] text-white font-medium">
+                      {(creatorProfile.first_name?.[0] || '?').toUpperCase()}
+                    </span>
+                  )}
+                  {profileName(task.created_by!)}
+                </div>
               </div>
             </div>
           )}
@@ -309,7 +316,7 @@ export function TaskDetailSlideOver({
               <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-1">
                 {t('tasks.completedOn')}
               </label>
-              <span className="text-sm text-nokturo-700 dark:text-nokturo-300">
+              <span className="inline-flex items-center text-xs h-6 px-2 rounded-[4px] bg-emerald-600 text-[#b3ffe8]">
                 {formatDate(task.completed_at)}
               </span>
             </div>
@@ -329,7 +336,6 @@ export function TaskDetailSlideOver({
               />
             </div>
           )}
-        </div>
         </div>
       </div>
     </>

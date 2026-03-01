@@ -92,7 +92,7 @@ export function CompositionFilter({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 h-9 px-3 text-sm font-medium rounded-lg transition-colors inline-flex items-center gap-2 w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900"
+        className="bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 h-9 px-3 text-sm font-medium rounded-[6px] transition-colors inline-flex items-center gap-2 w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900"
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -133,7 +133,7 @@ export function CompositionFilter({
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleFiber(fiber)}
-                        className="w-4 h-4 rounded border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300"
+                        className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300"
                       />
                       <span className="text-sm text-nokturo-800 dark:text-nokturo-200 flex-1">
                         {getFiberLabel(fiber)}
@@ -164,7 +164,7 @@ export function CompositionFilter({
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggleTargetProduct(tp.id)}
-                          className="w-4 h-4 rounded border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300"
+                          className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300"
                         />
                         <span className="text-sm text-nokturo-800 dark:text-nokturo-200 flex-1 truncate">
                           {tp.name}

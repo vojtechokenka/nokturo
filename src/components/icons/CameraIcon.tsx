@@ -1,0 +1,21 @@
+interface CameraIconProps {
+  className?: string;
+  size?: number;
+}
+
+export function CameraIcon({ className, size = 24 }: CameraIconProps) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      className={className}
+    >
+      <path
+        fill="currentColor"
+        d="M6 17h12l-3.75-5l-3 4L9 13zm-3 4V3h18v18z"
+      />
+    </svg>
+  );
+}

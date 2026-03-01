@@ -32,7 +32,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
   const previewImage = tp?.preview_photo_url ?? tp?.design_gallery?.[0]?.url;
 
   return (
-    <div className="group relative bg-nokturo-50 dark:bg-nokturo-800 rounded-lg overflow-hidden transition-all">
+    <div className="group relative bg-nokturo-50 dark:bg-nokturo-800 transition-all" style={{ borderRadius: '8px', overflow: 'hidden' }}>
       <button
         type="button"
         onClick={() => navigate(to)}
@@ -41,7 +41,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
         {/* Visual top section – first image from Design gallery or placeholder (4:5 format) */}
         <div className="aspect-[4/5] bg-nokturo-100 dark:bg-nokturo-700 relative flex flex-col items-center justify-center p-4 overflow-hidden">
           {product.priority && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 rounded bg-red-600 text-white text-xs font-medium whitespace-nowrap z-10">
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-[4px] bg-red-600 text-white text-xs font-medium whitespace-nowrap z-10">
               {t('products.priority')}
             </span>
           )}
@@ -67,7 +67,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
         <div className="p-3">
           <h3 className="text-heading-5 font-body font-normal h-fit leading-4 text-nokturo-900 dark:text-nokturo-100 truncate mt-0 mb-0 flex items-center gap-1.5">
             {(showReadyBadge || product.ready_for_sampling) && (
-              <span className="w-2 h-2 rounded-full bg-green-500 shrink-0" aria-hidden />
+              <span className="avatar-round w-2 h-2 bg-emerald-500 shrink-0" aria-hidden />
             )}
             <span className="truncate font-semibold">{product.name}</span>
           </h3>
