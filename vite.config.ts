@@ -22,8 +22,23 @@ const env = fs.existsSync(envFile)
 const packageJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
 const packageVersion = packageJson.version;
 
+// PWA manifest a ikony musí zůstat na rootu (/manifest.json, /icons/) — Vite s base /app/ je přepisuje
+function fixPwaPathsPlugin() {
+  return {
+    name: 'fix-pwa-paths',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html) {
+        return html
+          .replace('href="/app/manifest.json"', 'href="/manifest.json"')
+          .replace('href="/app/icons/icon-192.png"', 'href="/icons/icon-192.png"');
+      },
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), fixPwaPathsPlugin()],
   define: {
     __APP_VERSION__: JSON.stringify(packageVersion),
     __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
