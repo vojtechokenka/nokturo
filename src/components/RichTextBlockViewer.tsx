@@ -161,8 +161,7 @@ function BlockView({ block, prevBlock, nextBlock, headingFont = 'headline', h3La
               ? 'text-rta-h3'
               : 'text-rta-std-h3';
       const headingMt = prevBlock?.type === 'tag' && prevBlock.visible !== false ? 'mt-0' : block.level === 1 ? 'mt-8' : block.level === 2 ? 'mt-12' : 'mt-8';
-      const isNokturoHeadline = block.level === 1 && block.text.trim() === 'Nokturo® — Crafted slowly and intentionally. Without noise.';
-      const colorClass = isNokturoHeadline ? 'text-red-500 dark:text-red-400' : 'text-nokturo-900 dark:text-nokturo-100';
+      const colorClass = 'text-nokturo-900 dark:text-nokturo-100';
       const headingClass = {
         1: `${hFont} ${hSizeClass} font-normal ${colorClass} ${headingMt} mb-4 scroll-mt-6`,
         2: `${hFont} ${hSizeClass} font-normal ${colorClass} ${headingMt} mb-4 scroll-mt-6`,

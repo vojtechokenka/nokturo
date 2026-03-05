@@ -1,6 +1,6 @@
 {
   "name": "nokturo",
-  "version": "5.9.0-beta.1",
+  "version": "5.9.0-beta.2",
   "description": "Nokturo PLM/ERP – Product Lifecycle Management for high-end fashion",
   "main": "electron/main.js",
   "repository": {
