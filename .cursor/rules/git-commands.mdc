@@ -1,0 +1,12 @@
+## finish work
+When user says "finish work", run this in terminal:
+1. Run: git add .
+2. Ask Claude to summarize what files changed and write a commit message
+3. Run: git commit -m "[auto-generated summary]"
+4. Run: git push
+Then confirm: "✅ Work saved and pushed to GitHub"
+
+## pull
+When user says "pull", run in terminal:
+git pull
+Then confirm: "✅ Latest code pulled"
