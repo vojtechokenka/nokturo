@@ -1,15 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  X,
-  ArrowLeft,
-  MoreVertical,
-  Pencil,
-  Trash2,
-  Check,
-  CheckCircle2,
-  RotateCcw,
-} from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
 import type { Task, TaskProfile } from './TaskSlideOver';
 
 interface TaskDetailSlideOverProps {
@@ -135,7 +127,7 @@ export function TaskDetailSlideOver({
                 className="p-1.5 -ml-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 shrink-0"
                 title={t('common.back')}
               >
-                <ArrowLeft className="w-5 h-5" />
+                <MaterialIcon name="arrow_back" size={20} className="shrink-0" />
               </button>
             )}
             <button
@@ -143,12 +135,12 @@ export function TaskDetailSlideOver({
               onClick={() => task.status === 'completed' ? onReopen(task.id) : onMarkCompleted(task.id)}
               className={`shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors ${
                 task.status === 'completed'
-                  ? 'bg-emerald-600 text-white'
-                  : 'border-[1.5px] border-nokturo-300 dark:border-nokturo-500 hover:border-emerald-500 dark:hover:border-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                  ? 'bg-green text-green-fg'
+                  : 'border-[1.5px] border-nokturo-300 dark:border-nokturo-500 hover:border-green hover:bg-green/10 dark:hover:bg-green/20'
               }`}
               title={task.status === 'completed' ? t('tasks.reopen') : t('tasks.markCompleted')}
             >
-              {task.status === 'completed' && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
+              {task.status === 'completed' && <MaterialIcon name="check" size={14} className="shrink-0" />}
             </button>
             <h3 className={`text-heading-5 font-extralight tracking-tight truncate min-w-0 ${
               task.status === 'completed'
@@ -158,9 +150,9 @@ export function TaskDetailSlideOver({
               {task.title}
             </h3>
             <span
-              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-sm font-medium bg-emerald-600 text-white`}
+              className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-[4px] text-sm font-medium bg-green text-green-fg`}
             >
-              {task.status === 'completed' && <CheckCircle2 className="w-3.5 h-3.5" />}
+              {task.status === 'completed' && <MaterialIcon name="check_circle" size={14} className="shrink-0" />}
               {t(`tasks.${task.status}`)}
             </span>
           </div>
@@ -170,7 +162,7 @@ export function TaskDetailSlideOver({
                 onClick={() => setMenuOpen((p) => !p)}
                 className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
               >
-                <MoreVertical className="w-5 h-5" />
+                <MaterialIcon name="more_vert" size={20} className="shrink-0" />
               </button>
               {menuOpen && (
                 <>
@@ -180,7 +172,7 @@ export function TaskDetailSlideOver({
                       onClick={() => { onEdit(task); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                     >
-                      <Pencil className="w-3.5 h-3.5 shrink-0" />
+                      <MaterialIcon name="edit" size={14} className="shrink-0" />
                       {t('common.edit')}
                     </button>
                     {task.status === 'active' ? (
@@ -188,7 +180,7 @@ export function TaskDetailSlideOver({
                         onClick={() => { onMarkCompleted(task.id); setMenuOpen(false); }}
                         className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                       >
-                        <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                        <MaterialIcon name="check_circle" size={14} className="shrink-0" />
                         {t('tasks.markCompleted')}
                       </button>
                     ) : (
@@ -196,16 +188,16 @@ export function TaskDetailSlideOver({
                         onClick={() => { onReopen(task.id); setMenuOpen(false); }}
                         className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                       >
-                        <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                        <MaterialIcon name="undo" size={14} className="shrink-0" />
                         {t('tasks.reopen')}
                       </button>
                     )}
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(task.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2 whitespace-nowrap"
+                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2 whitespace-nowrap"
                       >
-                        <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                        <DeleteIcon className="w-3.5 h-3.5 shrink-0" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -218,7 +210,7 @@ export function TaskDetailSlideOver({
                 onClick={onClose}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
               >
-                <X className="w-5 h-5" />
+                <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
             )}
           </div>
@@ -235,9 +227,9 @@ export function TaskDetailSlideOver({
               <span
                 className={`inline-flex items-center gap-1 text-xs h-6 px-2 rounded-[4px] ${
                   isOverdue
-                    ? 'bg-red-600 text-[#ffc2c2]'
+                    ? 'bg-red text-red-fg'
                     : isUrgent
-                      ? 'bg-amber-600 text-[rgb(254,229,200)]'
+                      ? 'bg-orange text-orange-fg'
                       : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
                 }`}
               >
@@ -316,7 +308,7 @@ export function TaskDetailSlideOver({
               <label className="block text-sm font-normal text-nokturo-600 dark:text-nokturo-400 mb-1">
                 {t('tasks.completedOn')}
               </label>
-              <span className="inline-flex items-center text-xs h-6 px-2 rounded-[4px] bg-emerald-600 text-[#b3ffe8]">
+              <span className="inline-flex items-center text-xs h-6 px-2 rounded-[4px] bg-green text-green-fg">
                 {formatDate(task.completed_at)}
               </span>
             </div>

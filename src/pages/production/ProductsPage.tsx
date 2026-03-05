@@ -13,10 +13,7 @@ import {
 } from '../../components/ProductSlideOver';
 import { ProductCard } from '../../components/ProductCard';
 import { FilterGroup } from '../../components/FilterGroup';
-import {
-  Plus,
-  Loader2,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 // ── Page component ────────────────────────────────────────────
 export default function ProductsPage() {
@@ -171,7 +168,7 @@ export default function ProductsPage() {
             onClick={openAdd}
             className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('products.addProduct')}
           </button>
         </div>
@@ -180,7 +177,7 @@ export default function ProductsPage() {
       {/* ── Content area ────────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">

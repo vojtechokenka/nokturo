@@ -1,12 +1,7 @@
 import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
-import {
-  Search,
-  GripVertical,
-  MoreHorizontal,
-  X,
-} from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { FilterChevronIcon } from './FilterSelect';
 import { INPUT_CLASS } from '../lib/inputStyles';
 
@@ -45,13 +40,13 @@ export interface NotionSelectProps {
 // Notion-style tag colors
 const TAG_COLORS: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 const COLOR_OPTIONS = ['gray', 'orange', 'blue', 'green', 'purple', 'pink', 'red', 'yellow'];
@@ -443,7 +438,7 @@ export function NotionSelect({
           {/* Search */}
           <div className="p-1.5 shrink-0">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-nokturo-500 dark:text-nokturo-400" />
+              <MaterialIcon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 shrink-0" />
               <input
                 ref={inputRef}
                 type="text"
@@ -527,7 +522,7 @@ export function NotionSelect({
                       }}
                       className={`shrink-0 text-nokturo-500 ${canDrag ? 'cursor-grab active:cursor-grabbing touch-none' : ''}`}
                     >
-                      <GripVertical className="w-4 h-4" />
+                      <MaterialIcon name="drag_indicator" size={16} className="shrink-0" />
                     </div>
 
                     {editingId === opt.id ? (
@@ -568,7 +563,7 @@ export function NotionSelect({
                         }
                         className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 opacity-0 group-hover:opacity-100 focus:opacity-100"
                       >
-                        <MoreHorizontal className="w-4 h-4" />
+                        <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                       </button>
                     </div>
                     {showDropAfter && (
@@ -644,9 +639,9 @@ export function NotionSelect({
                 <button
                   type="button"
                   onClick={() => handleDelete(openOpt.id)}
-                  className="w-full px-2.5 py-1 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                  className="w-full px-2.5 py-1 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                 >
-                  <X className="w-3 h-3" />
+                  <MaterialIcon name="close" size={12} className="shrink-0" />
                   {t('common.delete')}
                 </button>
               </>

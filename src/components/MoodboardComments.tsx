@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { useToastStore } from '../stores/toastStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
-import { Loader2, Check, X, MoreHorizontal } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
 import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
@@ -381,14 +381,14 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                 disabled={!editContent.trim() || editSaving}
                 className="flex items-center gap-1 text-xs text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 disabled:opacity-50"
               >
-                <Check className="w-3 h-3" />
+                <MaterialIcon name="check" size={12} className="shrink-0" />
                 {t('common.save')}
               </button>
               <button
                 onClick={cancelEdit}
                 className="flex items-center gap-1 text-xs text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300"
               >
-                <X className="w-3 h-3" />
+                <MaterialIcon name="close" size={12} className="shrink-0" />
                 {t('common.cancel')}
               </button>
             </div>
@@ -439,7 +439,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                       }}
                       className={`p-1 rounded text-white/60 hover:text-white/90 hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     >
-                      <MoreHorizontal className="w-4 h-4" />
+                      <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                     </button>
                   </div>
                 )}
@@ -524,11 +524,11 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
             disabled={!newComment.trim() || sending}
             className="px-4 flex items-center justify-center h-11 bg-[#ffffff] text-nokturo-900 rounded-lg hover:bg-[#f5f5f5] transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shrink-0 text-sm font-medium"
           >
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : t('chat.send')}
+            {sending ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : t('chat.send')}
           </button>
         </div>
         {postError && (
-          <p className="text-xs text-red-500">{postError}</p>
+          <p className="text-xs text-red-fg">{postError}</p>
         )}
       </div>
       )}
@@ -559,7 +559,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
               <button
                 type="button"
                 onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
-                className="w-full flex flex-col justify-center items-center p-1 text-xs bg-red-500 text-white hover:bg-red-600 rounded-[4px]"
+                className="w-full flex flex-col justify-center items-center p-1 text-xs bg-red text-red-fg hover:bg-red/90 rounded-[4px]"
               >
                 {t('common.delete')}
               </button>
@@ -583,7 +583,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

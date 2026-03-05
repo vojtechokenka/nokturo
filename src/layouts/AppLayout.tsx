@@ -6,7 +6,7 @@ import { ProfileDropdown } from '../components/ProfileDropdown';
 import { useAuthStore } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { useToastStore } from '../stores/toastStore';
-import { Loader2, Menu } from 'lucide-react';
+import { MaterialIcon } from '../components/icons/MaterialIcon';
 import { MyTasksIcon } from '../components/icons/MyTasksIcon';
 import { useTranslation } from 'react-i18next';
 
@@ -25,7 +25,7 @@ export function AppLayout() {
   if (isLoading) {
     return (
       <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 items-center justify-center">
-        <Loader2 className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+        <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
       </div>
     );
   }
@@ -64,7 +64,7 @@ export function AppLayout() {
             className="p-2 -ml-2 rounded-lg text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
             aria-label="Menu"
           >
-            <Menu className="w-5 h-5" />
+            <MaterialIcon name="menu" size={20} className="shrink-0" />
           </button>
           <svg className="h-[28px] w-[28px] ml-3" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="32" height="32" rx="4" fill="black"/>

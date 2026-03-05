@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { PageShell } from '../../components/PageShell';
-import { Hash, Loader2, MessageCircle } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SendArrowIcon } from '../../components/icons/SendArrowIcon';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { renderContentWithMentions } from '../../lib/renderMentions';
@@ -218,7 +218,7 @@ export default function ChatPage() {
         descriptionKey="pages.internalChat.description"
       >
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       </PageShell>
     );
@@ -248,7 +248,7 @@ export default function ChatPage() {
                     : 'text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 hover:text-nokturo-800 dark:hover:text-nokturo-200'
                 }`}
               >
-                <Hash className="w-4 h-4 shrink-0 text-nokturo-500" />
+                <MaterialIcon name="tag" size={16} className="shrink-0 text-nokturo-500" />
                 {roomLabel(room.name)}
               </button>
             ))}
@@ -260,7 +260,7 @@ export default function ChatPage() {
           {/* Room header */}
           <div className="px-4 py-3 border-b border-nokturo-200 shrink-0">
             <div className="flex items-center gap-2">
-              <Hash className="w-4 h-4 text-nokturo-500" />
+              <MaterialIcon name="tag" size={16} className="text-nokturo-500 shrink-0" />
               <h3 className="text-heading-5 font-extralight text-nokturo-900">
                 {rooms.find((r) => r.id === activeRoomId)
                   ? roomLabel(rooms.find((r) => r.id === activeRoomId)!.name)
@@ -273,11 +273,11 @@ export default function ChatPage() {
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
             {loadingMessages ? (
               <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-5 h-5 text-nokturo-500 animate-spin" />
+                <MaterialIcon name="progress_activity" size={20} className="text-nokturo-500 animate-spin shrink-0" />
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center">
-                <MessageCircle className="w-10 h-10 text-nokturo-600 mb-3" />
+                <MaterialIcon name="forum" size={40} className="text-nokturo-600 mb-3 shrink-0" />
                 <p className="text-nokturo-500 text-sm">{t('chat.noMessages')}</p>
               </div>
             ) : (
@@ -363,7 +363,7 @@ export default function ChatPage() {
                 className="p-2 bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-900/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
               >
                 {sending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                 ) : (
                   <SendArrowIcon className="w-4 h-4" />
                 )}

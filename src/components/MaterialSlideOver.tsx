@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, Plus, Search } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { UploadImageIcon } from './icons/UploadImageIcon';
 import { NotionSelect, type NotionSelectOption } from './NotionSelect';
 import { SelectField } from './SelectField';
@@ -489,7 +489,7 @@ export function MaterialSlideOver({
             onClick={onClose}
             className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
           >
-            <X className="w-5 h-5" />
+            <MaterialIcon name="close" size={20} className="shrink-0" />
           </button>
         </div>
 
@@ -519,7 +519,7 @@ export function MaterialSlideOver({
                 />
                 {uploading && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    <MaterialIcon name="progress_activity" size={24} className="text-white animate-spin shrink-0" />
                   </div>
                 )}
               </div>
@@ -541,7 +541,7 @@ export function MaterialSlideOver({
                 className="relative flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
               >
                 {uploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                 ) : (
                   <>
                     <UploadImageIcon className="w-4 h-4" size={16} />
@@ -601,7 +601,7 @@ export function MaterialSlideOver({
                       onClick={() => removeTargeted(id)}
                       className="p-0.5 hover:bg-nokturo-300 dark:hover:bg-nokturo-500 rounded"
                     >
-                      <X className="w-3 h-3" />
+                      <MaterialIcon name="close" size={12} className="shrink-0" />
                     </button>
                   </span>
                 ) : null;
@@ -626,7 +626,7 @@ export function MaterialSlideOver({
                 <div className="absolute left-0 right-0 top-full mt-1 z-50 bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-600 rounded-xl overflow-hidden">
                   <div className="p-1.5 border-b border-nokturo-200 dark:border-nokturo-600">
                     <div className="relative">
-                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-nokturo-500 dark:text-nokturo-400" />
+                      <MaterialIcon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 shrink-0" />
                       <input
                         ref={targetedInputRef}
                         type="text"
@@ -714,9 +714,9 @@ export function MaterialSlideOver({
                     type="button"
                     onClick={() => removeCompositionRow(idx)}
                     disabled={compositionRows.length <= 1}
-                    className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                    className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-red-fg dark:hover:text-red-fg disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
                   >
-                    <X className="w-4 h-4" />
+                    <MaterialIcon name="close" size={16} className="shrink-0" />
                   </button>
                 </div>
               ))}
@@ -725,11 +725,11 @@ export function MaterialSlideOver({
                 onClick={addCompositionRow}
                 className="flex items-center gap-1.5 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200"
               >
-                <Plus className="w-4 h-4" />
+                <MaterialIcon name="add" size={16} className="shrink-0" />
                 {t('materials.addCompositionRow')}
               </button>
               {compositionRows.some((r) => r.pct !== '' || r.fiber.trim()) && !compositionSumValid && (
-                <p className="text-xs text-red-500">{t('materials.compositionSumError')}</p>
+                <p className="text-xs text-red-fg">{t('materials.compositionSumError')}</p>
               )}
               {compositionSumValid && (
                 <p className="text-xs text-nokturo-500 dark:text-nokturo-400">
@@ -914,7 +914,7 @@ export function MaterialSlideOver({
 
           {/* ── Error banner ─────────────────────────────── */}
           {error && (
-            <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+            <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5">
               {error}
             </div>
           )}
@@ -935,7 +935,7 @@ export function MaterialSlideOver({
             disabled={saving}
             className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
             {t('common.save')}
           </button>
         </div>

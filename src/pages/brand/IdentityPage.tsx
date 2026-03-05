@@ -9,7 +9,7 @@ import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTe
 import { RichTextBlockViewer, getDefaultTocItems } from '../../components/RichTextBlockViewer';
 import { PageStructurePanel } from '../../components/PageStructurePanel';
 import { ToastContainer, type ToastData } from '../../components/Toast';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { EditIcon } from '../../components/icons/EditIcon';
 import { SaveIcon } from '../../components/icons/SaveIcon';
 
@@ -157,7 +157,7 @@ export default function IdentityPage() {
       <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-nokturo-500" />
+          <MaterialIcon name="progress_activity" size={24} className="animate-spin text-nokturo-500 shrink-0" />
         </div>
       ) : (
         <>
@@ -200,7 +200,7 @@ export default function IdentityPage() {
                     disabled={saving}
                     className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 disabled:opacity-60 shadow-sm"
                   >
-                    {saving ? <Loader2 size={16} className="animate-spin" /> : <SaveIcon size={16} />}
+                    {saving ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SaveIcon size={16} />}
                     {t('common.save')}
                   </button>
                 }
@@ -214,7 +214,7 @@ export default function IdentityPage() {
                   disabled={saving}
                   className="w-full max-w-[240px] mx-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 disabled:opacity-60 shadow-sm"
                 >
-                  {saving ? <Loader2 size={16} className="animate-spin" /> : <SaveIcon size={16} />}
+                  {saving ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SaveIcon size={16} />}
                   {t('common.save')}
                 </button>
               </div>

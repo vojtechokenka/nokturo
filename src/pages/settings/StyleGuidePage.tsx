@@ -1,24 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import {
-  Palette,
-  Type,
-  MousePointer2,
-  FormInput,
-  Tag,
-  Layout,
-  User,
-  Menu,
-  Square,
-  PanelRight,
-  Bell,
-  Loader2,
-  Inbox,
-  ChevronRight,
-  X,
-  Briefcase,
-  Plus,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { PageShell } from '../../components/PageShell';
 import { SelectField } from '../../components/SelectField';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
@@ -29,27 +11,29 @@ import { useToastStore } from '../../stores/toastStore';
 import { useAuthStore } from '../../stores/authStore';
 
 const SECTIONS = [
-  { id: 'colors', label: 'Colors', icon: Palette },
-  { id: 'typography', label: 'Typography', icon: Type },
-  { id: 'buttons', label: 'Buttons', icon: MousePointer2 },
-  { id: 'form-inputs', label: 'Form Inputs', icon: FormInput },
-  { id: 'badges-tags', label: 'Badges & Tags', icon: Tag },
-  { id: 'cards', label: 'Cards', icon: Layout },
-  { id: 'avatars', label: 'Avatars', icon: User },
-  { id: 'navigation', label: 'Navigation', icon: Menu },
-  { id: 'modals-sheets', label: 'Modals & Sheets', icon: PanelRight },
-  { id: 'toasts', label: 'Toast Notifications', icon: Bell },
-  { id: 'loading', label: 'Loading States', icon: Loader2 },
-  { id: 'empty', label: 'Empty States', icon: Inbox },
+  { id: 'colors', label: 'Colors', icon: 'palette' },
+  { id: 'typography', label: 'Typography', icon: 'title' },
+  { id: 'buttons', label: 'Buttons', icon: 'touch_app' },
+  { id: 'form-inputs', label: 'Form Inputs', icon: 'edit_note' },
+  { id: 'badges-tags', label: 'Badges & Tags', icon: 'sell' },
+  { id: 'cards', label: 'Cards', icon: 'dashboard' },
+  { id: 'avatars', label: 'Avatars', icon: 'person' },
+  { id: 'navigation', label: 'Navigation', icon: 'menu' },
+  { id: 'modals-sheets', label: 'Modals & Sheets', icon: 'side_navigation' },
+  { id: 'toasts', label: 'Toast Notifications', icon: 'notifications' },
+  { id: 'loading', label: 'Loading States', icon: 'progress_activity' },
+  { id: 'empty', label: 'Empty States', icon: 'inbox' },
 ];
 
 function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <section id={id} className="scroll-mt-24">
+    <section id={id} className="scroll-mt-24 min-w-0">
       <h2 className="text-heading-4 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-6 pb-2 border-b border-nokturo-200 dark:border-nokturo-700">
         {title}
       </h2>
-      {children}
+      <div className="min-w-0 break-words">
+        {children}
+      </div>
     </section>
   );
 }
@@ -101,17 +85,17 @@ export default function StyleGuidePage() {
 
   return (
     <PageShell>
-      <div className="flex gap-8 max-w-6xl mx-auto">
+      <div className="flex gap-8 max-w-6xl mx-auto min-w-0 w-full">
         {/* Sticky sidebar nav */}
         <aside className="hidden lg:block w-52 shrink-0">
           <nav className="sticky top-24 space-y-0.5">
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
+            {SECTIONS.map(({ id, label, icon }) => (
               <a
                 key={id}
                 href={`#${id}`}
                 className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-800 rounded-lg transition-colors"
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <MaterialIcon name={icon} size={16} className="shrink-0" />
                 {label}
               </a>
             ))}
@@ -125,12 +109,20 @@ export default function StyleGuidePage() {
               to="/settings/account"
               className="inline-flex items-center gap-1 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
             >
-              <ChevronRight className="w-4 h-4 rotate-180" />
+              <MaterialIcon name="chevron_right" size={16} className="rotate-180 shrink-0" />
               Back to Settings
             </NavLink>
-            <h1 className="text-heading-2 font-extralight text-nokturo-900 dark:text-nokturo-100 mt-2">
-              Style Guide
-            </h1>
+            <div className="flex items-center gap-3 mt-2">
+              <h1 className="text-heading-2 font-extralight text-nokturo-900 dark:text-nokturo-100">
+                Style Guide
+              </h1>
+              <NavLink
+                to="/settings/style-guide-v2"
+                className="text-sm text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300"
+              >
+                (v2)
+              </NavLink>
+            </div>
             <p className="text-nokturo-600 dark:text-nokturo-400 mt-1">
               UI primitives used across the app. Use the sidebar to jump between sections.
             </p>
@@ -167,13 +159,13 @@ export default function StyleGuidePage() {
               </div>
               <div>
                 <p className="text-xs font-medium text-nokturo-500 dark:text-nokturo-500 mb-2">Semantic (from usage)</p>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-3 min-w-0">
                   <div className="p-3 rounded-lg bg-nokturo-700 dark:bg-white text-white dark:text-nokturo-900 text-center text-sm">Primary (btn)</div>
                   <div className="p-3 rounded-lg bg-nokturo-50 dark:bg-nokturo-900 text-nokturo-900 dark:text-nokturo-100 text-center text-sm border border-nokturo-200 dark:border-nokturo-700">Background</div>
                   <div className="p-3 rounded-lg bg-white dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 text-center text-sm border border-nokturo-200 dark:border-nokturo-600">Surface</div>
-                  <div className="p-3 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-center text-sm">Error</div>
-                  <div className="p-3 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 text-center text-sm">Success</div>
-                  <div className="p-3 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-center text-sm">Warning</div>
+                  <div className="p-3 rounded-lg bg-[#6A0B0B] text-[#FFA3A3] text-center text-sm">Error</div>
+                  <div className="p-3 rounded-lg bg-[#127346] text-[#94FFCD] text-center text-sm">Success</div>
+                  <div className="p-3 rounded-lg bg-[#D98320] text-[#FEDBB4] text-center text-sm">Warning</div>
                 </div>
               </div>
             </div>
@@ -187,7 +179,7 @@ export default function StyleGuidePage() {
                 <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-3 font-body">
                   Font families
                 </h3>
-                <p className="text-sm text-nokturo-600 dark:text-nokturo-400 mb-3">
+                <p className="text-sm text-nokturo-600 dark:text-nokturo-400 mb-3 break-words">
                   <code className="font-mono text-xs bg-nokturo-100 dark:bg-nokturo-800 px-1.5 py-0.5 rounded-[4px]">font-headline</code> = IvyPresto Headline (Adobe Fonts) — pro About Nokturo, Magazine, názvy produktů<br />
                   <code className="font-mono text-xs bg-nokturo-100 dark:bg-nokturo-800 px-1.5 py-0.5 rounded-[4px]">font-body</code> = Inter — pro Identity, sekce produktů, auth stránky
                 </p>
@@ -351,7 +343,7 @@ export default function StyleGuidePage() {
                     disabled
                     className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm"
                   >
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                     Loading
                   </button>
                 </div>
@@ -385,11 +377,11 @@ export default function StyleGuidePage() {
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Danger</p>
                 <button
                   type="button"
-                  className="bg-red-500 text-white hover:bg-red-600 px-3 py-2 rounded-lg text-sm transition-colors"
+                  className="bg-red text-red-fg hover:bg-red/90 px-3 py-2 rounded-lg text-sm transition-colors"
                 >
                   Danger
                 </button>
-                <CodeBlock classes="bg-red-500 text-white hover:bg-red-600" />
+                <CodeBlock classes="bg-red text-red-fg hover:bg-red/90" />
               </div>
               <div>
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Icon-only</p>
@@ -399,7 +391,7 @@ export default function StyleGuidePage() {
                     className="p-2 text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
                     title="Icon button"
                   >
-                    <Square className="w-4 h-4" />
+                    <MaterialIcon name="crop_square" size={16} className="shrink-0" />
                   </button>
                 </div>
                 <CodeBlock classes="p-2 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700" />
@@ -427,7 +419,7 @@ export default function StyleGuidePage() {
                 <input
                   type="text"
                   placeholder="Error state"
-                  className={`${INPUT_CLASS} border-red-500 focus:ring-red-500/50`}
+                  className={`${INPUT_CLASS} border-red focus:ring-red/50`}
                 />
               </div>
               <div>
@@ -495,8 +487,8 @@ export default function StyleGuidePage() {
                 <div className="flex flex-wrap gap-2">
                   <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-blue-600 text-white">concept</span>
                   <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-violet-600 text-white">pattern</span>
-                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-amber-600 text-white">prototype</span>
-                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-emerald-600 text-white">production</span>
+                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-[#D98320] text-[#FEDBB4]">prototype</span>
+                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-[#127346] text-[#94FFCD]">production</span>
                   <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-nokturo-500 text-white">archived</span>
                 </div>
                 <CodeBlock classes="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-blue-600 text-white" />
@@ -505,9 +497,9 @@ export default function StyleGuidePage() {
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Accounting order status</p>
                 <div className="flex flex-wrap gap-2">
                   <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-nokturo-500 text-white">gray</span>
-                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-amber-600 text-white">orange</span>
-                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-emerald-600 text-white">green</span>
-                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-red-600 text-white">red</span>
+                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-[#D98320] text-[#FEDBB4]">orange</span>
+                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-[#127346] text-[#94FFCD]">green</span>
+                  <span className="px-2 py-0.5 rounded-[4px] text-xs font-medium bg-[#6A0B0B] text-[#FFA3A3]">red</span>
                 </div>
               </div>
               <div>
@@ -516,10 +508,10 @@ export default function StyleGuidePage() {
                   <span className="inline-flex items-center justify-center w-5 h-5 min-w-5 min-h-5 rounded-[9999px] text-[11px] font-medium tabular-nums bg-nokturo-500 text-white">
                     7
                   </span>
-                  <span className="inline-flex items-center justify-center w-5 h-5 min-w-5 min-h-5 rounded-[9999px] text-[11px] font-medium tabular-nums bg-emerald-600 text-white">
+                  <span className="inline-flex items-center justify-center w-5 h-5 min-w-5 min-h-5 rounded-[9999px] text-[11px] font-medium tabular-nums bg-[#127346] text-[#94FFCD]">
                     1
                   </span>
-                  <span className="inline-flex items-center justify-center w-5 h-5 min-w-5 min-h-5 rounded-[9999px] text-[11px] font-medium tabular-nums bg-red-600 text-white">
+                  <span className="inline-flex items-center justify-center w-5 h-5 min-w-5 min-h-5 rounded-[9999px] text-[11px] font-medium tabular-nums bg-[#6A0B0B] text-[#FFA3A3]">
                     0
                   </span>
                 </div>
@@ -532,16 +524,16 @@ export default function StyleGuidePage() {
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 22V4h3V2h2v2h8V2h2v2h3v18zm2-2h14V10H5z"/></svg>
                     14 days left
                   </span>
-                  <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-amber-600 text-[rgb(254,229,200)]">
+                  <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-[#D98320] text-[#FEDBB4]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M3 22V4h3V2h2v2h8V2h2v2h3v7.675q-.475-.225-.975-.375T19 11.075V10H5v10h6.3q.175.55.413 1.05t.562.95zm11.463-.462Q13 20.075 13 18t1.463-3.537T18 13t3.538 1.463T23 18t-1.463 3.538T18 23t-3.537-1.463m5.212-1.162l.7-.7L18.5 17.8V15h-1v3.2z"/></svg>
                     5 days left
                   </span>
-                  <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-red-600 text-[#ffc2c2]">
+                  <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-[#6A0B0B] text-[#FFA3A3]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M1 21L12 2l11 19zm11.713-3.287Q13 17.425 13 17t-.288-.712T12 16t-.712.288T11 17t.288.713T12 18t.713-.288M11 15h2v-5h-2z"/></svg>
                     Overdue: Feb 20, 2026
                   </span>
                 </div>
-                <CodeBlock classes="inline-flex items-center gap-1 text-xs h-6 px-2 rounded-[4px] bg-red-600 text-[#ffc2c2]" />
+                <CodeBlock classes="inline-flex items-center gap-1 text-xs h-6 px-2 rounded-[4px] bg-red text-red-fg" />
               </div>
               <div>
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Tasks row — comment count (no bg)</p>
@@ -558,21 +550,21 @@ export default function StyleGuidePage() {
               <div>
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Tasks row — deleted countdown</p>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-red-600 text-[#ffc2c2]">
+                  <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-red text-red-fg">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M9 3V1h6v2zm2 11h2V8h-2zm-2.488 7.288q-1.637-.713-2.862-1.938t-1.937-2.863T3 13t.713-3.488T5.65 6.65t2.863-1.937T12 4q1.55 0 2.975.5t2.675 1.45l1.4-1.4l1.4 1.4l-1.4 1.4Q20 8.6 20.5 10.025T21 13q0 1.85-.713 3.488T18.35 19.35t-2.863 1.938T12 22t-3.488-.712"/></svg>
                     Auto-delete in 3 days
                   </span>
                 </div>
-                <CodeBlock classes="inline-flex items-center gap-1 text-xs h-6 px-2 rounded-[4px] bg-red-600 text-[#ffc2c2]" />
+                <CodeBlock classes="inline-flex items-center gap-1 text-xs h-6 px-2 rounded-[4px] bg-red text-red-fg" />
               </div>
               <div>
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Tasks row — completed date</p>
                 <div className="flex flex-wrap gap-2 items-center">
-                  <span className="inline-flex items-center text-xs h-6 px-2 shrink-0 rounded-[4px] bg-emerald-600 text-[#b3ffe8]">
+                  <span className="inline-flex items-center text-xs h-6 px-2 shrink-0 rounded-[4px] bg-green text-green-fg">
                     Completed on Mar 1, 2026
                   </span>
                 </div>
-                <CodeBlock classes="inline-flex items-center text-xs h-6 px-2 rounded-[4px] bg-emerald-600 text-[#b3ffe8]" />
+                <CodeBlock classes="inline-flex items-center text-xs h-6 px-2 rounded-[4px] bg-green text-green-fg" />
               </div>
             </div>
           </Section>
@@ -633,7 +625,7 @@ export default function StyleGuidePage() {
                   href="#"
                   className="flex items-center gap-2.5 px-3 py-2 rounded text-sm text-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
                 >
-                  <Briefcase className="w-[18px] h-[18px] shrink-0" strokeLinejoin="miter" strokeLinecap="square" />
+                  <MaterialIcon name="work" size={18} className="shrink-0" />
                   Strategy
                 </a>
               </div>
@@ -643,7 +635,7 @@ export default function StyleGuidePage() {
                   href="#"
                   className="flex items-center gap-2.5 px-3 py-2 rounded text-sm bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-700 dark:text-nokturo-100"
                 >
-                  <Briefcase className="w-[18px] h-[18px] shrink-0" strokeLinejoin="miter" strokeLinecap="square" />
+                  <MaterialIcon name="work" size={18} className="shrink-0" />
                   Strategy
                 </a>
               </div>
@@ -654,7 +646,7 @@ export default function StyleGuidePage() {
                   className="flex items-center justify-center px-0 py-2 rounded text-sm text-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-700"
                   title="Strategy"
                 >
-                  <Briefcase className="w-[18px] h-[18px]" strokeLinejoin="miter" strokeLinecap="square" />
+                  <MaterialIcon name="work" size={18} className="shrink-0" />
                 </a>
               </div>
               <CodeBlock classes="flex items-center gap-2.5 px-3 py-2 rounded text-sm (active: bg-nokturo-200 dark:bg-nokturo-700)" />
@@ -730,7 +722,7 @@ export default function StyleGuidePage() {
                       onClick={() => setSheetOpen(false)}
                       className="p-1.5 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10"
                     >
-                      <X className="w-5 h-5" />
+                      <MaterialIcon name="close" size={20} className="shrink-0" />
                     </button>
                   </div>
                   <div className="flex-1 overflow-y-auto p-6">
@@ -752,14 +744,14 @@ export default function StyleGuidePage() {
               <button
                 type="button"
                 onClick={() => addToast('Success message', 'success')}
-                className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-emerald-600 text-[#b3ffe8] hover:bg-emerald-500 transition-colors"
+                className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-green text-green-fg hover:bg-green/90 transition-colors"
               >
                 Success toast
               </button>
               <button
                 type="button"
                 onClick={() => addToast('Error message', 'error')}
-                className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-red-600 text-[#ffc2c2] hover:bg-red-500 transition-colors"
+                className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-red text-red-fg hover:bg-red/90 transition-colors"
               >
                 Error toast
               </button>
@@ -779,18 +771,18 @@ export default function StyleGuidePage() {
               Fixed bottom-right messages (AccountPage, PageShell). Same styling as semantic colors.
             </p>
             <div className="flex flex-wrap gap-2 items-center">
-              <div className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-emerald-600 text-[#b3ffe8]">
+              <div className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-green text-green-fg">
                 Profile saved
               </div>
-              <div className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-red-600 text-[#ffc2c2]">
+              <div className="inline-flex items-center justify-center h-9 px-3 rounded-[4px] text-xs font-medium bg-red text-red-fg">
                 Error saving profile.
               </div>
             </div>
             <div className="mt-2 space-y-1">
               <p className="text-xs font-medium text-nokturo-500 mb-1">Success</p>
-              <CodeBlock classes="fixed bottom-6 right-6 px-4 py-3 rounded-lg z-50 bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300" />
+              <CodeBlock classes="fixed bottom-6 right-6 px-4 py-3 rounded-lg z-50 bg-green/10 dark:bg-green/20 text-green dark:text-green-fg" />
               <p className="text-xs font-medium text-nokturo-500 mb-1 mt-3">Error</p>
-              <CodeBlock classes="fixed bottom-6 right-6 px-4 py-3 rounded-lg z-50 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300" />
+              <CodeBlock classes="fixed bottom-6 right-6 px-4 py-3 rounded-lg z-50 bg-red/10 dark:bg-red/20 text-red dark:text-red-fg" />
             </div>
           </Section>
 
@@ -798,13 +790,13 @@ export default function StyleGuidePage() {
           <Section id="loading" title="Loading States">
             <div className="space-y-6">
               <div>
-                <p className="text-xs font-medium text-nokturo-500 mb-2">Spinner (Loader2)</p>
+                <p className="text-xs font-medium text-nokturo-500 mb-2">Spinner (MaterialIcon progress_activity)</p>
                 <div className="flex gap-6 items-center">
-                  <Loader2 className="w-4 h-4 text-nokturo-500 animate-spin" />
-                  <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
-                  <Loader2 className="w-8 h-8 text-nokturo-500 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="text-nokturo-500 animate-spin shrink-0" />
+                  <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
+                  <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 animate-spin shrink-0" />
                 </div>
-                <CodeBlock classes={'<Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />'} />
+                <CodeBlock classes={'<MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />'} />
               </div>
               <div>
                 <p className="text-xs font-medium text-nokturo-500 mb-2">Skeleton (MoodboardComments pattern)</p>
@@ -836,7 +828,7 @@ export default function StyleGuidePage() {
                   type="button"
                   className="mt-4 inline-flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:hover:bg-nokturo-100 transition-colors"
                 >
-                  <Plus className="w-5 h-5" />
+                  <MaterialIcon name="add" size={20} className="shrink-0" />
                   Add item
                 </button>
               </div>

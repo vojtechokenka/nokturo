@@ -12,23 +12,18 @@ import {
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { useExchangeRates, convertToCzk, CURRENCIES } from '../../lib/currency';
 import { FilterSelect } from '../../components/FilterSelect';
-import {
-  Plus,
-  Pencil,
-  Trash2,
-  Package,
-  Loader2,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteIcon } from '../../components/icons/DeleteIcon';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 export default function ComponentsPage() {
@@ -205,7 +200,7 @@ export default function ComponentsPage() {
             onClick={openAdd}
             className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('components.addComponent')}
           </button>
         </div>
@@ -214,7 +209,7 @@ export default function ComponentsPage() {
       {/* ── Content area ──────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : components.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -242,7 +237,7 @@ export default function ComponentsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Package className="w-10 h-10 text-nokturo-400" />
+                    <MaterialIcon name="inventory_2" size={40} className="text-nokturo-400 shrink-0" />
                   </div>
                 )}
 
@@ -253,15 +248,15 @@ export default function ComponentsPage() {
                     className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
                     title={t('common.edit')}
                   >
-                    <Pencil className="w-4 h-4" />
+                    <MaterialIcon name="edit" size={16} className="shrink-0" />
                   </button>
                   {canDelete && (
                     <button
                       onClick={() => setDeleteTarget(comp.id)}
-                      className="p-2 rounded bg-red-700 text-red-100 hover:text-red-50 transition-colors"
+                      className="p-2 rounded bg-red text-red-fg hover:text-red-fg transition-colors"
                       title={t('common.delete')}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <DeleteIcon className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -328,7 +323,7 @@ export default function ComponentsPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

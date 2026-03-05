@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, Trash2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
 import { SimpleDropdown } from './SimpleDropdown';
 import { RichTextArea } from './RichTextArea';
 import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
@@ -237,17 +238,17 @@ export function TaskSlideOver({
                   onDelete(task.id);
                   onClose();
                 }}
-                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red-500 hover:text-white transition-colors rounded-lg"
+                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red hover:text-red-fg transition-colors rounded-lg"
                 title={t('common.delete')}
               >
-                <Trash2 className="w-5 h-5" />
+                <DeleteIcon className="w-5 h-5" />
               </button>
             )}
             <button
               onClick={onClose}
               className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -365,7 +366,7 @@ export function TaskSlideOver({
 
           <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">
                 {error}
               </div>
             )}
@@ -382,7 +383,7 @@ export function TaskSlideOver({
                 disabled={saving}
                 className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
                 {t('common.save')}
               </button>
             </div>

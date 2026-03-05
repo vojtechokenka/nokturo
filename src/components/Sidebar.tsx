@@ -5,9 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useSidebarStore } from '../stores/sidebarStore';
 import { canAccessSection, canAccessModule } from '../lib/rbac';
 import type { Module } from '../lib/rbac';
-import { Calculator } from 'lucide-react';
-
-const iconProps = { size: 18, strokeLinejoin: 'miter' as const, strokeLinecap: 'square' as const };
+import { MaterialIcon } from './icons/MaterialIcon';
 
 interface NavItem {
   key: string;
@@ -31,6 +29,7 @@ const NAV_SECTIONS: NavSection[] = [
     labelKey: 'nav.brand',
     rbacSection: 'brand',
     items: [
+      { key: 'strategy', path: '/brand/strategy', icon: <AboutNokturoIcon size={20} className="shrink-0" />, labelKey: 'nav.strategy', rbacModule: 'brand.strategy' },
       { key: 'identity', path: '/brand/identity', icon: <IdentityIcon size={20} className="shrink-0" />, labelKey: 'nav.identity', rbacModule: 'brand.identity' },
     ],
   },
@@ -61,7 +60,7 @@ const NAV_SECTIONS: NavSection[] = [
     labelKey: 'nav.business',
     rbacSection: 'business',
     items: [
-      { key: 'costing', path: '/business/costing', icon: <Calculator {...iconProps} />, labelKey: 'nav.costingCalculator', rbacModule: 'business.costing', hidden: true },
+      { key: 'costing', path: '/business/costing', icon: <MaterialIcon name="calculate" size={20} className="shrink-0" />, labelKey: 'nav.costingCalculator', rbacModule: 'business.costing', hidden: true },
       { key: 'suppliers', path: '/business/suppliers', icon: <SuppliersIcon size={20} className="shrink-0" />, labelKey: 'nav.supplierDirectory', rbacModule: 'business.suppliers' },
       { key: 'accounting', path: '/business/accounting', icon: <AccountingIcon size={20} className="shrink-0" />, labelKey: 'nav.accounting', rbacModule: 'business.accounting' },
     ],
@@ -78,6 +77,7 @@ import { ProductsIcon } from './icons/ProductsIcon';
 import { LabelsIcon } from './icons/LabelsIcon';
 import { ComponentsIcon } from './icons/ComponentsIcon';
 import { MaterialsIcon } from './icons/MaterialsIcon';
+import { AboutNokturoIcon } from './icons/AboutNokturoIcon';
 import { IdentityIcon } from './icons/IdentityIcon';
 import { MagazineIcon } from './icons/MagazineIcon';
 import { MenuIcon } from './icons/MenuIcon';

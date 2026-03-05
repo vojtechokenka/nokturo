@@ -10,23 +10,17 @@ import {
   type Label,
 } from '../../components/LabelSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
-import {
-  Plus,
-  Tag,
-  Loader2,
-  MoreVertical,
-  Copy,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 export default function LabelsPage() {
@@ -199,7 +193,7 @@ export default function LabelsPage() {
             onClick={openAdd}
             className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('labels.addLabel')}
           </button>
         </div>
@@ -207,7 +201,7 @@ export default function LabelsPage() {
     >
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : labels.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -238,7 +232,7 @@ export default function LabelsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Tag className="w-10 h-10 text-nokturo-400" />
+                    <MaterialIcon name="sell" size={40} className="text-nokturo-400 shrink-0" />
                   </div>
                 )}
 
@@ -249,7 +243,7 @@ export default function LabelsPage() {
                       onClick={() => setCardMenuOpen(cardMenuOpen === lbl.id ? null : lbl.id)}
                       className={`p-1.5 rounded transition-all ${cardMenuOpen === lbl.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
-                      <MoreVertical className="w-4 h-4" />
+                      <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
                     {cardMenuOpen === lbl.id && (
                       <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-xl shadow-lg py-1 min-w-[120px] z-20 overflow-hidden">
@@ -264,7 +258,7 @@ export default function LabelsPage() {
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(lbl.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
                           >
                             {t('common.delete')}
                           </button>
@@ -327,7 +321,7 @@ export default function LabelsPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

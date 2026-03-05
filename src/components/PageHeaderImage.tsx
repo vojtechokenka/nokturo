@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Upload, X, Loader2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 
 function AddCoverIcon({ size = 24 }: { size?: number }) {
   return (
@@ -70,7 +70,7 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
         <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {uploading ? (
             <div className="px-3 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md">
-              <Loader2 size={14} className="animate-spin inline mr-1.5" />
+              <MaterialIcon name="progress_activity" size={14} className="animate-spin inline mr-1.5 shrink-0" />
               {t('common.loading')}
             </div>
           ) : (
@@ -80,15 +80,15 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
                 onClick={() => fileInputRef.current?.click()}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md hover:bg-black/80 transition-colors"
               >
-                <Upload size={13} />
+                <MaterialIcon name="upload" size={13} className="shrink-0" />
                 {t('headerImage.change')}
               </button>
               <button
                 type="button"
                 onClick={() => onChange(null)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md hover:bg-red-600/90 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md hover:bg-red/90 transition-colors"
               >
-                <X size={13} />
+                <MaterialIcon name="close" size={13} className="shrink-0" />
                 {t('headerImage.remove')}
               </button>
             </>
@@ -124,7 +124,7 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
       {dragOver ? (
         <span className="pointer-events-none">{t('headerImage.dropHere')}</span>
       ) : uploading ? (
-        <Loader2 size={24} className="animate-spin shrink-0" />
+        <MaterialIcon name="progress_activity" size={24} className="animate-spin shrink-0" />
       ) : (
         <>
           <AddCoverIcon size={20} className="shrink-0" />

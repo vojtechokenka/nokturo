@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { LanguageToggle } from '../../components/LanguageToggle';
-import { Mail, Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 import { NokturoLogo } from '../../components/NokturoLogo';
 import { isElectron } from '../../utils/platform';
@@ -69,7 +69,7 @@ export default function ForgotPassword() {
           {sent ? (
             /* Success state */
             <div className="text-center">
-              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+              <MaterialIcon name="check_circle" size={48} className="text-green-fg mx-auto mb-4 shrink-0" />
               <h2 className="text-heading-4 font-extralight text-nokturo-900 mb-2">
                 {t('auth.resetEmailSent')}
               </h2>
@@ -77,7 +77,7 @@ export default function ForgotPassword() {
                 to="/login"
                 className="inline-flex items-center gap-2 text-sm text-nokturo-500 hover:text-nokturo-800 transition-colors mt-6"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
                 {t('auth.backToLogin')}
               </Link>
             </div>
@@ -98,7 +98,7 @@ export default function ForgotPassword() {
                     {t('auth.email')}
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500" />
+                    <MaterialIcon name="mail" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-nokturo-500 shrink-0" />
                     <input
                       type="email"
                       value={email}
@@ -113,7 +113,7 @@ export default function ForgotPassword() {
 
                 {/* Error message */}
                 {error && (
-                  <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+                  <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5">
                     {error}
                   </div>
                 )}
@@ -126,7 +126,7 @@ export default function ForgotPassword() {
                 >
                   {submitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                       {t('auth.sendingResetLink')}
                     </>
                   ) : (
@@ -141,7 +141,7 @@ export default function ForgotPassword() {
                   to="/login"
                   className="inline-flex items-center gap-2 text-sm text-nokturo-500 hover:text-nokturo-800 transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
                   {t('auth.backToLogin')}
                 </Link>
               </div>

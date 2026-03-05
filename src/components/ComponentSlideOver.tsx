@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, ImageIcon } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import type { Supplier } from './SupplierSlideOver';
 import { CURRENCIES } from '../lib/currency';
 import {
@@ -239,7 +239,7 @@ export function ComponentSlideOver({
             onClick={onClose}
             className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
           >
-            <X className="w-5 h-5" />
+            <MaterialIcon name="close" size={20} className="shrink-0" />
           </button>
         </div>
 
@@ -266,13 +266,13 @@ export function ComponentSlideOver({
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400">
-                  <ImageIcon className="w-8 h-8 mb-2" />
+                  <MaterialIcon name="image" size={32} className="mb-2 shrink-0" />
                   <span className="text-sm">{t('components.uploadImage')}</span>
                 </div>
               )}
               {uploading && (
                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                  <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  <MaterialIcon name="progress_activity" size={24} className="text-white animate-spin shrink-0" />
                 </div>
               )}
             </div>
@@ -404,7 +404,7 @@ export function ComponentSlideOver({
 
           {/* ── Error banner ─────────────────────────────── */}
           {error && (
-            <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+            <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5">
               {error}
             </div>
           )}
@@ -425,7 +425,7 @@ export function ComponentSlideOver({
             disabled={saving}
             className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
             {t('common.save')}
           </button>
         </div>

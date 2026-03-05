@@ -20,18 +20,8 @@ import { ProductGalleryComments } from '../../components/ProductGalleryComments'
 import { MaterialDetailSlideOver } from '../../components/MaterialDetailSlideOver';
 import type { Material } from '../../components/MaterialSlideOver';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Loader2,
-  Pencil,
-  RefreshCw,
-  Trash2,
-  Scissors,
-  Tag,
-  X,
-  MoreVertical,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteIcon } from '../../components/icons/DeleteIcon';
 
 // ── Parse description (legacy or rich blocks) ────────────────────
 function parseDescriptionBlocks(
@@ -54,8 +44,8 @@ function parseDescriptionBlocks(
 const STATUS_COLORS: Record<string, string> = {
   concept: 'bg-blue-600 text-white',
   pattern: 'bg-violet-600 text-white',
-  prototype: 'bg-amber-600 text-white',
-  production: 'bg-emerald-600 text-white',
+  prototype: 'bg-orange text-orange-fg',
+  production: 'bg-green text-green-fg',
   archived: 'bg-nokturo-500 text-white',
 };
 
@@ -166,7 +156,7 @@ export default function ProductDetailPage() {
     return (
       <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
         <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 animate-spin text-nokturo-500" />
+          <MaterialIcon name="progress_activity" size={32} className="animate-spin text-nokturo-500 shrink-0" />
         </div>
       </PageShell>
     );
@@ -214,7 +204,7 @@ export default function ProductDetailPage() {
             onClick={() => navigate('/production/products')}
             className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
             {t('common.back')}
           </button>
           <div className="relative">
@@ -222,7 +212,7 @@ export default function ProductDetailPage() {
               onClick={() => setPageMenuOpen((p) => !p)}
               className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
             >
-              <MoreVertical className="w-5 h-5" />
+              <MaterialIcon name="more_vert" size={20} className="shrink-0" />
             </button>
             {pageMenuOpen && (
               <>
@@ -232,15 +222,15 @@ export default function ProductDetailPage() {
                     onClick={() => { setEditOpen(true); setPageMenuOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                   >
-                    <Pencil className="w-3.5 h-3.5" />
+                    <MaterialIcon name="edit" size={14} className="shrink-0" />
                     {t('common.edit')}
                   </button>
                   {canDelete && (
                     <button
                       onClick={() => { setDeleteConfirm(true); setPageMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <DeleteIcon className="w-3.5 h-3.5" />
                       {t('common.delete')}
                     </button>
                   )}
@@ -260,12 +250,12 @@ export default function ProductDetailPage() {
               )}
               <div className="flex flex-wrap gap-2 mt-3">
                 {product.priority && (
-                  <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-red-600 text-white">
+                  <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-red text-red-fg">
                     {t('products.priority')}
                   </span>
                 )}
                 {product.ready_for_sampling && (
-                  <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-emerald-600 text-white">
+                  <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-green text-green-fg">
                     {t('products.readyForSampling')}
                   </span>
                 )}
@@ -362,7 +352,7 @@ export default function ProductDetailPage() {
                                   {mat?.image_url ? (
                                     <img src={mat.image_url} alt="" className="w-full h-full object-cover" />
                                   ) : (
-                                    <Scissors className="w-6 h-6 text-nokturo-400" />
+                                    <MaterialIcon name="content_cut" size={24} className="text-nokturo-400 shrink-0" />
                                   )}
                                 </div>
                                 <div className="min-w-0 flex-1">
@@ -379,7 +369,7 @@ export default function ProductDetailPage() {
                                 title={t('products.materials.replaceMaterial')}
                                 aria-label={t('products.materials.replaceMaterial')}
                               >
-                                <RefreshCw className="w-4 h-4" />
+                                <MaterialIcon name="refresh" size={16} className="shrink-0" />
                               </button>
                             </div>
                           );
@@ -456,7 +446,7 @@ export default function ProductDetailPage() {
                         </div>
                       ) : (
                         <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-nokturo-100 flex items-center justify-center">
-                          <Tag className="w-6 h-6 text-nokturo-400" />
+                          <MaterialIcon name="sell" size={24} className="text-nokturo-400 shrink-0" />
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
@@ -487,7 +477,7 @@ export default function ProductDetailPage() {
                         title={t('common.edit')}
                         aria-label={t('common.edit')}
                       >
-                        <RefreshCw className="w-4 h-4" />
+                        <MaterialIcon name="refresh" size={16} className="shrink-0" />
                       </button>
                     </div>
                   );
@@ -608,7 +598,7 @@ export default function ProductDetailPage() {
                     className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
                     aria-label="Previous"
                   >
-                    <ArrowLeft className="w-8 h-8" />
+                    <MaterialIcon name="arrow_back" size={32} className="shrink-0" />
                   </button>
                   <button
                     type="button"
@@ -629,7 +619,7 @@ export default function ProductDetailPage() {
                     className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
                     aria-label="Next"
                   >
-                    <ArrowRight className="w-8 h-8" />
+                    <MaterialIcon name="arrow_forward" size={32} className="shrink-0" />
                   </button>
                 </>
               )}
@@ -723,7 +713,7 @@ export default function ProductDetailPage() {
                 className="absolute top-4 left-4 p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors z-10"
                 aria-label={t('common.close')}
               >
-                <X className="w-5 h-5" />
+                <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
 
               {lightbox.gallery.length > 1 && (
@@ -816,7 +806,7 @@ export default function ProductDetailPage() {
               </button>
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="px-4 py-2 text-sm bg-red text-red-fg rounded-lg hover:bg-red/90"
               >
                 {t('common.delete')}
               </button>

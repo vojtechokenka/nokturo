@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Pencil, Trash2, ExternalLink, MoreVertical } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import type { Supplier } from './SupplierSlideOver';
 import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
@@ -8,13 +9,13 @@ import type { NotionSelectOption } from './NotionSelect';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 interface SupplierDetailSlideOverProps {
@@ -59,7 +60,7 @@ export function SupplierDetailSlideOver({
                 onClick={() => setMenuOpen((p) => !p)}
                 className="p-2 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
               >
-                <MoreVertical className="w-5 h-5" />
+                <MaterialIcon name="more_vert" size={20} className="shrink-0" />
               </button>
               {menuOpen && (
                 <>
@@ -69,15 +70,15 @@ export function SupplierDetailSlideOver({
                       onClick={() => { onEdit(supplier); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-200 hover:bg-nokturo-700 flex items-center gap-2"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <MaterialIcon name="edit" size={14} className="shrink-0" />
                       {t('common.edit')}
                     </button>
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(supplier.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <DeleteIcon className="w-3.5 h-3.5" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -89,7 +90,7 @@ export function SupplierDetailSlideOver({
               onClick={onClose}
               className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 shrink-0"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -178,7 +179,7 @@ export function SupplierDetailSlideOver({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 text-base font-medium text-nokturo-300 hover:text-white"
               >
-                <ExternalLink className="w-4 h-4" />
+                <MaterialIcon name="open_in_new" size={16} className="shrink-0" />
                 {supplier.website.replace(/^https?:\/\//, '')}
               </a>
             </div>

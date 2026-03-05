@@ -1,13 +1,13 @@
 import { useTranslation } from 'react-i18next';
-import { ExternalLink } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { convertToCzk } from '../lib/currency';
 import type { AccountingOrder } from './AccountingSlideOver';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
-  green: 'bg-emerald-600 text-white',
-  red: 'bg-red-600 text-white',
+  orange: 'bg-orange text-orange-fg',
+  green: 'bg-green text-green-fg',
+  red: 'bg-red text-red-fg',
 };
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
@@ -61,7 +61,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
             onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-[4px] font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition-colors truncate max-w-full"
           >
-            <ExternalLink className="w-3 h-3 shrink-0" />
+            <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
             <span className="truncate">{order.eshop_link.replace(/^https?:\/\//, '').slice(0, 14)}…</span>
           </a>
         ) : (

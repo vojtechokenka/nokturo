@@ -3,7 +3,7 @@
  */
 import { useState, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Minus, GripVertical } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 
 const iconCls = 'shrink-0 text-nokturo-500 dark:text-nokturo-400';
 const BlockIcons = {
@@ -17,7 +17,7 @@ const BlockIcons = {
   imageGrid: <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" className={iconCls}><path fill="currentColor" d="M3 11V3h8v8zm0 10v-8h8v8zm10-10V3h8v8zm0 10v-8h8v8z"/></svg>,
   grid: <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" className={iconCls}><path fill="currentColor" d="M3 21V3h18v18zm2-2h3.325v-3.325H5zm5.325 0h3.35v-3.325h-3.35zm5.35 0H19v-3.325h-3.325zM5 13.675h3.325v-3.35H5zm5.325 0h3.35v-3.35h-3.35zm5.35 0H19v-3.35h-3.325zM5 8.325h3.325V5H5zm5.325 0h3.35V5h-3.35zm5.35 0H19V5h-3.325z"/></svg>,
   link: <svg xmlns="http://www.w3.org/2000/svg" width={14} height={14} viewBox="0 0 24 24" className={iconCls}><path fill="currentColor" d="M11 17H7q-2.075 0-3.537-1.463T2 12t1.463-3.537T7 7h4v2H7q-1.25 0-2.125.875T4 12t.875 2.125T7 15h4zm-3-4v-2h8v2zm5 4v-2h4q1.25 0 2.125-.875T20 12t-.875-2.125T17 9h-4V7h4q2.075 0 3.538 1.463T22 12t-1.463 3.538T17 17z"/></svg>,
-  divider: <Minus size={14} className={iconCls} />,
+  divider: <MaterialIcon name="remove" size={14} className={iconCls} />,
 };
 import type { RichTextBlock } from './RichTextBlockEditor';
 
@@ -220,7 +220,7 @@ export function PageStructurePanel({ blocks, onChange, onSelectBlock, footerSlot
                 className={`group flex items-center gap-2 px-2 py-1.5 rounded text-sm text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-100/40 dark:hover:bg-nokturo-800/40 transition-all duration-150 ${isDragging ? 'cursor-grabbing' : 'cursor-grab'} ${draggedIndex === index ? 'scale-90' : 'scale-100'}`}
               >
                 <div className="shrink-0 p-0.5 -m-0.5 rounded text-nokturo-400 dark:text-nokturo-500 pointer-events-none">
-                  <GripVertical size={12} />
+                  <MaterialIcon name="drag_indicator" size={12} className="shrink-0" />
                 </div>
                 <button
                   type="button"

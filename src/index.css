@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Material Symbols Sharp (fill) – icon font */
+.material-symbols-sharp {
+  font-family: 'Material Symbols Sharp';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-feature-settings: 'liga';
+  -webkit-font-feature-settings: 'liga';
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+}
+
 /* Globally remove border radius */
 .rounded,
 .rounded-sm,
@@ -77,6 +95,25 @@ button[role="switch"] > span {
   border-radius: 9999px !important;
 }
 
+/* Buttons and links: 16px, 100% lh, Inter, regular (mimo rich text) */
+button,
+a {
+  font-size: 16px !important;
+  line-height: 1 !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 400 !important;
+}
+/* Rich text links inherit from parent paragraph */
+article a,
+[data-rich-text-editor] a,
+.commentable-select a,
+.rich-text-area a {
+  font-size: inherit !important;
+  line-height: inherit !important;
+  font-family: inherit !important;
+  font-weight: inherit !important;
+}
+
 /* Global checkboxes – match task row style (rounded-[4px], nokturo/green) */
 input[type="checkbox"] {
   appearance: none;
@@ -89,13 +126,13 @@ input[type="checkbox"] {
   cursor: pointer;
   transition: background 0.15s;
   position: relative;
-  background: rgba(229, 229, 229, 0.6);
+  background: rgba(230, 230, 230, 0.6);
 }
 input[type="checkbox"]:hover {
-  background: #d4d4d4;
+  background: #D9D9D9;
 }
 input[type="checkbox"]:checked {
-  background: #059669;
+  background: #127346;
 }
 input[type="checkbox"]:checked::after {
   content: '';
@@ -117,7 +154,7 @@ input[type="checkbox"]:checked::after {
   background: #525252;
 }
 .dark input[type="checkbox"]:checked {
-  background: #10b981;
+  background: #127346;
 }
 .dark input[type="checkbox"]:checked::after {
   border-color: #fff;
@@ -132,7 +169,7 @@ input[type="checkbox"]:checked::after {
 
 /* Auth/Login checkbox – light gray when checked, white checkmark (override global green) */
 input[type="checkbox"].checkbox-auth:checked {
-  background: #c4c4c4;
+  background: #BFBFBF;
 }
 .dark input[type="checkbox"].checkbox-auth:checked {
   background: #737373;
@@ -194,11 +231,11 @@ img.avatar-round,
 
 /* NProgress top bar – thin red indicator */
 #nprogress .bar {
-  background: #EF4444 !important;
+  background: #FFA3A3 !important;
   height: 3px !important;
 }
 #nprogress .peg {
-  box-shadow: 0 0 10px #EF4444, 0 0 5px #EF4444 !important;
+  box-shadow: 0 0 10px #FFA3A3, 0 0 5px #FFA3A3 !important;
 }
 
 /* Base reset for Electron / light app */
@@ -220,15 +257,15 @@ body {
   margin: 0;
   padding: 0;
   font-family: 'Twemoji Country Flags', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #fafafa;
+  background-color: #FAFAFA;
   color: #171717;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .dark body {
-  background-color: #0a0a0a;
-  color: #fafafa;
+  background-color: #0A0A0A;
+  color: #FAFAFA;
 }
 
 /* UX/UI: Inter globally */
@@ -236,7 +273,7 @@ body {
 /* Custom gray selection for commentable text (Pro vzorkování page) */
 .commentable-select::selection,
 .commentable-select *::selection {
-  background-color: #d4d4d4;
+  background-color: #D9D9D9;
   color: inherit;
 }
 .dark .commentable-select::selection,
@@ -245,18 +282,18 @@ body {
   color: inherit;
 }
 
-/* Comment highlights: #FFDD00 50% opacity (light + dark) */
+/* Comment highlights: nokturo-30 50% opacity (light + dark) */
 .commentable-select mark[data-comment-id] {
-  background-color: rgba(255, 221, 0, 0.5);
+  background-color: rgba(179, 179, 179, 0.5);
 }
 .commentable-select mark[data-comment-id]:hover {
-  background-color: rgba(255, 221, 0, 0.65);
+  background-color: rgba(179, 179, 179, 0.65);
 }
 .dark .commentable-select mark[data-comment-id] {
-  background-color: rgba(255, 221, 0, 0.5);
+  background-color: rgba(115, 115, 115, 0.5);
 }
 .dark .commentable-select mark[data-comment-id]:hover {
-  background-color: rgba(255, 221, 0, 0.65);
+  background-color: rgba(115, 115, 115, 0.65);
 }
 .dark .commentable-select [data-pending-selection] {
   background-color: rgba(115, 115, 115, 0.5);
@@ -276,17 +313,17 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f5f5f5;
+  background: #F5F5F5;
 }
 .dark ::-webkit-scrollbar-track {
   background: #262626;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: #D9D9D9;
   border-radius: 0;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #b8b8b8;
+  background: #B3B3B3;
 }
 .dark ::-webkit-scrollbar-thumb {
   background: #525252;
@@ -431,7 +468,7 @@ body {
 .dark .rta-fit,
 .dark .rta-remove {
   background: rgba(0,0,0,0.6);
-  color: #d4d4d4;
+  color: #D9D9D9;
 }
 .rta-fit.active {
   background: #171717;
@@ -445,8 +482,8 @@ body {
   padding: 2px 6px;
 }
 .rta-remove:hover {
-  background: #ef4444;
-  color: #fff;
+  background: #6A0B0B;
+  color: #FFA3A3;
 }
 
 /* RichTextArea – checklist */
@@ -484,7 +521,7 @@ body {
 .rta-editor hr {
   border: none;
   height: 1px;
-  background: #d4d4d4;
+  background: #D9D9D9;
   margin: 12px 0;
 }
 .dark .rta-divider,

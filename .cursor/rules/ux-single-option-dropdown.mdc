@@ -1,0 +1,14 @@
+---
+description: UX – single-option dropdowns become buttons
+alwaysApply: true
+---
+
+# UX: Single-Option Dropdown → Button
+
+When a dropdown or context menu has **only one action**, render a **direct button** instead of a dropdown.
+
+- Avoids extra click (open menu → click option)
+- Clearer affordance
+- No overflow/z-index issues with dropdown positioning
+
+**Example**: Comment actions with only "Delete" → use a Trash icon button directly, not a ⋮ menu that opens a dropdown with one item.

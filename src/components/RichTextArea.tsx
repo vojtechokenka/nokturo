@@ -1,15 +1,5 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import {
-  Bold,
-  Italic,
-  List,
-  ListOrdered,
-  ListChecks,
-  Minus,
-  Link2,
-  ImageIcon,
-  Loader2,
-} from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { useTranslation } from 'react-i18next';
 
 interface RichTextAreaProps {
@@ -661,14 +651,14 @@ export function RichTextArea({
           onClick={() => runCommand('bold')}
           title="Bold (Ctrl+B)"
         >
-          <Bold className="w-3.5 h-3.5" />
+          <MaterialIcon name="format_bold" size={14} className="shrink-0" />
         </ToolbarButton>
         <ToolbarButton
           active={document.queryCommandState('italic')}
           onClick={() => runCommand('italic')}
           title="Italic (Ctrl+I)"
         >
-          <Italic className="w-3.5 h-3.5" />
+          <MaterialIcon name="format_italic" size={14} className="shrink-0" />
         </ToolbarButton>
 
         <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
@@ -678,21 +668,21 @@ export function RichTextArea({
           onClick={() => runCommand('insertUnorderedList')}
           title="Bullet list"
         >
-          <List className="w-3.5 h-3.5" />
+          <MaterialIcon name="format_list_bulleted" size={14} className="shrink-0" />
         </ToolbarButton>
         <ToolbarButton
           active={document.queryCommandState('insertOrderedList')}
           onClick={() => runCommand('insertOrderedList')}
           title="Numbered list"
         >
-          <ListOrdered className="w-3.5 h-3.5" />
+          <MaterialIcon name="format_list_numbered" size={14} className="shrink-0" />
         </ToolbarButton>
         <ToolbarButton
           active={false}
           onClick={insertChecklist}
           title="To-do list"
         >
-          <ListChecks className="w-3.5 h-3.5" />
+          <MaterialIcon name="checklist" size={14} className="shrink-0" />
         </ToolbarButton>
 
         <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
@@ -719,7 +709,7 @@ export function RichTextArea({
           }}
           title="Link (Ctrl+K)"
         >
-          <Link2 className="w-3.5 h-3.5" />
+          <MaterialIcon name="link" size={14} className="shrink-0" />
         </ToolbarButton>
 
         {/* Image */}
@@ -730,9 +720,9 @@ export function RichTextArea({
             title={t('richText.uploadImage') || 'Image'}
           >
             {uploading ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <MaterialIcon name="progress_activity" size={14} className="animate-spin shrink-0" />
             ) : (
-              <ImageIcon className="w-3.5 h-3.5" />
+              <MaterialIcon name="image" size={14} className="shrink-0" />
             )}
           </ToolbarButton>
         )}
@@ -745,7 +735,7 @@ export function RichTextArea({
           onClick={insertDivider}
           title={t('richText.divider') || 'Divider'}
         >
-          <Minus className="w-3.5 h-3.5" />
+          <MaterialIcon name="remove" size={14} className="shrink-0" />
         </ToolbarButton>
 
         {/* Link popover */}

@@ -9,14 +9,7 @@ import { ToastContainer, type ToastData } from '../../components/Toast';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { createNotification } from '../../components/NotificationCenter';
-import {
-  Plus,
-  Loader2,
-  Check,
-  RotateCcw,
-  MoreHorizontal,
-  Undo2,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 type Tab = 'active' | 'completed' | 'deleted';
 
@@ -106,7 +99,7 @@ function TaskRowMenu({
         }}
         className="p-1.5 text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 hover:bg-white/10 rounded-lg transition-colors"
       >
-        <MoreHorizontal className="w-4 h-4" />
+        <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
       </button>
       {open && (
         <>
@@ -136,14 +129,14 @@ function TaskRowMenu({
                 onClick={(e) => { e.stopPropagation(); onReopen(); setOpen(false); }}
                 className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
               >
-                <RotateCcw className="w-3.5 h-3.5 shrink-0" />
+                <MaterialIcon name="undo" size={14} className="shrink-0" />
                 {t('tasks.reopen')}
               </button>
             )}
             {onDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
-                className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2 whitespace-nowrap"
+                className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2 whitespace-nowrap"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
                   <path d="M9 17h2V8H9zm4 0h2V8h-2zm-8 4V6H4V4h5V3h6v1h5v2h-1v15z" />
@@ -510,7 +503,7 @@ export default function TasksPage() {
             onClick={openNew}
             className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-[6px] hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('tasks.addTask')}
           </button>
         </div>
@@ -551,8 +544,8 @@ export default function TasksPage() {
             key === 'active'
               ? 'bg-nokturo-500 text-white'
               : key === 'completed'
-                ? 'bg-emerald-600 text-white'
-                : 'bg-red-600 text-white';
+                ? 'bg-green text-green-fg'
+                : 'bg-red text-red-fg';
 
           return (
             <button
@@ -595,7 +588,7 @@ export default function TasksPage() {
                 addToast(t('tasks.deleteForever'));
                 fetchTasks();
               }}
-              className="text-xs font-medium bg-red-500 text-white hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
+              className="text-xs font-medium bg-red text-red-fg hover:bg-red/90 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
             >
               {t('tasks.deleteAll')}
             </button>
@@ -606,7 +599,7 @@ export default function TasksPage() {
       {/* Task list */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : displayed.length === 0 ? (
         <div className="text-center py-20">
@@ -637,9 +630,9 @@ export default function TasksPage() {
                 key={task.id}
                 className={`group flex items-center gap-3 p-4 rounded-[6px] transition-colors cursor-pointer ${
                   isDeleted
-                    ? 'bg-red-50/50 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20'
+                    ? 'bg-red/10 hover:bg-red/20 dark:hover:bg-red/20'
                     : isCompleted
-                      ? 'bg-emerald-50/50 dark:bg-emerald-900/10 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
+                      ? 'bg-green/10 hover:bg-green/20 dark:hover:bg-green/20'
                       : 'bg-white/5 hover:bg-white/10'
                 }`}
                 onClick={() => !isDeleted && openDetail(task)}
@@ -654,12 +647,12 @@ export default function TasksPage() {
                     }}
                     className={`shrink-0 w-4 h-4 rounded-[3px] flex items-center justify-center transition-colors ${
                       isCompleted
-                        ? 'bg-emerald-600 text-white'
+                        ? 'bg-green text-green-fg'
                         : 'bg-nokturo-200/60 dark:bg-nokturo-700/60 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
                     }`}
                     title={isCompleted ? t('tasks.reopen') : t('tasks.markCompleted')}
                   >
-                    {isCompleted && <Check className="w-4 h-4" strokeWidth={3} />}
+                    {isCompleted && <MaterialIcon name="check" size={16} className="shrink-0" />}
                   </button>
                 )}
 
@@ -682,9 +675,9 @@ export default function TasksPage() {
                     <span
                       className={`inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] ${
                         overdue
-                          ? 'bg-red-600 text-[#ffc2c2]'
+                          ? 'bg-red text-red-fg'
                           : urgent
-                            ? 'bg-amber-600 text-[rgb(254,229,200)]'
+                            ? 'bg-orange text-orange-fg'
                             : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400'
                       }`}
                     >
@@ -739,7 +732,7 @@ export default function TasksPage() {
 
                   {/* Completed date */}
                   {isCompleted && task.completed_at && (
-                    <span className="inline-flex items-center text-xs h-6 px-2 shrink-0 rounded-[4px] bg-emerald-600 text-[#b3ffe8]">
+                    <span className="inline-flex items-center text-xs h-6 px-2 shrink-0 rounded-[4px] bg-green text-green-fg">
                       {t('tasks.completedOn')}{' '}
                       {new Date(task.completed_at).toLocaleDateString(
                         user?.language === 'cs' ? 'cs-CZ' : 'en-US',
@@ -760,7 +753,7 @@ export default function TasksPage() {
 
                   {/* Deleted countdown */}
                   {isDeleted && (
-                    <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-red-600 text-[#ffc2c2]">
+                    <span className="inline-flex items-center gap-1 text-xs h-6 px-2 shrink-0 rounded-[4px] bg-red text-red-fg">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-4 h-4 shrink-0" fill="currentColor"><path d="M9 3V1h6v2zm2 11h2V8h-2zm-2.488 7.288q-1.637-.713-2.862-1.938t-1.937-2.863T3 13t.713-3.488T5.65 6.65t2.863-1.937T12 4q1.55 0 2.975.5t2.675 1.45l1.4-1.4l1.4 1.4l-1.4 1.4Q20 8.6 20.5 10.025T21 13q0 1.85-.713 3.488T18.35 19.35t-2.863 1.938T12 22t-3.488-.712"/></svg>
                       {t('tasks.autoDeleteIn')} {daysLeft} {daysLeft === 1 ? t('tasks.day') : t('tasks.days')}
                     </span>
@@ -779,7 +772,7 @@ export default function TasksPage() {
                       className="inline-flex items-center gap-1 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/10 transition-colors whitespace-nowrap rounded-lg"
                       title={t('tasks.recover')}
                     >
-                      <Undo2 className="w-3.5 h-3.5 inline mr-1" />
+                      <MaterialIcon name="undo" size={14} className="inline mr-1 shrink-0" />
                       {t('tasks.recover')}
                     </button>
                   </div>

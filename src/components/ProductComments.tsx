@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
-import { Loader2, MessageSquare, CornerDownRight, MoreHorizontal } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
@@ -297,7 +297,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
                     }}
                     className="p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-nokturo-500 dark:hover:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
                   >
-                    <MoreHorizontal className="w-3.5 h-3.5" />
+                    <MaterialIcon name="more_horiz" size={14} className="shrink-0" />
                   </button>
                   {commentMenuOpen === comment.id && (
                     <>
@@ -306,7 +306,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
                         <button
                           type="button"
                           onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
-                          className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
+                          className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
                         >
                           {t('common.delete')}
                         </button>
@@ -334,7 +334,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
                   }}
                   className="flex items-center gap-1 text-xs text-nokturo-500 hover:text-nokturo-600 transition-colors"
                 >
-                  <CornerDownRight className="w-3 h-3" />
+                  <MaterialIcon name="subdirectory_arrow_right" size={12} className="shrink-0" />
                   {t('comments.reply')}
                 </button>
               )}
@@ -401,11 +401,11 @@ export function ProductComments({ productId }: ProductCommentsProps) {
       <div className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-lg p-4">
         {loading ? (
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="w-5 h-5 text-nokturo-500 animate-spin" />
+            <MaterialIcon name="progress_activity" size={20} className="text-nokturo-500 animate-spin shrink-0" />
           </div>
         ) : rootComments.length === 0 ? (
           <div className="text-center py-6">
-            <MessageSquare className="w-8 h-8 text-nokturo-600 mx-auto mb-2" />
+            <MaterialIcon name="chat_bubble" size={32} className="text-nokturo-600 mx-auto mb-2 shrink-0" />
             <p className="text-nokturo-500 text-sm">{t('comments.noComments')}</p>
             <p className="text-nokturo-500 text-xs mt-0.5">{t('comments.beFirst')}</p>
           </div>
@@ -453,7 +453,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
             className="p-2 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 rounded-lg hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
             {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
             ) : (
               <SendArrowIcon className="w-4 h-4" />
             )}
@@ -479,7 +479,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

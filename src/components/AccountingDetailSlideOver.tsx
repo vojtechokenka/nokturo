@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { X, Pencil, Copy, Trash2, FileText, ExternalLink, MoreVertical } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
+import { DuplicateIcon } from './icons/DuplicateIcon';
 import { convertToCzk } from '../lib/currency';
 import type { AccountingOrder } from './AccountingSlideOver';
 import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
@@ -8,9 +10,9 @@ import type { NotionSelectOption } from './NotionSelect';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
-  green: 'bg-emerald-600 text-white',
-  red: 'bg-red-600 text-white',
+  orange: 'bg-orange text-orange-fg',
+  green: 'bg-green text-green-fg',
+  red: 'bg-red text-red-fg',
 };
 
 const ORDER_STATUS_COLORS: Record<string, string> = {
@@ -78,7 +80,7 @@ export function AccountingDetailSlideOver({
                 onClick={() => setMenuOpen((p) => !p)}
                 className="p-2 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
               >
-                <MoreVertical className="w-5 h-5" />
+                <MaterialIcon name="more_vert" size={20} className="shrink-0" />
               </button>
               {menuOpen && (
                 <>
@@ -88,7 +90,7 @@ export function AccountingDetailSlideOver({
                       onClick={() => { onEdit(order); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-200 hover:bg-nokturo-700 flex items-center gap-2"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <MaterialIcon name="edit" size={14} className="shrink-0" />
                       {t('common.edit')}
                     </button>
                     {onDuplicate && (
@@ -96,16 +98,16 @@ export function AccountingDetailSlideOver({
                         onClick={() => { onDuplicate(order); setMenuOpen(false); }}
                         className="w-full px-3 py-2 text-left text-sm text-nokturo-200 hover:bg-nokturo-700 flex items-center gap-2"
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        <DuplicateIcon className="w-3.5 h-3.5" />
                         {t('common.duplicate')}
                       </button>
                     )}
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(order.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <DeleteIcon className="w-3.5 h-3.5" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -117,7 +119,7 @@ export function AccountingDetailSlideOver({
               onClick={onClose}
               className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 shrink-0"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -230,7 +232,7 @@ export function AccountingDetailSlideOver({
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-base font-medium text-nokturo-300 hover:text-white"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <MaterialIcon name="open_in_new" size={16} className="shrink-0" />
                   {order.eshop_link.replace(/^https?:\/\//, '')}
                 </a>
               </div>
@@ -249,7 +251,7 @@ export function AccountingDetailSlideOver({
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-nokturo-200 hover:text-white bg-nokturo-800 hover:bg-nokturo-700 rounded-lg transition-colors"
               >
-                <FileText className="w-4 h-4" />
+                <MaterialIcon name="description" size={16} className="shrink-0" />
                 {t('accounting.downloadInvoice')}
               </a>
             </div>

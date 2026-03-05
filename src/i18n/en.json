@@ -866,6 +866,7 @@
     "noContent": "No content yet.",
     "tableOfContents": "Table of Contents",
     "pageStructure": "Page structure",
+    "deleteBlockConfirm": "Delete this block?",
     "defaultToc": {
 "seamFinishing": "Placeholder",
     "hardware": "Placeholder"

@@ -4,19 +4,9 @@
  */
 import { useState, useCallback, useRef, useEffect, forwardRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  ChevronDown,
-  Link2,
-  Minus,
-  Plus,
-  GripVertical,
-  Trash2,
-  Bold,
-  Italic,
-} from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
+import { DuplicateIcon } from './icons/DuplicateIcon';
 import type { ToastData } from './Toast';
 import { INPUT_CLASS } from '../lib/inputStyles';
 
@@ -63,6 +53,53 @@ export type RichTextBlock =
 
 function generateId() {
   return `block_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function duplicateBlockData(block: RichTextBlock): RichTextBlock {
+  const id = generateId();
+  switch (block.type) {
+    case 'heading':
+      return { id, type: 'heading', level: block.level, text: block.text };
+    case 'paragraph':
+      return { id, type: 'paragraph', size: block.size, align: block.align, content: block.content };
+    case 'quote':
+      return { id, type: 'quote', text: block.text };
+    case 'image':
+      return { id, type: 'image', url: block.url, alt: block.alt, fit: block.fit, caption: block.caption };
+    case 'gallery':
+      return { id, type: 'gallery', columns: block.columns, images: block.images.map((img) => ({ ...img })) };
+    case 'imageGrid':
+      return {
+        id,
+        type: 'imageGrid',
+        columns: block.columns,
+        gapRow: block.gapRow,
+        gapCol: block.gapCol,
+        gapLocked: block.gapLocked,
+        aspectRatio: block.aspectRatio,
+        images: block.images.map((img) => ({ ...img })),
+      };
+    case 'grid':
+      return {
+        id,
+        type: 'grid',
+        columns: block.columns,
+        rows: block.rows,
+        headerRowCount: block.headerRowCount,
+        headerColumnCount: block.headerColumnCount,
+        cells: block.cells.map((c) => ({ ...c })),
+      };
+    case 'link':
+      return { id, type: 'link', url: block.url, text: block.text };
+    case 'divider':
+      return { id, type: 'divider' };
+    case 'list':
+      return { id, type: 'list', style: block.style, items: [...block.items] };
+    case 'tag':
+      return { id, type: 'tag', text: block.text, visible: block.visible };
+    default:
+      return block;
+  }
 }
 
 function isBlockEmpty(block: RichTextBlock): boolean {
@@ -163,7 +200,7 @@ const EditableParagraph = forwardRef<
     }
   }, []);
 
-  const sizeClass = size === 'large' ? 'text-lg text-nokturo-900 dark:text-nokturo-100' : size === 'small' ? 'text-sm text-nokturo-900/60 dark:text-nokturo-100/60' : 'text-base text-nokturo-900/80 dark:text-nokturo-100/80';
+  const sizeClass = size === 'large' ? 'text-rta-p-l text-nokturo-900/90 dark:text-white/90' : size === 'small' ? 'text-rta-p-s text-nokturo-900/70 dark:text-white/70' : 'text-rta-p-m text-nokturo-900/80 dark:text-white/80';
   const textClass = '';
 
   return (
@@ -360,7 +397,7 @@ function FormattingBar({
         className={`p-1.5 rounded hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isBold ? 'bg-nokturo-200 dark:bg-nokturo-600' : ''}`}
         title={t('richText.bold')}
       >
-        <Bold size={14} />
+        <MaterialIcon name="format_bold" size={14} className="shrink-0" />
       </button>
       <button
         type="button"
@@ -368,7 +405,7 @@ function FormattingBar({
         className={`p-1.5 rounded hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isItalic ? 'bg-nokturo-200 dark:bg-nokturo-600' : ''}`}
         title={t('richText.italic')}
       >
-        <Italic size={14} />
+        <MaterialIcon name="format_italic" size={14} className="shrink-0" />
       </button>
       <button
         type="button"
@@ -376,7 +413,7 @@ function FormattingBar({
         className="p-1.5 rounded hover:bg-nokturo-200 dark:hover:bg-nokturo-600"
         title={t('richText.link')}
       >
-        <Link2 size={14} />
+        <MaterialIcon name="link" size={14} className="shrink-0" />
       </button>
     </div>
   );
@@ -394,7 +431,7 @@ const AddBlockIcons = {
   imageGrid: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M3 11V3h8v8zm0 10v-8h8v8zm10-10V3h8v8zm0 10v-8h8v8z"/></svg>,
   grid: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M3 21V3h18v18zm2-2h3.325v-3.325H5zm5.325 0h3.35v-3.325h-3.35zm5.35 0H19v-3.325h-3.325zM5 13.675h3.325v-3.35H5zm5.325 0h3.35v-3.35h-3.35zm5.35 0H19v-3.35h-3.325zM5 8.325h3.325V5H5zm5.325 0h3.35V5h-3.35zm5.35 0H19V5h-3.325z"/></svg>,
   link: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M11 17H7q-2.075 0-3.537-1.463T2 12t1.463-3.537T7 7h4v2H7q-1.25 0-2.125.875T4 12t.875 2.125T7 15h4zm-3-4v-2h8v2zm5 4v-2h4q1.25 0 2.125-.875T20 12t-.875-2.125T17 9h-4V7h4q2.075 0 3.538 1.463T22 12t-1.463 3.538T17 17z"/></svg>,
-  divider: <Minus size={16} />,
+  divider: <MaterialIcon name="remove" size={16} className="shrink-0" />,
 };
 
 // ── Block menu (add block) ──────────────────────────────────────
@@ -486,7 +523,7 @@ function AddBlockMenu({
   ];
 
   return (
-    <div className="mt-1 w-52 py-0.5 bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm">
+    <div className="mt-1 w-52 p-1 rounded-[4px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg">
       {options.map((opt) => (
         <button
           key={opt.block.type}
@@ -495,7 +532,7 @@ function AddBlockMenu({
             onAdd(opt.block);
             onClose();
           }}
-          className="flex items-center gap-3 w-full px-2.5 py-1.5 text-left text-sm text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 transition-colors"
+          className="flex items-center gap-3 w-full p-1 text-left text-sm text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 rounded transition-colors"
         >
           <span className="text-nokturo-500 dark:text-nokturo-400">{opt.icon}</span>
           {t(opt.labelKey)}
@@ -541,10 +578,10 @@ function AspectRatioSelect({
         className="h-6 min-w-[4rem] pl-2 pr-6 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 focus:ring-inset"
       >
         <span>{selected ? t(selected.labelKey) : value}</span>
-        <ChevronDown size={12} className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 pointer-events-none transition-transform ${open ? 'rotate-180' : ''}`} />
+        <MaterialIcon name="expand_more" size={12} className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 pointer-events-none transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-0.5 z-50 min-w-[4rem] py-0.5 rounded-[4px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden">
+        <div className="absolute left-0 top-full mt-0.5 z-50 min-w-[4rem] p-1 rounded-[4px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -553,7 +590,7 @@ function AspectRatioSelect({
                 onChange(opt.value);
                 setOpen(false);
               }}
-              className={`w-full text-left px-2 py-1.5 text-xs transition-colors ${
+              className={`w-full text-left p-1 text-xs rounded transition-colors ${
                 value === opt.value
                   ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100 font-medium'
                   : 'text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-50 dark:hover:bg-nokturo-700'
@@ -603,6 +640,119 @@ function AutoResizeHeadingTextarea({
   );
 }
 
+// ── Block actions dropdown (Delete / Duplicate) ───────────────────
+function BlockActionsDropdown({
+  block,
+  index,
+  onRemove,
+  onDuplicate,
+  t,
+}: {
+  block: RichTextBlock;
+  index: number;
+  onRemove: (id: string) => void;
+  onDuplicate: (block: RichTextBlock, afterIndex: number) => void;
+  t: (k: string) => string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+      return () => document.removeEventListener('mousedown', handleClick);
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (!showDeleteConfirm) return;
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowDeleteConfirm(false);
+    };
+    document.addEventListener('keydown', handleEsc);
+    return () => document.removeEventListener('keydown', handleEsc);
+  }, [showDeleteConfirm]);
+
+  return (
+    <div ref={containerRef} className="relative ml-auto shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="p-0.5 rounded text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 opacity-20 hover:opacity-100 transition-opacity"
+        title={t('common.delete')}
+      >
+        <MaterialIcon name="more_vert" size={14} className="shrink-0" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-0.5 z-50 p-1 rounded-[4px] bg-white dark:bg-nokturo-800 shadow-lg min-w-[120px]">
+          <button
+            type="button"
+            onClick={() => {
+              onDuplicate(block, index + 1);
+              setOpen(false);
+            }}
+            className="w-full text-left px-1.5 py-1 text-xs text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded flex items-center gap-2"
+          >
+            <DuplicateIcon size={12} />
+            {t('common.duplicate')}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(false);
+              setShowDeleteConfirm(true);
+            }}
+            className="w-full text-left px-1.5 py-1 text-xs text-red dark:text-red-fg hover:bg-red/10 dark:hover:bg-red/20 rounded flex items-center gap-2"
+          >
+            <DeleteIcon size={12} />
+            {t('common.delete')}
+          </button>
+        </div>
+      )}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl text-nokturo-900 dark:text-nokturo-100"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
+              {t('richText.deleteBlockConfirm')}
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  onRemove(block.id);
+                  setShowDeleteConfirm(false);
+                }}
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
+              >
+                {t('common.delete')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Single block renderer ────────────────────────────────────────
 function BlockRenderer({
   block,
@@ -610,14 +760,9 @@ function BlockRenderer({
   total,
   onUpdate,
   onRemove,
-  onMoveBlock,
-  onDragStart,
-  onDragEnd,
-  onDragOver,
+  onDuplicate,
   onUploadImage,
   onToast,
-  isDragging,
-  isDragOver,
   headingFont,
   h3Large = false,
 }: {
@@ -626,13 +771,8 @@ function BlockRenderer({
   total: number;
   onUpdate: (id: string, data: Partial<RichTextBlock>) => void;
   onRemove: (id: string) => void;
-  onMoveBlock: (fromIndex: number, toIndex: number) => void;
-  onDragStart: (index: number) => void;
-  onDragEnd: () => void;
-  onDragOver: (index: number | null) => void;
+  onDuplicate: (block: RichTextBlock, afterIndex: number) => void;
   onUploadImage: (file: File) => Promise<string>;
-  isDragging?: boolean;
-  isDragOver?: boolean;
   onToast: (t: ToastData) => void;
   headingFont?: HeadingFontFamily;
   h3Large?: boolean;
@@ -654,60 +794,8 @@ function BlockRenderer({
     if (url) execFormat('createLink', url);
   };
 
-  const handleDragStart = (e: React.DragEvent) => {
-    e.dataTransfer.setData('text/plain', String(index));
-    e.dataTransfer.effectAllowed = 'move';
-    onDragStart(index);
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    onDragOver(index);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    if (!e.currentTarget.contains(e.relatedTarget as Node)) onDragOver(null);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    onDragOver(null);
-    const fromIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    if (fromIndex !== index) onMoveBlock(fromIndex, index);
-  };
-
   return (
-    <div
-      data-block-id={block.id}
-      className={`group flex gap-2 items-start transition-opacity ${
-        isDragging ? 'opacity-50' : ''
-      } ${isDragOver ? 'bg-nokturo-50/50 dark:bg-nokturo-700/50' : ''}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      {/* Drag handle + add/delete */}
-      <div className="flex flex-col items-center gap-0.5 pt-2 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        <div
-          draggable
-          onDragStart={handleDragStart}
-          onDragEnd={onDragEnd}
-          className="cursor-grab active:cursor-grabbing touch-none p-0.5 -m-0.5 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
-          title={t('richText.dragToReorder')}
-        >
-          <GripVertical size={14} className="text-nokturo-400 dark:text-nokturo-500 pointer-events-none" />
-        </div>
-        <button
-          type="button"
-          onClick={() => onRemove(block.id)}
-          className="p-0.5 rounded text-nokturo-400 dark:text-nokturo-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30"
-          title={t('common.delete')}
-        >
-          <Trash2 size={12} />
-        </button>
-      </div>
-
+    <div data-block-id={block.id} className="group flex gap-2 items-start transition-opacity">
       <div className="flex-1 min-w-0">
         {block.type === 'heading' && (
           <div className="mb-4">
@@ -732,24 +820,26 @@ function BlockRenderer({
                   H{lvl}
                 </button>
               ))}
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             {(() => {
               const isHeadline = headingFont !== 'body';
               const hf = isHeadline ? 'font-headline' : 'font-body';
-              const h3Size = h3Large ? 'text-[32px]' : 'text-[20px]';
               const sizeClass =
                 block.level === 1
                   ? isHeadline
-                    ? 'text-[56px]'
-                    : 'text-[30px]'
+                    ? 'text-rta-h1'
+                    : 'text-rta-std-h1'
                   : block.level === 2
                     ? isHeadline
-                      ? 'text-[40px]'
-                      : 'text-[24px]'
-                    : h3Size;
+                      ? 'text-rta-h2'
+                      : 'text-rta-std-h2'
+                    : isHeadline
+                      ? 'text-rta-h3'
+                      : 'text-rta-std-h3';
               const levelClass = {
-                1: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.1] resize-none overflow-hidden min-h-[1.5em]`,
-                2: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 leading-[1.2] resize-none overflow-hidden min-h-[1.5em]`,
+                1: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 resize-none overflow-hidden min-h-[1.5em]`,
+                2: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 resize-none overflow-hidden min-h-[1.5em]`,
                 3: `${hf} w-full ${sizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-300 dark:placeholder:text-nokturo-500 resize-none overflow-hidden min-h-[1.5em]`,
               }[block.level];
               return (
@@ -803,10 +893,11 @@ function BlockRenderer({
                     }`}
                     title={t(`richText.align${al === 'left' ? 'Left' : al === 'center' ? 'Center' : 'Right'}`)}
                   >
-                    {al === 'left' ? <AlignLeft size={14} /> : al === 'center' ? <AlignCenter size={14} /> : <AlignRight size={14} />}
+                    {al === 'left' ? <MaterialIcon name="format_align_left" size={14} className="shrink-0" /> : al === 'center' ? <MaterialIcon name="format_align_center" size={14} className="shrink-0" /> : <MaterialIcon name="format_align_right" size={14} className="shrink-0" />}
                   </button>
                 ))}
               </div>
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             <div className={(block.align ?? 'left') === 'center' ? 'text-center' : (block.align ?? 'left') === 'right' ? 'text-right' : 'text-left'}>
               <EditableParagraph
@@ -820,7 +911,10 @@ function BlockRenderer({
         )}
 
         {block.type === 'quote' && (
-          <blockquote className="font-body mb-4 pl-4 text-nokturo-600 dark:text-nokturo-400 italic">
+          <blockquote className="font-headline italic text-rta-quote text-nokturo-700 dark:text-nokturo-300 mb-4 pl-4">
+            <div className="flex justify-end mb-1">
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+            </div>
             <textarea
               value={block.text}
               onChange={(e) => onUpdate(block.id, { text: e.target.value })}
@@ -848,6 +942,7 @@ function BlockRenderer({
                   {st === 'bullet' ? t('richText.bulletList') : t('richText.numberedList')}
                 </button>
               ))}
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             <div className="space-y-1 pl-2">
               {(block.items?.length ? block.items : ['']).map((item, i) => (
@@ -884,10 +979,10 @@ function BlockRenderer({
                       const next = (block.items || ['']).filter((_, j) => j !== i);
                       onUpdate(block.id, { items: next.length ? next : [''] });
                     }}
-                    className="p-0.5 rounded text-nokturo-400 dark:text-nokturo-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 opacity-0 group-hover/list-item:opacity-100"
+                    className="p-0.5 rounded text-nokturo-400 dark:text-nokturo-500 hover:text-red-fg hover:bg-red/10 dark:hover:bg-red/20 opacity-0 group-hover/list-item:opacity-100"
                     title={t('common.delete')}
                   >
-                    <Trash2 size={12} />
+                    <DeleteIcon size={12} />
                   </button>
                 </div>
               ))}
@@ -896,7 +991,7 @@ function BlockRenderer({
                 onClick={() => onUpdate(block.id, { items: [...(block.items || ['']), ''] })}
                 className="flex items-center gap-1 px-2 py-0.5 text-xs text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300"
               >
-                <Plus size={12} />
+                <MaterialIcon name="add" size={12} className="shrink-0" />
                 {t('richText.addListItem')}
               </button>
             </div>
@@ -922,6 +1017,7 @@ function BlockRenderer({
                       {t(`richText.image${f === 'fill' ? 'Fill' : 'Hug'}`)}
                     </button>
                   ))}
+                  <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
                 </div>
                 <div className="relative group/img">
                   <img
@@ -948,7 +1044,7 @@ function BlockRenderer({
                   <button
                     type="button"
                     onClick={() => onUpdate(block.id, { url: '' })}
-                    className="px-3 py-1.5 bg-red-500 text-white text-sm hover:bg-red-600"
+                    className="px-3 py-1.5 bg-red text-red-fg text-sm hover:bg-red/90"
                   >
                     {t('common.delete')}
                   </button>
@@ -963,8 +1059,12 @@ function BlockRenderer({
                 />
               </>
             ) : (
-              <label className="flex flex-col items-center justify-center w-full h-32 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors">
-                <ImageIcon size={24} className="text-nokturo-400 dark:text-nokturo-500 mb-1" />
+              <>
+                <div className="flex justify-end mb-2">
+                  <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+                </div>
+                <label className="flex flex-col items-center justify-center w-full h-32 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors">
+                <MaterialIcon name="image" size={24} className="text-nokturo-400 dark:text-nokturo-500 mb-1 shrink-0" />
                 <span className="text-sm text-nokturo-500 dark:text-nokturo-400">{t('richText.uploadImage')}</span>
                 <input
                   type="file"
@@ -984,6 +1084,7 @@ function BlockRenderer({
                   }}
                 />
               </label>
+              </>
             )}
           </div>
         )}
@@ -1008,6 +1109,7 @@ function BlockRenderer({
                   </button>
                 ))}
               </div>
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             <div
               className="grid gap-2"
@@ -1043,12 +1145,12 @@ function BlockRenderer({
                     }}
                     className="absolute top-1 right-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover/gal:opacity-100"
                   >
-                    <Trash2 size={12} />
+                    <DeleteIcon size={12} />
                   </button>
                 </div>
               ))}
               <label className="aspect-square flex flex-col items-center justify-center cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors">
-                <Plus size={20} className="text-nokturo-400 dark:text-nokturo-500" />
+                <MaterialIcon name="add" size={20} className="text-nokturo-400 dark:text-nokturo-500 shrink-0" />
                 <span className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5">{t('richText.addToGallery')}</span>
                 <input
                   type="file"
@@ -1148,6 +1250,7 @@ function BlockRenderer({
                 )}
                 </div>
               </div>
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             <div
               className="grid"
@@ -1184,7 +1287,7 @@ function BlockRenderer({
                     }}
                     className="absolute top-1 right-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover/imgrid:opacity-100"
                   >
-                    <Trash2 size={12} />
+                    <DeleteIcon size={12} />
                   </button>
                 </div>
               ))}
@@ -1192,7 +1295,7 @@ function BlockRenderer({
                 className={`flex flex-col items-center justify-center cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors border border-dashed border-nokturo-300 dark:border-nokturo-600 rounded ${getAspectClass(block.aspectRatio)}`}
                 style={{ minHeight: 80 }}
               >
-                <Plus size={20} className="text-nokturo-400 dark:text-nokturo-500" />
+                <MaterialIcon name="add" size={20} className="text-nokturo-400 dark:text-nokturo-500 shrink-0" />
                 <span className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-0.5">{t('richText.addToGallery')}</span>
                 <input
                   type="file"
@@ -1323,6 +1426,7 @@ function BlockRenderer({
               >
                 {t('richText.addHeaderColumn')}
               </button>
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             <div className="flex items-stretch">
               {/* Add column left */}
@@ -1332,7 +1436,7 @@ function BlockRenderer({
                 className="group/addcol flex items-center justify-center w-6 shrink-0 border border-r-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-l-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
                 title={t('richText.addColumn')}
               >
-                <Plus size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300" />
+                <MaterialIcon name="add" size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300 shrink-0" />
               </button>
               {/* Table + add row */}
               <div className="flex-1 min-w-0 flex flex-col">
@@ -1353,10 +1457,10 @@ function BlockRenderer({
                           <button
                             type="button"
                             onClick={() => deleteRow(r)}
-                            className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                            className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-fg hover:bg-red/10 dark:hover:bg-red/20"
                             title={t('richText.deleteRow')}
                           >
-                            <Trash2 size={12} />
+                            <DeleteIcon size={12} />
                           </button>
                         )}
                       </div>
@@ -1435,7 +1539,7 @@ function BlockRenderer({
                                 </div>
                               ) : (
                                 <label className="flex items-center justify-center w-full h-8 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 text-xs">
-                                  <ImageIcon size={14} className="mr-1" />
+                                  <MaterialIcon name="image" size={14} className="mr-1 shrink-0" />
                                   {t('richText.uploadImage')}
                                   <input
                                     type="file"
@@ -1488,7 +1592,7 @@ function BlockRenderer({
                                 }`}
                                 title={tipo === 'text' ? t('richText.paragraph') : t('richText.image')}
                               >
-                                {tipo === 'text' ? <Type size={10} /> : <ImageIcon size={10} />}
+                                {tipo === 'text' ? <MaterialIcon name="title" size={10} className="shrink-0" /> : <MaterialIcon name="image" size={10} className="shrink-0" />}
                               </button>
                             ))}
                           </div>
@@ -1516,10 +1620,10 @@ function BlockRenderer({
                               <button
                                 type="button"
                                 onClick={() => deleteColumn(c)}
-                                className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/30"
+                                className="p-1 rounded text-nokturo-500 dark:text-nokturo-400 hover:text-red-fg hover:bg-red/10 dark:hover:bg-red/20"
                                 title={t('richText.deleteColumn')}
                               >
-                                <Trash2 size={12} />
+                                <DeleteIcon size={12} />
                               </button>
                             )}
                           </div>
@@ -1535,7 +1639,7 @@ function BlockRenderer({
                   className="group/addrow flex items-center justify-center h-6 w-full shrink-0 border border-t-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-b-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
                   title={t('richText.addRow')}
                 >
-                  <Plus size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addrow:text-nokturo-600 dark:group-hover/addrow:text-nokturo-300" />
+                  <MaterialIcon name="add" size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addrow:text-nokturo-600 dark:group-hover/addrow:text-nokturo-300 shrink-0" />
                 </button>
               </div>
               {/* Add column right */}
@@ -1545,7 +1649,7 @@ function BlockRenderer({
                 className="group/addcol flex items-center justify-center w-6 shrink-0 border border-l-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-r-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
                 title={t('richText.addColumn')}
               >
-                <Plus size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300" />
+                <MaterialIcon name="add" size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300 shrink-0" />
               </button>
             </div>
           </div>
@@ -1553,7 +1657,7 @@ function BlockRenderer({
         })()}
 
         {block.type === 'link' && (
-          <div className="mb-4 flex flex-wrap gap-2">
+          <div className="mb-4 flex flex-wrap gap-2 items-center">
             <input
               type="text"
               value={block.text}
@@ -1561,18 +1665,22 @@ function BlockRenderer({
               placeholder={t('richText.linkTextPlaceholder')}
               className={`flex-1 min-w-[120px] ${INPUT_CLASS}`}
             />
-            <input
-              type="url"
-              value={block.url}
-              onChange={(e) => onUpdate(block.id, { url: e.target.value })}
-              placeholder={t('richText.linkUrlPlaceholder')}
-              className={`flex-1 min-w-[180px] ${INPUT_CLASS}`}
-            />
+              <input
+                type="url"
+                value={block.url}
+                onChange={(e) => onUpdate(block.id, { url: e.target.value })}
+                placeholder={t('richText.linkUrlPlaceholder')}
+                className={`flex-1 min-w-[180px] ${INPUT_CLASS}`}
+              />
+            <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
           </div>
         )}
 
         {block.type === 'divider' && (
           <div className="my-6 py-2">
+            <div className="flex justify-end mb-1">
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+            </div>
             <hr className="border-0 border-t border-nokturo-300 dark:border-nokturo-600" />
           </div>
         )}
@@ -1589,6 +1697,7 @@ function BlockRenderer({
                 />
                 {t('richText.tagVisible')}
               </label>
+              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
             <input
               type="text"
@@ -1633,11 +1742,11 @@ export function RichTextBlockEditor({
   const { t } = useTranslation();
   const [addMenuAtIndex, setAddMenuAtIndex] = useState<number | null>(null);
   const blocks = value?.length ? value : [];
-  const undoableAdditionsRef = useRef<Set<string>>(new Set());
-  const lastAddedBlockIdRef = useRef<string | null>(null);
+  const lastDuplicatedBlockIdRef = useRef<string | null>(null);
 
   const updateBlock = useCallback(
     (id: string, data: Partial<RichTextBlock>) => {
+      if (id === lastDuplicatedBlockIdRef.current) lastDuplicatedBlockIdRef.current = null;
       const nextBlocks = blocks.map((b) => {
         if (b.id !== id) return b;
         if (data.type && data.type !== b.type) {
@@ -1645,11 +1754,6 @@ export function RichTextBlockEditor({
         }
         return { ...b, ...data } as RichTextBlock;
       });
-      const updated = nextBlocks.find((b) => b.id === id);
-      if (updated && !isBlockEmpty(updated)) {
-        undoableAdditionsRef.current.delete(id);
-        if (lastAddedBlockIdRef.current === id) lastAddedBlockIdRef.current = null;
-      }
       onChange(nextBlocks);
     },
     [blocks, onChange],
@@ -1672,19 +1776,14 @@ export function RichTextBlockEditor({
     [blocks, onChange],
   );
 
-  const moveBlock = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      if (fromIndex === toIndex) return;
-      const next = [...blocks];
-      const [removed] = next.splice(fromIndex, 1);
-      next.splice(toIndex, 0, removed);
-      onChange(next);
+  const duplicateBlock = useCallback(
+    (block: RichTextBlock, afterIndex: number, trackForUndo = false) => {
+      const copy = duplicateBlockData(block);
+      addBlock(copy, afterIndex);
+      if (trackForUndo) lastDuplicatedBlockIdRef.current = copy.id;
     },
-    [blocks, onChange],
+    [addBlock],
   );
-
-  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   const handleAddBlock = (idx: number) => {
     setAddMenuAtIndex((prev) => (prev === idx ? null : idx));
@@ -1693,34 +1792,44 @@ export function RichTextBlockEditor({
   const handleAddFromMenu = (block: RichTextBlock) => {
     if (addMenuAtIndex !== null) {
       addBlock(block, addMenuAtIndex);
-      undoableAdditionsRef.current.add(block.id);
-      lastAddedBlockIdRef.current = block.id;
       setAddMenuAtIndex(null);
     }
   };
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (!((e.ctrlKey || e.metaKey) && e.key === 'z') || e.shiftKey) return;
       const target = e.target as Element | null;
       if (!target?.closest) return;
       const editorRoot = target.closest('[data-rich-text-editor]');
       if (!editorRoot) return;
-      const blockEl = target.closest('[data-block-id]');
-      let blockId = blockEl?.getAttribute('data-block-id');
-      if (!blockId && lastAddedBlockIdRef.current) {
-        blockId = lastAddedBlockIdRef.current;
+
+      // Ctrl+Z / Cmd+Z: undo last duplicate (remove duplicated block)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+        const blockIdToUndo = lastDuplicatedBlockIdRef.current;
+        if (blockIdToUndo && blocks.some((b) => b.id === blockIdToUndo)) {
+          e.preventDefault();
+          e.stopPropagation();
+          lastDuplicatedBlockIdRef.current = null;
+          removeBlock(blockIdToUndo);
+          return;
+        }
       }
-      if (!blockId || !undoableAdditionsRef.current.has(blockId)) return;
-      const block = blocks.find((b) => b.id === blockId);
-      if (!block || !isBlockEmpty(block)) return;
-      e.preventDefault();
-      e.stopPropagation();
-      undoableAdditionsRef.current.delete(blockId);
-      lastAddedBlockIdRef.current = null;
-      removeBlock(blockId);
+
+      // Ctrl+D / Cmd+D: duplicate focused block
+      if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+        const blockEl = target.closest('[data-block-id]');
+        const blockId = blockEl?.getAttribute('data-block-id');
+        if (!blockId) return;
+        const block = blocks.find((b) => b.id === blockId);
+        if (!block) return;
+        const index = blocks.findIndex((b) => b.id === blockId);
+        if (index === -1) return;
+        e.preventDefault();
+        e.stopPropagation();
+        duplicateBlock(block, index + 1, true);
+      }
     },
-    [blocks, removeBlock],
+    [blocks, removeBlock, duplicateBlock],
   );
 
   useEffect(() => {
@@ -1738,7 +1847,7 @@ export function RichTextBlockEditor({
               onClick={() => handleAddBlock(0)}
               className="flex items-center gap-2 px-4 py-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
             >
-              <Plus size={18} />
+              <MaterialIcon name="add" size={18} className="shrink-0" />
               {t('richText.addBlock')}
             </button>
             {addMenuAtIndex === 0 && (
@@ -1761,12 +1870,7 @@ export function RichTextBlockEditor({
                 total={blocks.length}
                 onUpdate={updateBlock}
                 onRemove={removeBlock}
-                onMoveBlock={moveBlock}
-                onDragStart={() => setDraggingIndex(index)}
-                onDragEnd={() => { setDraggingIndex(null); setDragOverIndex(null); }}
-                onDragOver={(idx) => setDragOverIndex(idx)}
-                isDragging={draggingIndex === index}
-                isDragOver={dragOverIndex === index}
+                onDuplicate={duplicateBlock}
                 onUploadImage={onUploadImage}
                 onToast={onToast}
                 headingFont={headingFont}
@@ -1778,7 +1882,7 @@ export function RichTextBlockEditor({
                   onClick={() => handleAddBlock(index + 1)}
                   className="flex items-center gap-1 px-2 py-0.5 text-xs text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
                 >
-                  <Plus size={12} />
+                  <MaterialIcon name="add" size={12} className="shrink-0" />
                   {t('richText.addBlock')}
                 </button>
                 {addMenuAtIndex === index + 1 && (

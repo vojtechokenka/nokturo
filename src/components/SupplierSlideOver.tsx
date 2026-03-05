@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { countryCodeToFlag } from '../lib/countryUtils';
 import { fetchLinkMetadata } from '../lib/fetchLinkMetadata';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import {
   NotionSelect,
   type NotionSelectOption,
@@ -212,7 +212,7 @@ export function SupplierSlideOver({
             onClick={onClose}
             className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10"
           >
-            <X className="w-5 h-5" />
+            <MaterialIcon name="close" size={20} className="shrink-0" />
           </button>
         </div>
 
@@ -329,7 +329,7 @@ export function SupplierSlideOver({
               />
               {fetchingTitle && (
                 <span className="absolute right-0 top-1/2 -translate-y-1/2 text-nokturo-500">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                 </span>
               )}
             </div>
@@ -344,7 +344,7 @@ export function SupplierSlideOver({
           {/* Footer */}
           <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
             {error && (
-              <div className="text-red-300 text-sm bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">
                 {error}
               </div>
             )}
@@ -368,7 +368,7 @@ export function SupplierSlideOver({
               }}
               className="px-5 py-2 text-sm bg-white text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
               {t('common.save')}
             </button>
             </div>

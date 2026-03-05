@@ -4,7 +4,7 @@ import { PageShell } from '../../components/PageShell';
 import { LanguageToggle } from '../../components/LanguageToggle';
 import { ThemeToggle } from '../../components/ThemeToggle';
 import { NavLink } from 'react-router-dom';
-import { ChevronRight, Loader2, X } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { LanguageIcon } from '../../components/icons/LanguageIcon';
 import { LightModeIcon } from '../../components/icons/LightModeIcon';
 import { SecurityIcon } from '../../components/icons/SecurityIcon';
@@ -243,7 +243,7 @@ export default function AccountPage() {
     return (
       <PageShell titleKey="settings.account.title" descriptionKey="settings.account.description">
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+          <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
         </div>
       </PageShell>
     );
@@ -295,7 +295,7 @@ export default function AccountPage() {
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50/70 dark:hover:bg-nokturo-600 transition-colors disabled:opacity-50"
                     >
                       {uploadingAvatar ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                       ) : (
                         <CameraIcon className="w-4 h-4 shrink-0 opacity-50" size={16} />
                       )}
@@ -305,9 +305,9 @@ export default function AccountPage() {
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm hover:bg-red-600 transition-colors"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red text-red-fg text-sm hover:bg-red/90 transition-colors"
                       >
-                        <X className="w-4 h-4" />
+                        <MaterialIcon name="close" size={16} className="shrink-0" />
                         {t('settings.account.removePhoto')}
                       </button>
                     )}
@@ -439,7 +439,7 @@ export default function AccountPage() {
                 {t('settings.security.description')}
               </p>
             </div>
-            <ChevronRight className="w-5 h-5 text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
+            <MaterialIcon name="chevron_right" size={20} className="text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
           </div>
         </NavLink>
 
@@ -458,29 +458,35 @@ export default function AccountPage() {
                   {t('settings.users.description')}
                 </p>
               </div>
-              <ChevronRight className="w-5 h-5 text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
+              <MaterialIcon name="chevron_right" size={20} className="text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
             </div>
           </NavLink>
         )}
 
         {/* Style guide (founder only) */}
         {user?.role === 'founder' && (
-          <NavLink to="/settings/style-guide" className="block py-1">
-            <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-[8px] hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
-              <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
-                <StyleGuideIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
+          <div className="py-1">
+            <NavLink to="/settings/style-guide" className="block">
+              <div className="flex items-center gap-3 py-3 -mx-2 px-2 rounded-[8px] hover:bg-nokturo-50 dark:hover:bg-nokturo-800/50 transition-colors group">
+                <div className="w-10 h-10 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-700 flex items-center justify-center shrink-0">
+                  <StyleGuideIcon className="w-5 h-5 text-nokturo-600 dark:text-nokturo-300" size={20} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
+                    {t('settings.styleGuide.title')}
+                  </h3>
+                  <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
+                    {t('settings.styleGuide.description')}
+                  </p>
+                </div>
+                <MaterialIcon name="chevron_right" size={20} className="text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
-                  {t('settings.styleGuide.title')}
-                </h3>
-                <p className="text-nokturo-600 dark:text-nokturo-400 text-sm">
-                  {t('settings.styleGuide.description')}
-                </p>
-              </div>
-              <ChevronRight className="w-5 h-5 text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
+            </NavLink>
+            <div className="flex gap-3 mt-1 ml-[52px]">
+              <NavLink to="/settings/style-guide" className="text-xs text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300">v1</NavLink>
+              <NavLink to="/settings/style-guide-v2" className="text-xs text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300">v2</NavLink>
             </div>
-          </NavLink>
+          </div>
         )}
 
         {/* Save profile button */}
@@ -492,7 +498,7 @@ export default function AccountPage() {
               disabled={saving}
               className="w-full py-3 rounded-lg bg-nokturo-700 hover:bg-nokturo-600 dark:bg-nokturo-600 dark:hover:bg-nokturo-500 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
             >
-              {saving && <Loader2 className="w-5 h-5 animate-spin" />}
+              {saving && <MaterialIcon name="progress_activity" size={20} className="animate-spin shrink-0" />}
               {t('settings.account.saveProfile')}
             </button>
           </div>
@@ -515,7 +521,7 @@ export default function AccountPage() {
       {toast && (
         <div
           className={`fixed bottom-6 right-6 px-4 py-3 rounded-lg z-50 ${
-              toast.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300'
+              toast.type === 'success' ? 'bg-green/10 dark:bg-green/20 text-green dark:text-green-fg' : 'bg-red/10 dark:bg-red/20 text-red dark:text-red-fg'
           }`}
         >
           {toast.msg}

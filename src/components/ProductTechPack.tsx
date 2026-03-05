@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { X, Printer } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { useExchangeRates, convertToCzk, CURRENCIES } from '../lib/currency';
 import type { ProductWithMaterials, ProductTechPack } from './ProductSlideOver';
 import { ProductComments } from './ProductComments';
@@ -11,8 +11,8 @@ import type { RichTextBlock } from './RichTextBlockEditor';
 const STATUS_COLORS: Record<string, string> = {
   concept: 'bg-blue-600 text-white',
   pattern: 'bg-violet-600 text-white',
-  prototype: 'bg-amber-600 text-white',
-  production: 'bg-emerald-600 text-white',
+  prototype: 'bg-orange text-orange-fg',
+  production: 'bg-green text-green-fg',
   archived: 'bg-nokturo-500 text-white',
 };
 
@@ -73,13 +73,13 @@ export function ProductTechPack({
               className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-nokturo-700"
               title={t('products.techPack.printTechPack')}
             >
-              <Printer className="w-5 h-5" />
+              <MaterialIcon name="print" size={20} className="shrink-0" />
             </button>
             <button
               onClick={onClose}
               className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-nokturo-700"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>

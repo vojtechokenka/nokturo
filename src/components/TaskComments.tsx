@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { canDeleteAnything } from '../lib/rbac';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
@@ -253,7 +253,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setDeleteTarget(comment.id); }}
-                  className="px-2 py-1 text-xs rounded text-white bg-white/10 hover:bg-red-500 hover:text-white transition-colors"
+                  className="px-2 py-1 text-xs rounded text-white bg-white/10 hover:bg-red hover:text-red-fg transition-colors"
                 >
                   {t('common.delete')}
                 </button>
@@ -270,7 +270,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
       <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-hide px-4 py-3">
         {loading ? (
           <div className="flex items-center justify-center py-10">
-            <Loader2 className="w-5 h-5 text-nokturo-500 animate-spin" />
+            <MaterialIcon name="progress_activity" size={20} className="text-nokturo-500 animate-spin shrink-0" />
           </div>
         ) : displayedComments.length === 0 ? (
           <div className="text-center py-10">
@@ -311,7 +311,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
             disabled={!newComment.trim() || sending}
             className="size-9 flex items-center justify-center text-white bg-white/10 hover:bg-white/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
           >
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendArrowIcon className="w-4 h-4" />}
+            {sending ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SendArrowIcon className="w-4 h-4" />}
           </button>
         </div>
       </div>
@@ -325,7 +325,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
               <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors">
                 {t('common.cancel')}
               </button>
-              <button onClick={() => handleDelete(deleteTarget)} className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors">
+              <button onClick={() => handleDelete(deleteTarget)} className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors">
                 {t('common.delete')}
               </button>
             </div>

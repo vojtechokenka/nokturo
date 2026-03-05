@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
-import { Loader2, CheckCircle, ArrowLeft } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SecurityIcon } from '../../components/icons/SecurityIcon';
 import { LockIcon } from '../../components/icons/LockIcon';
 import { PasswordInput } from '../../components/PasswordInput';
@@ -59,7 +59,7 @@ export default function SecurityPage() {
           to="/settings/account"
           className="inline-flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 mb-6 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
           {t('settings.security.backToSettings')}
         </Link>
 
@@ -116,15 +116,15 @@ export default function SecurityPage() {
 
             {/* Error message */}
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5">
                 {error}
               </div>
             )}
 
             {/* Success message */}
             {success && (
-              <div className="text-emerald-700 dark:text-emerald-300 text-sm bg-emerald-50 dark:bg-emerald-900/30 rounded-lg px-4 py-2.5 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 shrink-0" />
+              <div className="text-green dark:text-green-fg text-sm bg-green/10 dark:bg-green/20 rounded-lg px-4 py-2.5 flex items-center gap-2">
+                <MaterialIcon name="check_circle" size={16} className="shrink-0" />
                 {success}
               </div>
             )}
@@ -137,7 +137,7 @@ export default function SecurityPage() {
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                   {t('auth.changingPassword')}
                 </>
               ) : (

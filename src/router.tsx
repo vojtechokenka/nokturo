@@ -15,6 +15,7 @@ import AccountPage from './pages/settings/AccountPage';
 import SecurityPage from './pages/settings/SecurityPage';
 import UsersPage from './pages/settings/UsersPage';
 import StyleGuidePage from './pages/settings/StyleGuidePage';
+import StyleGuideV2Page from './pages/settings/StyleGuideV2Page';
 
 // Brand
 import StrategyPage from './pages/brand/StrategyPage';
@@ -105,6 +106,7 @@ const routes = [
           { path: 'settings/security', element: <SecurityPage /> },
           { path: 'settings/users', element: <ProtectedRoute allowedRoles={['founder']}><UsersPage /></ProtectedRoute> },
           { path: 'settings/style-guide', element: <ProtectedRoute allowedRoles={['founder']}><StyleGuidePage /></ProtectedRoute> },
+          { path: 'settings/style-guide-v2', element: <ProtectedRoute allowedRoles={['founder']}><StyleGuideV2Page /></ProtectedRoute> },
         ],
       },
     ],

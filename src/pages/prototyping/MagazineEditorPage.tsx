@@ -8,11 +8,7 @@ import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTe
 import { PageStructurePanel } from '../../components/PageStructurePanel';
 import { ToastContainer, type ToastData } from '../../components/Toast';
 import { INPUT_CLASS } from '../../lib/inputStyles';
-import {
-  ArrowLeft,
-  Loader2,
-  Upload,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SaveIcon } from '../../components/icons/SaveIcon';
 
 export default function MagazineEditorPage() {
@@ -139,7 +135,7 @@ export default function MagazineEditorPage() {
     return (
       <PageShell titleKey="pages.magazine.title" descriptionKey="pages.magazine.description">
         <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 animate-spin text-nokturo-500" />
+          <MaterialIcon name="progress_activity" size={32} className="animate-spin text-nokturo-500 shrink-0" />
         </div>
       </PageShell>
     );
@@ -155,7 +151,7 @@ export default function MagazineEditorPage() {
             onClick={() => navigate('/prototyping/magazine')}
             className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
             {t('common.back')}
           </button>
           <button
@@ -165,7 +161,7 @@ export default function MagazineEditorPage() {
             className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 disabled:opacity-60 transition-colors"
           >
             {saving ? (
-              <Loader2 size={16} className="animate-spin" />
+              <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
             ) : (
               <SaveIcon size={16} />
             )}
@@ -219,7 +215,7 @@ export default function MagazineEditorPage() {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setThumbnailUrl(null); }}
-                      className="px-2 py-1 text-xs text-white bg-red-500/90 hover:bg-red-600 rounded transition-colors"
+                      className="px-2 py-1 text-xs text-red-fg bg-red/90 hover:bg-red/90 rounded transition-colors"
                     >
                       {t('common.delete')}
                     </button>
@@ -236,7 +232,7 @@ export default function MagazineEditorPage() {
                 onClick={() => fileInputRef.current?.click()}
                 className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
               >
-                <Upload className="w-4 h-4 shrink-0" />
+                <MaterialIcon name="upload" size={16} className="shrink-0" />
                 {t('magazine.uploadThumbnail')}
               </div>
             )}

@@ -4,13 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import type { ProductWithMaterials } from '../../components/ProductSlideOver';
 import { useExchangeRates, convertToCzk, CURRENCIES } from '../../lib/currency';
-import {
-  Loader2,
-  TrendingUp,
-  TrendingDown,
-  ArrowUpDown,
-  RefreshCw,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 // ── Costing row derived from product + linked materials ──────
 interface CostingRow {
@@ -257,7 +251,7 @@ export default function CostingPage() {
           <p className="text-nokturo-500 text-xs uppercase tracking-wider mb-1">
             {t('costing.avgProfit')}
           </p>
-          <p className="text-2xl font-medium text-emerald-600">
+          <p className="text-2xl font-medium text-green-fg">
             {fmtCurrency(avgProfit)}
           </p>
         </div>
@@ -275,11 +269,11 @@ export default function CostingPage() {
       {/* ── Table ───────────────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <TrendingUp className="w-12 h-12 text-nokturo-400 mb-4" />
+          <MaterialIcon name="trending_up" size={48} className="text-nokturo-400 mb-4 shrink-0" />
           <p className="text-nokturo-600 font-medium">
             {t('costing.noProducts')}
           </p>
@@ -421,15 +415,15 @@ export default function CostingPage() {
                     <td className="text-right px-4 py-3">
                       <div className="flex items-center justify-end gap-1">
                         {row.profitPerUnit >= 0 ? (
-                          <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                          <MaterialIcon name="trending_up" size={14} className="text-green-fg shrink-0" />
                         ) : (
-                          <TrendingDown className="w-3.5 h-3.5 text-red-600" />
+                          <MaterialIcon name="trending_down" size={14} className="text-red-fg shrink-0" />
                         )}
                         <span
                           className={`font-medium ${
                             row.profitPerUnit >= 0
-                              ? 'text-emerald-600'
-                              : 'text-red-600'
+                              ? 'text-green-fg'
+                              : 'text-red-fg'
                           }`}
                         >
                           {fmtCurrency(row.profitPerUnit, row.currency)}

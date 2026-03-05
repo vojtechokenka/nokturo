@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { INPUT_CLASS } from '../../lib/inputStyles';
 import { useAuthStore } from '../../stores/authStore';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { LoginLogo } from '../../components/LoginLogo';
 import { AppUpdateSection } from '../../components/AppUpdateSection';
 import { isElectron } from '../../utils/platform';
@@ -119,7 +119,7 @@ export default function LoginPage() {
 
             {/* Error message */}
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-none px-4 py-2.5">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-none px-4 py-2.5">
                 {error}
               </div>
             )}
@@ -132,7 +132,7 @@ export default function LoginPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                   {t('auth.signingIn')}
                 </>
               ) : (

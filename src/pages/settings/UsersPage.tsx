@@ -6,7 +6,8 @@ import { SelectField } from '../../components/SelectField';
 import { useAuthStore } from '../../stores/authStore';
 import { supabase } from '../../lib/supabase';
 import { FunctionsHttpError } from '@supabase/supabase-js';
-import { Loader2, Copy, Check, ArrowLeft } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
 import { UsersIcon } from '../../components/icons/UsersIcon';
 import type { Role } from '../../lib/rbac';
 import { INPUT_CLASS } from '../../lib/inputStyles';
@@ -181,7 +182,7 @@ export default function UsersPage() {
             to="/settings/account"
             className="inline-flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 mb-6 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
             {t('settings.users.backToSettings')}
           </Link>
           <h1 className="text-heading-3 font-medium text-nokturo-900 dark:text-nokturo-100 mb-2">
@@ -202,7 +203,7 @@ export default function UsersPage() {
           to="/settings/account"
           className="inline-flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 mb-6 transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
           {t('settings.users.backToSettings')}
         </Link>
         <h1 className="text-heading-3 font-medium text-nokturo-900 dark:text-nokturo-100 mb-1">
@@ -213,7 +214,7 @@ export default function UsersPage() {
         </p>
 
         {user?.id === 'dev-user' && (
-          <div className="mb-6 p-4 rounded-lg bg-amber-50 dark:bg-amber-300/30 text-amber-800 dark:text-amber-300 text-sm">
+          <div className="mb-6 p-4 rounded-lg bg-orange/10 dark:bg-orange/20 text-orange dark:text-orange-fg text-sm">
             {t('settings.users.errorDevBypass')}
           </div>
         )}
@@ -321,7 +322,7 @@ export default function UsersPage() {
           </div>
 
           {error && (
-            <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2 space-y-2">
+            <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2 space-y-2">
               <p>{error}</p>
               {authError && (
                 <button
@@ -339,8 +340,8 @@ export default function UsersPage() {
           )}
 
           {result && (
-            <div className="bg-emerald-50 dark:bg-emerald-900/30 rounded-lg p-4 space-y-3">
-              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+            <div className="bg-green/10 dark:bg-green/20 rounded-lg p-4 space-y-3">
+              <p className="text-sm font-medium text-green dark:text-green-fg">
                 {t('settings.users.createdSuccess')}
               </p>
               <div className="bg-white dark:bg-nokturo-800 rounded-lg p-3 font-mono text-sm space-y-1">
@@ -357,12 +358,12 @@ export default function UsersPage() {
               >
                 {copied ? (
                   <>
-                    <Check className="w-4 h-4" />
+                    <MaterialIcon name="check" size={16} className="shrink-0" />
                     {t('settings.users.copied')}
                   </>
                 ) : (
                   <>
-                    <Copy className="w-4 h-4" />
+                    <DuplicateIcon className="w-4 h-4" />
                     {t('settings.users.copyCredentials')}
                   </>
                 )}
@@ -377,7 +378,7 @@ export default function UsersPage() {
           >
             {submitting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <MaterialIcon name="progress_activity" size={20} className="animate-spin shrink-0" />
                 {t('settings.users.creating')}
               </>
             ) : (

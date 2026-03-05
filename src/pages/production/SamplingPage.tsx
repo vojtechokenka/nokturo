@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import { ProductCard } from '../../components/ProductCard';
 import type { ProductWithMaterials } from '../../components/ProductSlideOver';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 export default function SamplingPage() {
   const { t } = useTranslation();
@@ -78,7 +78,7 @@ export default function SamplingPage() {
     >
       {loading ? (
         <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 animate-spin text-nokturo-500 dark:text-nokturo-400" />
+          <MaterialIcon name="progress_activity" size={32} className="animate-spin text-nokturo-500 dark:text-nokturo-400 shrink-0" />
         </div>
       ) : products.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">

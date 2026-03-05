@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore, getCachedAvatarUrl } from '../stores/authStore';
 import { DefaultAvatar } from './DefaultAvatar';
 import { useNotifications, NotificationPanel } from './NotificationCenter';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { LogOutIcon } from './icons/LogOutIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
 
@@ -74,7 +74,7 @@ export function ProfileDropdown() {
       {isLoggingOut && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 rounded-xl bg-white dark:bg-nokturo-800 px-6 py-5 shadow-xl">
-            <Loader2 className="w-8 h-8 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+            <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
             <span className="text-sm text-nokturo-700 dark:text-nokturo-300">{t('common.loggingOut')}</span>
           </div>
         </div>
@@ -147,7 +147,7 @@ export function ProfileDropdown() {
                     className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 bg-white/10 rounded-[6px] hover:bg-nokturo-50 dark:hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoggingOut ? (
-                      <Loader2 className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+                      <MaterialIcon name="progress_activity" size={16} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
                     ) : (
                       <LogOutIcon size={16} className="text-nokturo-500 dark:text-nokturo-400 shrink-0" />
                     )}

@@ -14,17 +14,7 @@ import {
   NotionSelect,
   type NotionSelectOption,
 } from '../../components/NotionSelect';
-import {
-  Plus,
-  X,
-  Loader2,
-  Image as ImageIcon,
-  ChevronLeft,
-  ChevronRight,
-  Link2,
-  MoreVertical,
-  GripVertical,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
 import { useMentionSuggestions, MentionDropdown } from '../../components/MentionSuggestions';
 import type { MentionProfile } from '../../components/MentionSuggestions';
@@ -36,13 +26,13 @@ const inputClass = INPUT_CLASS;
 // Notion-style tag colors (same as NotionSelect)
 const TAG_COLORS: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 // ── Types ─────────────────────────────────────────────────────
@@ -873,7 +863,7 @@ export default function MoodboardPage() {
             onClick={() => setShowUpload(true)}
             className="flex items-center justify-center gap-2 h-9 shrink-0 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('moodboard.addItem')}
           </button>
         </>
@@ -892,7 +882,7 @@ export default function MoodboardPage() {
         </div>
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
-          <ImageIcon className="w-12 h-12 text-nokturo-600 mb-4" />
+          <MaterialIcon name="image" size={48} className="text-nokturo-600 mb-4 shrink-0" />
           <p className="text-nokturo-600 font-medium">{t('moodboard.noItems')}</p>
           <p className="text-nokturo-500 text-sm mt-1">{t('moodboard.addFirst')}</p>
         </div>
@@ -940,7 +930,7 @@ export default function MoodboardPage() {
                       }}
                       className={`p-2 rounded transition-colors ${cardMenuOpen === item.id ? 'bg-white/30' : 'hover:bg-white/20'} text-white`}
                     >
-                      <MoreVertical className="w-4 h-4" />
+                      <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
                     {cardMenuOpen === item.id && (
                       <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 px-1 min-w-[120px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -953,7 +943,7 @@ export default function MoodboardPage() {
                         {canDelete && (
                           <button
                             onClick={() => { setDeleteTarget(item.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
                           >
                             {t('common.delete')}
                           </button>
@@ -986,7 +976,7 @@ export default function MoodboardPage() {
                 onClick={resetUpload}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -1023,7 +1013,7 @@ export default function MoodboardPage() {
                 {/* URL input – below drop zone */}
                 <div className="mt-3">
                   <div className="relative">
-                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                    <MaterialIcon name="link" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 shrink-0" />
                     <input
                       type="url"
                       value={urlInput}
@@ -1034,14 +1024,14 @@ export default function MoodboardPage() {
                       onPaste={handleUrlPaste}
                       onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
                       placeholder={t('moodboard.urlPlaceholder')}
-                      className={`${inputClass} pl-10 ${urlError ? 'ring-2 ring-red-400/50 focus:ring-red-400' : ''}`}
+                      className={`${inputClass} pl-10 ${urlError ? 'ring-2 ring-red/50 focus:ring-red' : ''}`}
                     />
                     {urlLoading && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 animate-spin" />
+                      <MaterialIcon name="progress_activity" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-nokturo-500 animate-spin shrink-0" />
                     )}
                   </div>
                   {urlError && (
-                    <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 mt-2 space-y-1">
+                    <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5 mt-2 space-y-1">
                       <div>{urlError}</div>
                       {urlError === t('moodboard.invalidUrl') && (
                         <div className="text-nokturo-500 dark:text-nokturo-400 text-xs">{t('moodboard.invalidUrlHint')}</div>
@@ -1078,10 +1068,10 @@ export default function MoodboardPage() {
                         onClick={(e) => { e.stopPropagation(); removeUploadImage(img.id); }}
                         className="absolute top-1 right-1 p-0.5 bg-black/60 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="w-3 h-3" />
+                        <MaterialIcon name="close" size={12} className="shrink-0" />
                       </button>
                       <div className="absolute bottom-1 left-1 text-white/50 pointer-events-none">
-                        <GripVertical className="w-3 h-3" />
+                        <MaterialIcon name="drag_indicator" size={12} className="shrink-0" />
                       </div>
                     </div>
                   ))}
@@ -1094,7 +1084,7 @@ export default function MoodboardPage() {
                     onClick={() => fileInputRef.current?.click()}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-300 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 rounded-lg transition-colors"
                   >
-                    <Plus className="w-3 h-3" />
+                    <MaterialIcon name="add" size={12} className="shrink-0" />
                     {t('moodboard.addMoreImages')}
                   </button>
                 </div>
@@ -1102,7 +1092,7 @@ export default function MoodboardPage() {
                 {/* URL input for adding more via URL */}
                 <div>
                   <div className="relative">
-                    <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 dark:text-nokturo-400" />
+                    <MaterialIcon name="link" size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 shrink-0" />
                     <input
                       type="url"
                       value={urlInput}
@@ -1113,14 +1103,14 @@ export default function MoodboardPage() {
                       onPaste={handleUrlPaste}
                       onKeyDown={(e) => e.key === 'Enter' && handleUrlLoad()}
                       placeholder={t('moodboard.urlPlaceholder')}
-                      className={`${inputClass} pl-10 ${urlError ? 'ring-2 ring-red-400/50 focus:ring-red-400' : ''}`}
+                      className={`${inputClass} pl-10 ${urlError ? 'ring-2 ring-red/50 focus:ring-red' : ''}`}
                     />
                     {urlLoading && (
-                      <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-nokturo-500 animate-spin" />
+                      <MaterialIcon name="progress_activity" size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-nokturo-500 animate-spin shrink-0" />
                     )}
                   </div>
                   {urlError && (
-                    <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 mt-2 space-y-1">
+                    <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5 mt-2 space-y-1">
                       <div>{urlError}</div>
                       {urlError === t('moodboard.invalidUrl') && (
                         <div className="text-nokturo-500 dark:text-nokturo-400 text-xs">{t('moodboard.invalidUrlHint')}</div>
@@ -1210,7 +1200,7 @@ export default function MoodboardPage() {
 
             {/* Error */}
             {uploadError && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 mt-3">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5 mt-3">
                 {uploadError}
               </div>
             )}
@@ -1228,7 +1218,7 @@ export default function MoodboardPage() {
                 disabled={uploadImages.length === 0 || uploading}
                 className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {uploading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {uploading && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
                 {uploading ? t('moodboard.uploading') : t('moodboard.upload')}
               </button>
             </div>
@@ -1253,7 +1243,7 @@ export default function MoodboardPage() {
                 onClick={closeEdit}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
             </div>
 
@@ -1313,7 +1303,7 @@ export default function MoodboardPage() {
             </div>
 
             {editError && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 mt-3">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5 mt-3">
                 {editError}
               </div>
             )}
@@ -1326,7 +1316,7 @@ export default function MoodboardPage() {
                       setDeleteTarget(editTarget.id);
                       closeEdit();
                     }}
-                    className="px-4 py-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50 rounded-lg transition-colors"
+                    className="px-4 py-2 text-sm bg-red/10 dark:bg-red/20 text-red dark:text-red-fg hover:bg-red/20 dark:hover:bg-red/30 rounded-lg transition-colors"
                   >
                     {t('common.delete')}
                   </button>
@@ -1344,7 +1334,7 @@ export default function MoodboardPage() {
                   disabled={editSaving}
                   className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {editSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  {editSaving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
                   {editSaving ? t('moodboard.saving') : t('common.save')}
                 </button>
               </div>
@@ -1375,7 +1365,7 @@ export default function MoodboardPage() {
                   }}
                   className="absolute left-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
                 >
-                  <ChevronLeft className="w-8 h-8" />
+                  <MaterialIcon name="chevron_left" size={32} className="shrink-0" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -1384,7 +1374,7 @@ export default function MoodboardPage() {
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-white/70 hover:text-white/90 transition-colors z-10"
                 >
-                  <ChevronRight className="w-8 h-8" />
+                  <MaterialIcon name="chevron_right" size={32} className="shrink-0" />
                 </button>
               </>
             )}
@@ -1438,7 +1428,7 @@ export default function MoodboardPage() {
               }}
               className="absolute top-4 left-4 p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors z-10"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
             <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
               <div className="relative">
@@ -1446,7 +1436,7 @@ export default function MoodboardPage() {
                   onClick={() => setLightboxMenuOpen((p) => !p)}
                   className="p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
                 >
-                  <MoreVertical className="w-5 h-5" />
+                  <MaterialIcon name="more_vert" size={20} className="shrink-0" />
                 </button>
                 {lightboxMenuOpen && (
                   <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 px-1 min-w-[120px] z-20 overflow-hidden">
@@ -1467,7 +1457,7 @@ export default function MoodboardPage() {
                           setLightboxIndex(null);
                           setLightboxMenuOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600"
+                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90"
                       >
                         {t('common.delete')}
                       </button>
@@ -1548,7 +1538,7 @@ export default function MoodboardPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

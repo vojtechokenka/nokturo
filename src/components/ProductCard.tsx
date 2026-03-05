@@ -1,14 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Package } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import type { ProductWithMaterials } from './ProductSlideOver';
 
 // ── Status badge colours (shared with product pages) ─────────────
 const STATUS_COLORS: Record<string, string> = {
   concept: 'bg-blue-600 text-white',
   pattern: 'bg-violet-600 text-white',
-  prototype: 'bg-amber-600 text-white',
-  production: 'bg-emerald-600 text-white',
+  prototype: 'bg-orange text-orange-fg',
+  production: 'bg-green text-green-fg',
   archived: 'bg-nokturo-500 text-white',
 };
 
@@ -41,7 +41,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
         {/* Visual top section – first image from Design gallery or placeholder (4:5 format) */}
         <div className="aspect-[4/5] bg-nokturo-100 dark:bg-nokturo-700 relative flex flex-col items-center justify-center p-4 overflow-hidden">
           {product.priority && (
-            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-[4px] bg-red-600 text-white text-xs font-medium whitespace-nowrap z-10">
+            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-[4px] bg-red text-red-fg text-xs font-medium whitespace-nowrap z-10">
               {t('products.priority')}
             </span>
           )}
@@ -53,7 +53,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
             />
           ) : (
             <>
-              <Package className="w-10 h-10 text-nokturo-400 mb-2" />
+              <MaterialIcon name="inventory_2" size={40} className="text-nokturo-400 mb-2 shrink-0" />
               {product.category && (
                 <span className="text-xs text-nokturo-500 dark:text-nokturo-400">
                   {t(`products.categories.${product.category}`)}
@@ -67,7 +67,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
         <div className="p-3">
           <h3 className="text-heading-5 font-body font-normal h-fit leading-4 text-nokturo-900 dark:text-nokturo-100 truncate mt-0 mb-0 flex items-center gap-1.5">
             {(showReadyBadge || product.ready_for_sampling) && (
-              <span className="avatar-round w-2 h-2 bg-emerald-500 shrink-0" aria-hidden />
+              <span className="avatar-round w-2 h-2 bg-[#127346] shrink-0" aria-hidden />
             )}
             <span className="truncate font-semibold">{product.name}</span>
           </h3>

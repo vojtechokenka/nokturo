@@ -872,6 +872,7 @@
     "noContent": "Zatím žádný obsah.",
     "tableOfContents": "Obsah",
     "pageStructure": "Struktura stránky",
+    "deleteBlockConfirm": "Smazat tento blok?",
     "defaultToc": {
       "seamFinishing": "Placeholder",
       "hardware": "Placeholder"

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { LanguageToggle } from '../../components/LanguageToggle';
-import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { LockIcon } from '../../components/icons/LockIcon';
 import { PasswordInput } from '../../components/PasswordInput';
 import { INPUT_CLASS } from '../../lib/inputStyles';
@@ -68,7 +68,7 @@ export default function ResetPassword() {
           {success ? (
             /* Success state */
             <div className="text-center">
-              <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
+              <MaterialIcon name="check_circle" size={48} className="text-green-fg mx-auto mb-4 shrink-0" />
               <h2 className="font-body text-heading-4 font-extralight text-nokturo-900 mb-2">
                 {t('auth.passwordResetSuccess')}
               </h2>
@@ -76,7 +76,7 @@ export default function ResetPassword() {
                 to="/login"
                 className="inline-flex items-center gap-2 text-sm text-nokturo-500 hover:text-nokturo-800 transition-colors mt-6"
               >
-                <ArrowLeft className="w-4 h-4" />
+                <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
                 {t('auth.backToLogin')}
               </Link>
             </div>
@@ -124,7 +124,7 @@ export default function ResetPassword() {
 
                 {/* Error message */}
                 {error && (
-                  <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+                  <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5">
                     {error}
                   </div>
                 )}
@@ -137,7 +137,7 @@ export default function ResetPassword() {
                 >
                   {submitting ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                       {t('auth.resettingPassword')}
                     </>
                   ) : (
@@ -152,7 +152,7 @@ export default function ResetPassword() {
                   to="/login"
                   className="inline-flex items-center gap-2 text-sm text-nokturo-500 hover:text-nokturo-800 transition-colors"
                 >
-                  <ArrowLeft className="w-4 h-4" />
+                  <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
                   {t('auth.backToLogin')}
                 </Link>
               </div>

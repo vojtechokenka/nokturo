@@ -12,7 +12,8 @@ import { getAspectClass } from './RichTextBlockEditor';
 import { extractTags, type HeadingFontFamily } from './RichTextBlockViewer';
 import type { TocItem } from './TableOfContents';
 import { TableOfContents } from './TableOfContents';
-import { MessageSquare, Loader2, MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
 import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
@@ -114,7 +115,7 @@ function highlightPendingSelection(text: string, selectedText: string, blockId: 
   return (
     <>
       {text.slice(0, idx)}
-      <span className="rounded bg-neutral-300/70" data-pending-selection data-pending-selection-block-id={blockId}>
+      <span className="rounded bg-nokturo-300/70" data-pending-selection data-pending-selection-block-id={blockId}>
         {selectedText}
       </span>
       {text.slice(idx + selectedText.length)}
@@ -144,17 +145,17 @@ function CommentableBlockView({
   const hFont = isHeadline ? 'font-headline' : 'font-body';
   const hSizeClass =
     block.level === 1
-      ? isHeadline ? 'text-[56px]' : 'text-[30px]'
+      ? isHeadline ? 'text-rta-h1' : 'text-rta-std-h1'
       : block.level === 2
-        ? isHeadline ? 'text-[40px]' : 'text-[24px]'
-        : 'text-[20px]';
+        ? isHeadline ? 'text-rta-h2' : 'text-rta-std-h2'
+        : isHeadline ? 'text-rta-h3' : 'text-rta-std-h3';
 
   if (block.type === 'tag' && block.text?.trim()) {
     const tagMb = nextBlock?.type === 'heading' && block.visible !== false ? 'mb-3' : 'mb-1';
     return (
       <span
         id={block.id}
-        className={`block scroll-mt-6 ${block.visible !== false ? `text-[12px] uppercase tracking-[0.2em] text-nokturo-500 dark:text-nokturo-400 font-normal mt-[80px] ${tagMb}` : 'sr-only mt-[80px]'}`}
+        className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-[80px] ${tagMb}` : 'sr-only mt-[80px]'}`}
         aria-hidden={block.visible === false}
         data-block-id={block.id}
       >
@@ -203,7 +204,7 @@ function CommentableBlockView({
         : text;
     return (
       <blockquote
-        className="font-body pl-4 text-nokturo-600 dark:text-nokturo-400 italic my-6 py-1"
+        className="font-headline italic text-rta-quote text-nokturo-700 dark:text-nokturo-300 pl-4 border-l-4 border-nokturo-300 dark:border-nokturo-600 my-6 py-1"
         data-block-id={block.id}
       >
         {display}
@@ -213,14 +214,14 @@ function CommentableBlockView({
 
   // Paragraph: support multiple independent highlights per block
   if (block.type === 'paragraph' && block.content?.trim()) {
-    const sizeClass = block.size === 'large' ? 'text-lg text-nokturo-900 dark:text-nokturo-100' : block.size === 'small' ? 'text-sm text-nokturo-900/60 dark:text-nokturo-100/60' : 'text-base text-nokturo-900/80 dark:text-nokturo-100/80';
+    const sizeClass = block.size === 'large' ? 'text-rta-p-l text-nokturo-900/90 dark:text-white/90' : block.size === 'small' ? 'text-rta-p-s text-nokturo-900/70 dark:text-white/70' : 'text-rta-p-m text-nokturo-900/80 dark:text-white/80';
     const alignClass = block.align === 'center' ? 'text-center' : block.align === 'right' ? 'text-right' : 'text-left';
     let html = block.content;
     if (isPendingBlock && pendingSelection!.selectedText) {
       const escaped = pendingSelection!.selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const blockId = block.id.replace(/"/g, '&quot;');
       html = html.replace(new RegExp(escaped), (match) =>
-        `<span class="rounded bg-neutral-300/70" data-pending-selection data-pending-selection-block-id="${blockId}">${match}</span>`
+        `<span class="rounded bg-nokturo-300/70" data-pending-selection data-pending-selection-block-id="${blockId}">${match}</span>`
       );
     } else {
       // Replace from end to start to avoid position shifting
@@ -237,7 +238,7 @@ function CommentableBlockView({
     }
     return (
       <div
-        className={`font-body ${sizeClass} ${alignClass} leading-relaxed mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-0.5 [&_a]:text-nokturo-800 dark:[&_a]:text-nokturo-200 [&_a]:underline [&_a]:hover:text-nokturo-900 dark:[&_a]:hover:text-nokturo-100`}
+        className={`font-body ${sizeClass} ${alignClass} mb-5 [&_ul]:list-disc [&_ul]:pl-6 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:my-2 [&_li]:my-0.5 [&_a]:text-nokturo-800 dark:[&_a]:text-nokturo-200 [&_a]:underline [&_a]:hover:text-nokturo-900 dark:[&_a]:hover:text-nokturo-100`}
         data-block-id={block.id}
         dangerouslySetInnerHTML={{ __html: html }}
       />
@@ -972,7 +973,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           }}
         >
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-4 h-4 text-nokturo-500 dark:text-nokturo-400 shrink-0" />
+            <MaterialIcon name="chat_bubble" size={16} className="text-nokturo-500 dark:text-nokturo-400 shrink-0" />
             <p className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate flex-1">"{selectionState.selectedText}"</p>
           </div>
           <div className="flex gap-2">
@@ -1011,11 +1012,11 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
               disabled={!commentInput.trim() || sending}
               className="w-9 h-9 flex items-center justify-center shrink-0 bg-nokturo-900 text-white rounded hover:bg-nokturo-800 disabled:opacity-50"
             >
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendArrowIcon className="w-4 h-4" />}
+              {sending ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SendArrowIcon className="w-4 h-4" />}
             </button>
           </div>
           {addError && (
-            <p className="text-xs text-red-500 mt-2">{addError}</p>
+            <p className="text-xs text-red-fg mt-2">{addError}</p>
           )}
           {!user && !addError && (
             <p className="text-xs text-nokturo-500 dark:text-nokturo-400 mt-2">{t('comments.loginRequired')}</p>
@@ -1212,7 +1213,7 @@ function CommentThreadPopover({
                   }}
                   className={`p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-white/60 dark:hover:text-white/90 hover:bg-nokturo-100 dark:hover:bg-white/10 transition-all ${commentMenuOpen === c.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                 >
-                  <MoreHorizontal className="w-4 h-4" />
+                  <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                 </button>
                 {commentMenuOpen === c.id && menuPos && (
                   <>
@@ -1233,7 +1234,7 @@ function CommentThreadPopover({
                           }}
                           className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
-                          <Pencil className="w-3 h-3" />
+                          <MaterialIcon name="edit" size={12} className="shrink-0" />
                           {t('common.edit')}
                         </button>
                       )}
@@ -1248,9 +1249,9 @@ function CommentThreadPopover({
                           if (isRoot && !window.confirm(t('comments.deleteRootConfirm'))) return;
                           onDelete(c.id);
                         }}
-                        className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                        className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <DeleteIcon className="w-3 h-3" />
                         {t('common.delete')}
                       </button>
                     </div>
@@ -1353,7 +1354,7 @@ function CommentThreadPopover({
             disabled={!replyContent.trim() || sending}
             className="size-11 aspect-square flex items-center justify-center bg-white text-nokturo-900 rounded-lg hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0 dark:bg-white dark:text-nokturo-900 dark:hover:bg-nokturo-100"
           >
-            {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendArrowIcon className="w-4 h-4" />}
+            {sending ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SendArrowIcon className="w-4 h-4" />}
           </button>
         </div>
       </div>

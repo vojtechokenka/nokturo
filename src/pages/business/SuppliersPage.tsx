@@ -15,20 +15,20 @@ import {
 import { SupplierDetailSlideOver } from '../../components/SupplierDetailSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { FilterSelect } from '../../components/FilterSelect';
-import { Plus, Users, Loader2, ExternalLink, X, RefreshCw } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 const FETCH_TIMEOUT_MS = 5000;
 
 // ── Category badge colours by NotionSelect color ─────────────────
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 export default function SuppliersPage() {
@@ -265,7 +265,7 @@ export default function SuppliersPage() {
             onClick={openAdd}
             className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('suppliers.addSupplier')}
           </button>
         </div>
@@ -275,7 +275,7 @@ export default function SuppliersPage() {
       {/* ── Content area ──────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : fetchError ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -286,13 +286,13 @@ export default function SuppliersPage() {
             onClick={() => fetchSuppliers()}
             className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 transition-colors"
           >
-            <RefreshCw className="w-4 h-4" />
+            <MaterialIcon name="refresh" size={16} className="shrink-0" />
             {t('suppliers.refresh')}
           </button>
         </div>
       ) : suppliers.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <Users className="w-12 h-12 text-nokturo-400 mb-4" />
+          <MaterialIcon name="group" size={48} className="text-nokturo-400 mb-4 shrink-0" />
           <p className="text-nokturo-600 font-medium">
             {t('suppliers.noSuppliers')}
           </p>
@@ -345,7 +345,7 @@ export default function SuppliersPage() {
                     className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 hover:text-nokturo-900 dark:text-white dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
                     style={{ borderRadius: '6px' }}
                   >
-                    <ExternalLink className="w-3 h-3 shrink-0" />
+                    <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
                     <span className="truncate">
                       {supplier.website_title || supplier.website.replace(/^https?:\/\//, '')}
                     </span>

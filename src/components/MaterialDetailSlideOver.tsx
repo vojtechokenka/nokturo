@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { countryCodeToFlag } from '../lib/countryUtils';
-import { X, Package, Pencil, Copy, Trash2, MoreVertical } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
+import { DuplicateIcon } from './icons/DuplicateIcon';
 import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import type { Material } from './MaterialSlideOver';
 
@@ -104,7 +106,7 @@ export function MaterialDetailSlideOver({
                 onClick={() => setMenuOpen((p) => !p)}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
               >
-                <MoreVertical className="w-5 h-5" />
+                <MaterialIcon name="more_vert" size={20} className="shrink-0" />
               </button>
               {menuOpen && (
                 <>
@@ -114,7 +116,7 @@ export function MaterialDetailSlideOver({
                       onClick={() => { onEdit(material); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <MaterialIcon name="edit" size={14} className="shrink-0" />
                       {t('common.edit')}
                     </button>
                     {onDuplicate && (
@@ -122,16 +124,16 @@ export function MaterialDetailSlideOver({
                         onClick={() => { onDuplicate(material); setMenuOpen(false); }}
                         className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                       >
-                        <Copy className="w-3.5 h-3.5" />
+                        <DuplicateIcon className="w-3.5 h-3.5" />
                         {t('materials.duplicate')}
                       </button>
                     )}
                     {canDelete && onDelete && (
                       <button
                         onClick={() => { onDelete(material.id); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <DeleteIcon className="w-3.5 h-3.5" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -143,7 +145,7 @@ export function MaterialDetailSlideOver({
               onClick={onClose}
               className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -164,7 +166,7 @@ export function MaterialDetailSlideOver({
                 />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center text-nokturo-500 dark:text-nokturo-400">
-                  <Package className="w-10 h-10 mb-2" />
+                  <MaterialIcon name="inventory_2" size={40} className="mb-2 shrink-0" />
                   <span className="text-sm">{t('materials.uploadImage')}</span>
                 </div>
               )}

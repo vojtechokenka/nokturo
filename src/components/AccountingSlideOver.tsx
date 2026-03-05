@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, FileText, Upload, Trash2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
 import {
   NotionSelect,
   type NotionSelectOption,
@@ -313,14 +314,14 @@ export function AccountingSlideOver({
                   onDelete(order.id);
                   onClose();
                 }}
-                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red-500 hover:text-white transition-colors rounded-lg"
+                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red hover:text-red-fg transition-colors rounded-lg"
                 title={t('common.delete')}
               >
-                <Trash2 className="w-5 h-5" />
+                <DeleteIcon className="w-5 h-5" />
               </button>
             )}
             <button onClick={onClose} className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700">
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -532,21 +533,21 @@ export function AccountingSlideOver({
               <div className="flex flex-col gap-2">
                 {(invoiceFile || existingInvoiceUrl) && (
                   <div className="flex items-center gap-2 py-2">
-                    <FileText className="w-4 h-4 text-nokturo-500 shrink-0" />
+                    <MaterialIcon name="description" size={16} className="text-nokturo-500 shrink-0" />
                     <span className="text-sm text-nokturo-700 dark:text-nokturo-300 truncate flex-1">
                       {invoiceFile?.name ?? t('accounting.invoiceUploaded')}
                     </span>
                     <button
                       type="button"
                       onClick={removeInvoice}
-                      className="text-sm bg-red-500 text-white hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-sm bg-red text-red-fg hover:bg-red/90 px-3 py-1.5 rounded-lg transition-colors"
                     >
                       {t('common.delete')}
                     </button>
                   </div>
                 )}
                 <label className="flex items-center gap-2 cursor-pointer py-2 px-3 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors">
-                  <Upload className="w-4 h-4 text-nokturo-500" />
+                  <MaterialIcon name="upload" size={16} className="text-nokturo-500 shrink-0" />
                   <span className="text-sm text-nokturo-600 dark:text-nokturo-400">{t('accounting.uploadInvoice')}</span>
                   <input
                     type="file"
@@ -561,7 +562,7 @@ export function AccountingSlideOver({
 
           <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-3 py-2 shrink-0">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">
                 {error}
               </div>
             )}
@@ -578,7 +579,7 @@ export function AccountingSlideOver({
                 disabled={saving || uploadingPdf}
                 className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-800 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {(saving || uploadingPdf) && <Loader2 className="w-4 h-4 animate-spin" />}
+                {(saving || uploadingPdf) && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
                 {t('common.save')}
               </button>
             </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { X } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 
 // ── Types ────────────────────────────────────────────────────────
 export interface ToastData {
@@ -30,12 +30,12 @@ function ToastItem({ toast, onClose }: { toast: ToastData; onClose: (id: string)
 
   const styles = {
     success: {
-      bg: 'bg-emerald-100 dark:bg-emerald-900',
-      text: 'text-emerald-800 dark:text-emerald-100',
+      bg: 'bg-green/10 dark:bg-green/20',
+      text: 'text-green dark:text-green-fg',
     },
     error: {
-      bg: 'bg-red-100 dark:bg-red-900',
-      text: 'text-red-800 dark:text-red-100',
+      bg: 'bg-red/10 dark:bg-red/20',
+      text: 'text-red dark:text-red-fg',
     },
     info: {
       bg: 'bg-blue-100 dark:bg-blue-900',
@@ -65,7 +65,7 @@ function ToastItem({ toast, onClose }: { toast: ToastData; onClose: (id: string)
         onClick={dismiss}
         className={`ml-2 ${styles.text} opacity-70 hover:opacity-100 transition-all`}
       >
-        <X className="w-3.5 h-3.5" />
+        <MaterialIcon name="close" size={14} className="shrink-0" />
       </button>
     </div>
   );

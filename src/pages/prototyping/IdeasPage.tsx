@@ -8,13 +8,7 @@ import {
   NotionSelect,
   type NotionSelectOption,
 } from '../../components/NotionSelect';
-import {
-  Plus,
-  X,
-  Loader2,
-  Lightbulb,
-  MoreHorizontal,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
 import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../../lib/inputStyles';
@@ -46,25 +40,25 @@ interface Idea {
 // Notion-style tag badge colors (same as NotionSelect)
 const TAG_COLORS: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
-  orange: 'bg-amber-600 text-white',
+  orange: 'bg-orange text-orange-fg',
   blue: 'bg-blue-600 text-white',
-  green: 'bg-emerald-600 text-white',
+  green: 'bg-green text-green-fg',
   purple: 'bg-violet-600 text-white',
   pink: 'bg-pink-600 text-white',
-  red: 'bg-red-600 text-white',
-  yellow: 'bg-amber-500 text-nokturo-900',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
 };
 
 // Map Notion category color → sticky note background (no border, no rounding)
 const CATEGORY_BG: Record<string, string> = {
-  gray: 'bg-slate-200',
-  orange: 'bg-amber-200',
+  gray: 'bg-nokturo-10',
+  orange: 'bg-orange/20',
   blue: 'bg-sky-200',
-  green: 'bg-emerald-200',
+  green: 'bg-green/20',
   purple: 'bg-violet-200',
   pink: 'bg-pink-200',
-  red: 'bg-red-200',
-  yellow: 'bg-amber-100',
+  red: 'bg-red/20',
+  yellow: 'bg-orange/10',
 };
 
 function renderNoteContent(content: string): React.ReactNode {
@@ -561,7 +555,7 @@ export default function IdeasPage() {
             onClick={openAdd}
             className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-nokturo-700 dark:hover:bg-nokturo-600 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('ideas.quickCapture')}
           </button>
         </div>
@@ -570,17 +564,17 @@ export default function IdeasPage() {
       {/* ── Content ─────────────────────────────────────────── */}
       {loading ? (
         <div className="flex items-center justify-center py-20 px-4 sm:px-6">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : ideas.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
-          <Lightbulb className="w-12 h-12 text-nokturo-600 mb-4" />
+          <MaterialIcon name="lightbulb" size={48} className="text-nokturo-600 mb-4 shrink-0" />
           <p className="text-nokturo-600 font-medium">{t('ideas.noIdeas')}</p>
           <p className="text-nokturo-500 text-sm mt-1">{t('ideas.addFirst')}</p>
         </div>
       ) : filteredIdeas.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
-          <Lightbulb className="w-12 h-12 text-nokturo-600 mb-4" />
+          <MaterialIcon name="lightbulb" size={48} className="text-nokturo-600 mb-4 shrink-0" />
           <p className="text-nokturo-600 font-medium">{t('ideas.noFilterResults')}</p>
         </div>
       ) : (
@@ -596,7 +590,7 @@ export default function IdeasPage() {
             const cats = idea.categories ?? (idea.category ? [idea.category] : []);
             const firstCatName = cats[0];
             const cat = firstCatName ? categories.find((c) => c.name === firstCatName) : null;
-            const colorClass = 'bg-amber-200';
+            const colorClass = 'bg-orange/20';
             const isDragging = draggedId === idea.id;
             const showDropBefore = dragDropIndex === idx;
             const showDropAfter = dragDropIndex === idx + 1;
@@ -644,7 +638,7 @@ export default function IdeasPage() {
                   if (fromIndex !== toIndex) handleReorder(fromIndex, toIndex);
                 }}
                 title={t('ideas.dragToReorder')}
-                className={`group ${colorClass} text-slate-800 transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
+                className={`group ${colorClass} text-nokturo-85 transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
                   isDragging ? 'opacity-50 scale-95' : ''
                 } hover:-translate-y-0.25`}
               >
@@ -659,7 +653,7 @@ export default function IdeasPage() {
                       setLightboxIndex(idx >= 0 ? idx : null);
                     }}
                     onPointerDown={(e) => e.stopPropagation()}
-                    className="aspect-square bg-slate-200/50 overflow-hidden rounded-none w-full block cursor-pointer"
+                    className="aspect-square bg-nokturo-10/50 overflow-hidden rounded-none w-full block cursor-pointer"
                   >
                     <img
                       src={idea.image_url}
@@ -671,7 +665,7 @@ export default function IdeasPage() {
                 )}
 
                 {/* Body */}
-                <div className="p-4 rounded-none bg-amber-200/80">
+                <div className="p-4 rounded-none bg-orange/20">
                   {(() => {
                     const validNames = new Set(categories.map(c => c.name));
                     const cats = (idea.categories ?? (idea.category ? [idea.category] : [])).filter(c => validNames.has(c));
@@ -740,7 +734,7 @@ export default function IdeasPage() {
                         }}
                         className={`p-1.5 rounded transition-all ${cardMenuOpen === idea.id ? 'opacity-100 bg-black/10 dark:bg-white/10' : 'opacity-0 group-hover:opacity-100'} hover:bg-black/10 dark:hover:bg-white/10`}
                       >
-                        <MoreHorizontal className="w-4 h-4" />
+                        <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                       </button>
                       {cardMenuOpen === idea.id && (
                         <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-xl shadow-lg py-1 min-w-[120px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
@@ -753,7 +747,7 @@ export default function IdeasPage() {
                           {canDelete && (
                             <button
                               onClick={() => { setDeleteTarget(idea.id); setCardMenuOpen(null); }}
-                              className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
+                              className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
                             >
                               {t('common.delete')}
                             </button>
@@ -806,7 +800,7 @@ export default function IdeasPage() {
             }}
             className="absolute top-4 right-4 p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors z-[60]"
           >
-            <X className="w-5 h-5" />
+            <MaterialIcon name="close" size={20} className="shrink-0" />
           </button>
         </div>
       )}
@@ -823,7 +817,7 @@ export default function IdeasPage() {
                 onClick={closeModal}
                 className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
               >
-                <X className="w-5 h-5" />
+                <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
             </div>
 
@@ -896,7 +890,7 @@ export default function IdeasPage() {
                       }}
                       className="absolute top-2 right-2 p-1 bg-black/60 rounded-full text-white hover:bg-black/70 transition-colors"
                     >
-                      <X className="w-4 h-4" />
+                      <MaterialIcon name="close" size={16} className="shrink-0" />
                     </button>
                   </div>
                 ) : (
@@ -924,7 +918,7 @@ export default function IdeasPage() {
 
             {/* Error */}
             {error && (
-              <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 mt-3">
+              <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5 mt-3">
                 {error}
               </div>
             )}
@@ -942,7 +936,7 @@ export default function IdeasPage() {
                 disabled={saving}
                 className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
                 {t('common.save')}
               </button>
             </div>
@@ -965,7 +959,7 @@ export default function IdeasPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

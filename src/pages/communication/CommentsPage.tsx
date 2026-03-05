@@ -4,11 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import { ProductComments } from '../../components/ProductComments';
-import {
-  Package,
-  Loader2,
-  MessageSquare,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 // ── Types ─────────────────────────────────────────────────────
 interface ProductSummary {
@@ -22,8 +18,8 @@ interface ProductSummary {
 const STATUS_COLORS: Record<string, string> = {
   concept: 'bg-blue-600 text-white',
   pattern: 'bg-violet-600 text-white',
-  prototype: 'bg-amber-600 text-white',
-  production: 'bg-emerald-600 text-white',
+  prototype: 'bg-orange text-orange-fg',
+  production: 'bg-green text-green-fg',
   archived: 'bg-nokturo-500 text-white',
 };
 
@@ -76,7 +72,7 @@ export default function CommentsPage() {
           <div className="flex-1 overflow-y-auto py-1">
             {loading ? (
               <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-5 h-5 text-nokturo-400 animate-spin" />
+                <MaterialIcon name="progress_activity" size={20} className="text-nokturo-400 animate-spin shrink-0" />
               </div>
             ) : products.length === 0 ? (
               <p className="text-nokturo-500 text-sm text-center py-8">
@@ -93,7 +89,7 @@ export default function CommentsPage() {
                       : 'text-nokturo-300 hover:bg-nokturo-700/40 hover:text-nokturo-100'
                   }`}
                 >
-                  <Package className="w-4 h-4 shrink-0 text-nokturo-500" />
+                  <MaterialIcon name="inventory_2" size={16} className="shrink-0 text-nokturo-500" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{product.name}</p>
                     {product.sku && (
@@ -133,7 +129,7 @@ export default function CommentsPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center">
-              <MessageSquare className="w-12 h-12 text-nokturo-600 mb-4" />
+              <MaterialIcon name="chat_bubble" size={48} className="text-nokturo-600 mb-4 shrink-0" />
               <p className="text-nokturo-400 text-sm">
                 {t('comments.selectProduct')}
               </p>

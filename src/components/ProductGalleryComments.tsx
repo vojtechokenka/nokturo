@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
-import { Loader2, Check, X, MoreHorizontal } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
@@ -357,14 +357,14 @@ export function ProductGalleryComments({
                 disabled={!editContent.trim() || editSaving}
                 className="flex items-center gap-1 text-xs text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 disabled:opacity-50"
               >
-                <Check className="w-3 h-3" />
+                <MaterialIcon name="check" size={12} className="shrink-0" />
                 {t('common.save')}
               </button>
               <button
                 onClick={cancelEdit}
                 className="flex items-center gap-1 text-xs text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300"
               >
-                <X className="w-3 h-3" />
+                <MaterialIcon name="close" size={12} className="shrink-0" />
                 {t('common.cancel')}
               </button>
             </div>
@@ -410,7 +410,7 @@ export function ProductGalleryComments({
                       }}
                       className={`p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-white/60 dark:hover:text-white/90 hover:bg-nokturo-100 dark:hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     >
-                      <MoreHorizontal className="w-4 h-4" />
+                      <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                     </button>
                     {commentMenuOpen === comment.id && (
                       <>
@@ -428,7 +428,7 @@ export function ProductGalleryComments({
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
                           >
                             {t('common.delete')}
                           </button>
@@ -464,7 +464,7 @@ export function ProductGalleryComments({
       <div className="flex-1 overflow-y-auto min-h-0">
         {loading ? (
           <div className="flex justify-center py-6">
-            <Loader2 className="w-5 h-5 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+            <MaterialIcon name="progress_activity" size={20} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
           </div>
         ) : comments.length === 0 ? null : (
           <div className="space-y-2 pt-4 mb-4">
@@ -511,10 +511,10 @@ export function ProductGalleryComments({
               disabled={!newComment.trim() || sending}
               className="size-9 flex items-center justify-center bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
             >
-              {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendArrowIcon className="w-4 h-4" />}
+              {sending ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SendArrowIcon className="w-4 h-4" />}
             </button>
           </div>
-          {postError && <p className="text-xs text-red-500">{postError}</p>}
+          {postError && <p className="text-xs text-red-fg">{postError}</p>}
         </div>
       )}
 
@@ -532,7 +532,7 @@ export function ProductGalleryComments({
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

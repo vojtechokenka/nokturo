@@ -1,0 +1,12 @@
+---
+description: Design preference – avoid borders unless explicitly requested
+alwaysApply: true
+---
+
+# Design: No Borders
+
+**Never use borders** (`border`, `border-*`, `ring` for decorative borders) in UI design unless the user explicitly asks for them.
+
+- Prefer background, spacing, and typography to separate or emphasize elements
+- If a border exists in existing code and you're modifying the component, consider removing it unless it serves a clear functional purpose (e.g. focus ring for accessibility)
+- Exception: `focus:ring-*` for focus states is acceptable for accessibility

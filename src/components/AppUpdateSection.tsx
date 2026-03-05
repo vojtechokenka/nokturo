@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Loader2, Download, CheckCircle2, RefreshCw, AlertCircle } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 import { isElectron } from '../utils/platform';
 
 type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'downloading' | 'downloaded' | 'error' | 'dev';
@@ -104,14 +104,14 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
             onClick={handleCheck}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <MaterialIcon name="refresh" size={14} className="shrink-0" />
             {t('settings.account.checkUpdate', 'Zkontrolovat update')}
           </button>
         )}
 
         {status === 'checking' && (
           <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <MaterialIcon name="progress_activity" size={14} className="animate-spin shrink-0" />
             {t('settings.account.checkingUpdate', 'Kontroluji...')}
           </span>
         )}
@@ -122,14 +122,14 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
             onClick={handleDownload}
             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-nokturo-700 dark:bg-nokturo-600 text-sm text-white hover:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
           >
-            <Download className="w-3.5 h-3.5" />
+            <MaterialIcon name="download" size={14} className="shrink-0" />
             {t('settings.account.downloadUpdate', 'Stáhnout')} v{newVersion}
           </button>
         )}
 
         {status === 'downloading' && (
           <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            <MaterialIcon name="progress_activity" size={14} className="animate-spin shrink-0" />
             {t('settings.account.downloadingUpdate', 'Stahuji...')} {downloadPercent}%
           </span>
         )}
@@ -138,16 +138,16 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleInstall}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-emerald-600 text-sm text-white hover:bg-emerald-500 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-green text-sm text-green-fg hover:bg-green/90 transition-colors"
           >
-            <CheckCircle2 className="w-3.5 h-3.5" />
+            <MaterialIcon name="check_circle" size={14} className="shrink-0" />
             {t('settings.account.installUpdate', 'Nainstalovat a restartovat')}
           </button>
         )}
 
         {status === 'up-to-date' && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-emerald-600 dark:text-emerald-400">
-            <CheckCircle2 className="w-3.5 h-3.5" />
+          <span className="inline-flex items-center gap-1.5 text-sm text-green dark:text-green-fg">
+            <MaterialIcon name="check_circle" size={14} className="shrink-0" />
             {t('settings.account.upToDate', 'Máš nejnovější verzi')}
           </span>
         )}
@@ -156,9 +156,9 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleCheck}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-red-500 text-white text-sm hover:bg-red-600 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-red text-red-fg text-sm hover:bg-red/90 transition-colors"
           >
-            <AlertCircle className="w-3.5 h-3.5" />
+            <MaterialIcon name="warning" size={14} className="shrink-0" />
             {t('settings.account.retryUpdate', 'Zkusit znovu')}
           </button>
         )}
@@ -168,7 +168,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         )}
       </div>
 
-      {status === 'error' && errorMsg && <p className="text-xs text-red-500">{errorMsg}</p>}
+      {status === 'error' && errorMsg && <p className="text-xs text-red-fg">{errorMsg}</p>}
     </div>
   );
 }

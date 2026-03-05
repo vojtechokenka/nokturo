@@ -6,16 +6,8 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
-import {
-  Plus,
-  Loader2,
-  FileText,
-  MoreVertical,
-  Pencil,
-  EyeOff,
-  Eye,
-  Trash2,
-} from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
 
 interface MagazineArticle {
@@ -121,9 +113,9 @@ export default function MagazinePage() {
               }`}
             >
               {showHidden ? (
-                <Eye className="w-4 h-4" />
+                <MaterialIcon name="visibility" size={16} className="shrink-0" />
               ) : (
-                <EyeOff className="w-4 h-4" />
+                <MaterialIcon name="visibility_off" size={16} className="shrink-0" />
               )}
               {t('magazine.hiddenArticles')}
             </button>
@@ -132,7 +124,7 @@ export default function MagazinePage() {
             onClick={() => navigate('/prototyping/magazine/new')}
             className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('magazine.addNew')}
           </button>
         </div>
@@ -141,7 +133,7 @@ export default function MagazinePage() {
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : visibleArticles.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -185,7 +177,7 @@ export default function MagazinePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <FileText className="w-7 h-7 text-nokturo-400" />
+                    <MaterialIcon name="description" size={28} className="text-nokturo-400 shrink-0" />
                   )}
                 </div>
 
@@ -211,7 +203,7 @@ export default function MagazinePage() {
                     }}
                     className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
                   >
-                    <MoreVertical className="w-4 h-4" />
+                    <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                   </button>
                   {menuOpen === article.id && (
                     <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
@@ -223,7 +215,7 @@ export default function MagazinePage() {
                         }}
                         className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <MaterialIcon name="edit" size={14} className="shrink-0" />
                         {t('common.edit')}
                       </button>
                       {isFounder && (
@@ -235,9 +227,9 @@ export default function MagazinePage() {
                           className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
                           {article.hidden ? (
-                            <Eye className="w-3.5 h-3.5" />
+                            <MaterialIcon name="visibility" size={14} className="shrink-0" />
                           ) : (
-                            <EyeOff className="w-3.5 h-3.5" />
+                            <MaterialIcon name="visibility_off" size={14} className="shrink-0" />
                           )}
                           {article.hidden
                             ? t('magazine.unhide')
@@ -251,9 +243,9 @@ export default function MagazinePage() {
                             setMenuOpen(null);
                             setDeleteTarget(article.id);
                           }}
-                          className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <DeleteIcon className="w-3.5 h-3.5" />
                           {t('common.delete')}
                         </button>
                       )}
@@ -285,7 +277,7 @@ export default function MagazinePage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

@@ -5,7 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { PageShell } from '../../components/PageShell';
 import { RichTextBlockViewer } from '../../components/RichTextBlockViewer';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
-import { ArrowLeft, Loader2, FileText } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { EditIcon } from '../../components/icons/EditIcon';
 
 interface MagazineArticle {
@@ -47,7 +47,7 @@ export default function MagazineArticlePage() {
     return (
       <PageShell titleKey="pages.magazine.title" descriptionKey="pages.magazine.description">
         <div className="flex items-center justify-center py-32">
-          <Loader2 className="w-8 h-8 animate-spin text-nokturo-500" />
+          <MaterialIcon name="progress_activity" size={32} className="animate-spin text-nokturo-500 shrink-0" />
         </div>
       </PageShell>
     );
@@ -57,7 +57,7 @@ export default function MagazineArticlePage() {
     return (
       <PageShell titleKey="pages.magazine.title" descriptionKey="pages.magazine.description">
         <div className="flex flex-col items-center justify-center py-32 text-center">
-          <FileText className="w-16 h-16 text-nokturo-400 mb-4" />
+          <MaterialIcon name="description" size={64} className="text-nokturo-400 mb-4 shrink-0" />
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">
             {t('magazine.notFound')}
           </p>
@@ -82,7 +82,7 @@ export default function MagazineArticlePage() {
             onClick={() => navigate('/prototyping/magazine')}
             className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
             {t('common.back')}
           </button>
           <button

@@ -19,7 +19,7 @@ import {
 } from '../../components/SubscriptionSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { FilterGroup } from '../../components/FilterGroup';
-import { Plus, Receipt, Loader2, ArrowUpDown, RefreshCw } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SimpleDropdown } from '../../components/SimpleDropdown';
 
 type PageTab = 'orders' | 'subscriptions';
@@ -248,9 +248,9 @@ export default function AccountingPage() {
 
   const statusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-emerald-600 text-white';
-      case 'paused': return 'bg-amber-600 text-white';
-      case 'cancelled': return 'bg-red-600 text-white';
+      case 'active': return 'bg-green text-green-fg';
+      case 'paused': return 'bg-orange text-orange-fg';
+      case 'cancelled': return 'bg-red text-red-fg';
       default: return 'bg-nokturo-500 text-white';
     }
   };
@@ -334,7 +334,7 @@ export default function AccountingPage() {
                 <button
                   type="button"
                   onClick={() => { setCategoryFilter([]); setStatusFilter([]); }}
-                  className="h-9 px-3 text-sm font-medium bg-red-500 text-white rounded-[6px] hover:bg-red-600 transition-colors shrink-0 inline-flex items-center"
+                  className="h-9 px-3 text-sm font-medium bg-red text-red-fg rounded-[6px] hover:bg-red/90 transition-colors shrink-0 inline-flex items-center"
                 >
                   {t('common.clearFilters')}
                 </button>
@@ -355,7 +355,7 @@ export default function AccountingPage() {
                 title={sortAsc ? t('accounting.sortDesc') : t('accounting.sortAsc')}
                 className="flex items-center justify-center size-9 shrink-0 rounded-[6px] bg-white/10 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
               >
-                <ArrowUpDown className={`w-4 h-4 transition-transform ${sortAsc ? 'rotate-180' : ''}`} />
+                <MaterialIcon name="swap_vert" size={16} className={`transition-transform shrink-0 ${sortAsc ? 'rotate-180' : ''}`} />
               </button>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -363,7 +363,7 @@ export default function AccountingPage() {
                 onClick={openAdd}
                 className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
               >
-                <Plus className="w-4 h-4" />
+                <MaterialIcon name="add" size={16} className="shrink-0" />
                 {t('accounting.addOrder')}
               </button>
             </div>
@@ -374,7 +374,7 @@ export default function AccountingPage() {
               onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
               className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
             >
-              <Plus className="w-4 h-4" />
+              <MaterialIcon name="add" size={16} className="shrink-0" />
               {t('subscriptions.add')}
             </button>
           </div>
@@ -427,7 +427,7 @@ export default function AccountingPage() {
           <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('accounting.overview.spent')}
           </p>
-          <p className="text-xl font-medium text-emerald-400">
+          <p className="text-xl font-medium text-green-fg">
             {spentCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
           </p>
         </div>
@@ -445,11 +445,11 @@ export default function AccountingPage() {
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {loading ? (
         <div className="flex items-center justify-center py-20 pl-6 pr-6">
-          <Loader2 className="w-6 h-6 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
         </div>
       ) : orders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center pl-6 pr-6">
-          <Receipt className="w-12 h-12 text-nokturo-400 dark:text-nokturo-500 mb-4" />
+          <MaterialIcon name="receipt" size={48} className="text-nokturo-400 dark:text-nokturo-500 mb-4 shrink-0" />
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">{t('accounting.noOrders')}</p>
           <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mt-1">{t('accounting.addFirst')}</p>
         </div>
@@ -584,7 +584,7 @@ export default function AccountingPage() {
           <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('subscriptions.overview.totalYearly')}
           </p>
-          <p className="text-xl font-medium text-emerald-400">
+          <p className="text-xl font-medium text-green-fg">
             {subTotalYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
           </p>
           <p className="text-xs text-nokturo-400 mt-0.5">
@@ -614,11 +614,11 @@ export default function AccountingPage() {
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {subsLoading ? (
           <div className="flex items-center justify-center py-20 pl-6 pr-6">
-            <Loader2 className="w-6 h-6 text-nokturo-500 dark:text-nokturo-400 animate-spin" />
+            <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
           </div>
         ) : subscriptions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center pl-6 pr-6">
-            <RefreshCw className="w-12 h-12 text-nokturo-400 dark:text-nokturo-500 mb-4" />
+            <MaterialIcon name="refresh" size={48} className="text-nokturo-400 dark:text-nokturo-500 mb-4 shrink-0" />
             <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">{t('subscriptions.noSubscriptions')}</p>
             <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">{t('subscriptions.addFirst')}</p>
           </div>

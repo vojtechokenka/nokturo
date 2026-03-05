@@ -3,7 +3,8 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, Plus, Trash2, Search, Image as ImageIcon, GripVertical, RefreshCw, Tag } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
 import { NotionSelect } from './NotionSelect';
 import { SelectField } from './SelectField';
 import { RichTextBlockEditor } from './RichTextBlockEditor';
@@ -289,7 +290,7 @@ function MaterialSection({
           onClick={() => setPickerOpen(!pickerOpen)}
           className="flex items-center gap-2 text-sm font-medium text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 mb-2 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
         >
-          <Plus className="w-4 h-4" />
+          <MaterialIcon name="add" size={16} className="shrink-0" />
           {title}
         </button>
       )}
@@ -313,7 +314,7 @@ function MaterialSection({
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-nokturo-400">
-                  <ImageIcon className="w-4 h-4" />
+                  <MaterialIcon name="image" size={16} className="shrink-0" />
                 </div>
               )}
             </div>
@@ -340,10 +341,10 @@ function MaterialSection({
               <button
                 type="button"
                 onClick={() => onRemove(lm.material_id, version, role)}
-                className="p-1 text-nokturo-500 hover:text-red-500 shrink-0"
+                className="p-1 text-nokturo-500 hover:text-red-fg shrink-0"
                 title={t('products.materials.remove')}
               >
-                <Trash2 className="w-3.5 h-3.5" />
+                <DeleteIcon className="w-3.5 h-3.5" />
               </button>
             )}
           </div>
@@ -354,7 +355,7 @@ function MaterialSection({
           <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-nokturo-800 rounded-lg border border-nokturo-200 dark:border-nokturo-600 z-20 max-h-80 overflow-hidden flex flex-col">
             <div className="p-1.5">
               <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-nokturo-500" />
+                <MaterialIcon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-nokturo-500 shrink-0" />
                 <input
                   type="text"
                   value={search}
@@ -389,7 +390,7 @@ function MaterialSection({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-nokturo-400">
-                          <ImageIcon className="w-5 h-5" />
+                          <MaterialIcon name="image" size={20} className="shrink-0" />
                         </div>
                       )}
                     </div>
@@ -1104,7 +1105,7 @@ export function ProductSlideOver({
             onClick={handleClose}
             className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
           >
-            <X className="w-5 h-5" />
+            <MaterialIcon name="close" size={20} className="shrink-0" />
           </button>
         </div>
 
@@ -1177,7 +1178,7 @@ export function ProductSlideOver({
                 setForm((prev) => ({ ...prev, ready_for_sampling: next, priority: next ? prev.priority : false }));
               }}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-900 ${
-                form.ready_for_sampling ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-nokturo-400 dark:bg-nokturo-600'
+                form.ready_for_sampling ? 'bg-green' : 'bg-nokturo-400 dark:bg-nokturo-600'
               }`}
             >
               <span
@@ -1198,7 +1199,7 @@ export function ProductSlideOver({
                 aria-checked={form.priority}
                 onClick={() => handleChange('priority', !form.priority)}
                 className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-900 ${
-                  form.priority ? 'bg-emerald-600 dark:bg-emerald-500' : 'bg-nokturo-400 dark:bg-nokturo-600'
+                  form.priority ? 'bg-green' : 'bg-nokturo-400 dark:bg-nokturo-600'
                 }`}
               >
                 <span
@@ -1247,15 +1248,15 @@ export function ProductSlideOver({
                     onClick={() => fileInputPreviewPhotoRef.current?.click()}
                     className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
+                    <MaterialIcon name="refresh" size={14} className="shrink-0" />
                     {t('products.replaceImage')}
                   </button>
                   <button
                     type="button"
                     onClick={() => setPreviewPhotoUrl(null)}
-                    className="flex items-center gap-2 text-sm bg-red-500 text-white hover:bg-red-600 px-3 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-2 text-sm bg-red text-red-fg hover:bg-red/90 px-3 py-2 rounded-lg transition-colors"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <DeleteIcon className="w-3.5 h-3.5" />
                     {t('common.delete')}
                   </button>
                 </div>
@@ -1332,7 +1333,7 @@ export function ProductSlideOver({
                       <button
                         type="button"
                         onClick={() => removeVersion(version)}
-                        className="text-xs font-medium px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition-colors"
+                        className="text-xs font-medium px-2 py-1 rounded bg-red text-red-fg hover:bg-red/90 transition-colors"
                       >
                         {t('common.delete')}
                       </button>
@@ -1346,7 +1347,7 @@ export function ProductSlideOver({
                         }
                         className="flex-1 flex items-center justify-center gap-2 text-sm font-medium text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
                       >
-                        <Plus className="w-4 h-4" />
+                        <MaterialIcon name="add" size={16} className="shrink-0" />
                         {t('products.materials.primaryMaterial')}
                       </button>
                       <button
@@ -1356,7 +1357,7 @@ export function ProductSlideOver({
                         }
                         className="flex-1 flex items-center justify-center gap-2 text-sm font-medium text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
                       >
-                        <Plus className="w-4 h-4" />
+                        <MaterialIcon name="add" size={16} className="shrink-0" />
                         {t('products.materials.liningMaterial')}
                       </button>
                       <button
@@ -1366,7 +1367,7 @@ export function ProductSlideOver({
                         }
                         className="flex-1 flex items-center justify-center gap-2 text-sm font-medium text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
                       >
-                        <Plus className="w-4 h-4" />
+                        <MaterialIcon name="add" size={16} className="shrink-0" />
                         {t('products.materials.pocket')}
                       </button>
                     </div>
@@ -1447,7 +1448,7 @@ export function ProductSlideOver({
               onClick={addVersion}
               className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200"
             >
-              <Plus className="w-4 h-4" />
+              <MaterialIcon name="add" size={16} className="shrink-0" />
               {t('products.materials.addVersion')}
             </button>
           </div>
@@ -1472,7 +1473,7 @@ export function ProductSlideOver({
                         : 'text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600'
                     }`}
                   >
-                    <Plus className="w-4 h-4" />
+                    <MaterialIcon name="add" size={16} className="shrink-0" />
                     {t(`labels.types.${lt.name}`) !== `labels.types.${lt.name}` ? t(`labels.types.${lt.name}`) : lt.name}
                   </button>
                 ))
@@ -1482,7 +1483,7 @@ export function ProductSlideOver({
                   onClick={() => setLabelPickerType((p) => (p ? null : 'all'))}
                   className="flex-1 flex items-center justify-center gap-2 text-sm font-medium text-nokturo-700 dark:text-nokturo-300 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-3 py-2 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 hover:bg-nokturo-200/80 dark:hover:bg-nokturo-600 transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
+                  <MaterialIcon name="add" size={16} className="shrink-0" />
                   {t('products.labels.addLabel')}
                 </button>
               )}
@@ -1491,7 +1492,7 @@ export function ProductSlideOver({
               <div className="relative bg-white dark:bg-nokturo-700/50 rounded-lg border border-nokturo-200 dark:border-nokturo-600 p-2 max-h-60 overflow-hidden flex flex-col">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="relative flex-1">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-nokturo-500" />
+                    <MaterialIcon name="search" size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-nokturo-500 shrink-0" />
                     <input
                       type="text"
                       value={labelSearch}
@@ -1507,7 +1508,7 @@ export function ProductSlideOver({
                     className="p-1.5 text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-600"
                     title={t('common.cancel')}
                   >
-                    <X className="w-4 h-4" />
+                    <MaterialIcon name="close" size={16} className="shrink-0" />
                   </button>
                 </div>
                 <div className="overflow-y-auto flex-1">
@@ -1536,7 +1537,7 @@ export function ProductSlideOver({
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-nokturo-400">
-                              <Tag className="w-5 h-5" />
+                              <MaterialIcon name="sell" size={20} className="shrink-0" />
                             </div>
                           )}
                         </div>
@@ -1575,7 +1576,7 @@ export function ProductSlideOver({
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-nokturo-400">
-                          <Tag className="w-5 h-5" />
+                          <MaterialIcon name="sell" size={20} className="shrink-0" />
                         </div>
                       )}
                     </div>
@@ -1587,10 +1588,10 @@ export function ProductSlideOver({
                       <button
                         type="button"
                         onClick={() => removeLabel(ll.label_id)}
-                        className="p-1 text-nokturo-500 hover:text-red-500 shrink-0"
+                        className="p-1 text-nokturo-500 hover:text-red-fg shrink-0"
                         title={t('products.materials.remove')}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <DeleteIcon className="w-3.5 h-3.5" />
                       </button>
                     )}
                   </div>
@@ -1723,7 +1724,7 @@ export function ProductSlideOver({
                     } ${isDragOver ? 'ring-2 ring-nokturo-400 ring-offset-2 rounded-lg' : ''}`}
                   >
                     <div className="absolute top-0 left-0 p-1 bg-nokturo-900 z-10" style={{ borderBottomRightRadius: '8px', paddingBottom: '6px', paddingRight: '6px' }}>
-                      <GripVertical className="w-3.5 h-3.5 text-nokturo-500" />
+                      <MaterialIcon name="drag_indicator" size={14} className="text-nokturo-500 shrink-0" />
                     </div>
                     <img
                       src={img.url}
@@ -1747,14 +1748,14 @@ export function ProductSlideOver({
                         className="p-1 bg-white/90 dark:bg-nokturo-800/90 text-nokturo-600 dark:text-nokturo-400 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
                         title={t('products.replaceImage')}
                       >
-                        <RefreshCw className="w-3 h-3" />
+                        <MaterialIcon name="refresh" size={12} className="shrink-0" />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeGalleryImage('design', i)}
-                        className="p-1 bg-red-500/80 text-white rounded hover:bg-red-500"
+                        className="p-1 bg-red/80 text-red-fg rounded hover:bg-red"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <DeleteIcon className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
@@ -1836,7 +1837,7 @@ export function ProductSlideOver({
                     } ${isDragOver ? 'ring-2 ring-nokturo-400 ring-offset-2 rounded-lg' : ''}`}
                   >
                     <div className="absolute top-0 left-0 p-1 bg-nokturo-900 z-10" style={{ borderBottomRightRadius: '8px', paddingBottom: '6px', paddingRight: '6px' }}>
-                      <GripVertical className="w-3.5 h-3.5 text-nokturo-500" />
+                      <MaterialIcon name="drag_indicator" size={14} className="text-nokturo-500 shrink-0" />
                     </div>
                     <img
                       src={img.url}
@@ -1867,14 +1868,14 @@ export function ProductSlideOver({
                         className="p-1 bg-white/90 dark:bg-nokturo-800/90 text-nokturo-600 dark:text-nokturo-400 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
                         title={t('products.replaceImage')}
                       >
-                        <RefreshCw className="w-3 h-3" />
+                        <MaterialIcon name="refresh" size={12} className="shrink-0" />
                       </button>
                       <button
                         type="button"
                         onClick={() => removeGalleryImage('moodboard', i)}
-                        className="p-1 bg-red-500/80 text-white rounded hover:bg-red-500"
+                        className="p-1 bg-red/80 text-red-fg rounded hover:bg-red"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        <DeleteIcon className="w-3 h-3" />
                       </button>
                     </div>
                   </div>
@@ -1932,7 +1933,7 @@ export function ProductSlideOver({
           </div>
 
           {error && (
-            <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5">
+            <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5">
               {error}
             </div>
           )}
@@ -1952,7 +1953,7 @@ export function ProductSlideOver({
             disabled={saving}
             className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
             {t('common.save')}
           </button>
         </div>
@@ -1977,13 +1978,13 @@ export function ProductSlideOver({
                 onClick={() => setShowMoodboardPicker(false)}
                 className="p-2 text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
               >
-                <X className="w-5 h-5" />
+                <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
               {moodboardPickerLoading ? (
                 <div className="flex items-center justify-center py-16">
-                  <Loader2 className="w-8 h-8 animate-spin text-nokturo-500" />
+                  <MaterialIcon name="progress_activity" size={32} className="animate-spin text-nokturo-500 shrink-0" />
                 </div>
               ) : moodboardPickerItems.length === 0 ? (
                 <p className="text-center text-nokturo-500 dark:text-nokturo-400 py-8">

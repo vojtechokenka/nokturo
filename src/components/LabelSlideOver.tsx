@@ -2,7 +2,9 @@ import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
-import { X, Loader2, MoreVertical, Pencil, Copy, Trash2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
+import { DeleteIcon } from './icons/DeleteIcon';
+import { DuplicateIcon } from './icons/DuplicateIcon';
 import { UploadImageIcon } from './icons/UploadImageIcon';
 import {
   NotionSelect,
@@ -211,7 +213,7 @@ export function LabelSlideOver({
                   onClick={() => setMenuOpen((p) => !p)}
                   className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
                 >
-                  <MoreVertical className="w-5 h-5" />
+                  <MaterialIcon name="more_vert" size={20} className="shrink-0" />
                 </button>
                 {menuOpen && (
                   <>
@@ -222,16 +224,16 @@ export function LabelSlideOver({
                           onClick={() => { onDuplicate(label); setMenuOpen(false); }}
                           className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
-                          <Copy className="w-3.5 h-3.5" />
+                          <DuplicateIcon className="w-3.5 h-3.5" />
                           {t('materials.duplicate')}
                         </button>
                       )}
                       {canDelete && onDelete && (
                         <button
                           onClick={() => { onDelete(label.id); setMenuOpen(false); }}
-                          className="w-full px-3 py-2 text-left text-sm bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <DeleteIcon className="w-3.5 h-3.5" />
                           {t('common.delete')}
                         </button>
                       )}
@@ -244,7 +246,7 @@ export function LabelSlideOver({
               onClick={onClose}
               className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
             >
-              <X className="w-5 h-5" />
+              <MaterialIcon name="close" size={20} className="shrink-0" />
             </button>
           </div>
         </div>
@@ -345,14 +347,14 @@ export function LabelSlideOver({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); setDesignFile(null); setDesignPreview(null); }}
-                    className="px-2 py-1 text-xs text-white bg-red-500/90 hover:bg-red-600 rounded transition-colors"
+                    className="px-2 py-1 text-xs text-white bg-red/90 hover:bg-red/90 rounded transition-colors"
                   >
                     {t('common.delete')}
                   </button>
                 </div>
                 {uploading && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg pointer-events-none">
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    <MaterialIcon name="progress_activity" size={24} className="text-white animate-spin shrink-0" />
                   </div>
                 )}
               </div>
@@ -374,7 +376,7 @@ export function LabelSlideOver({
                 className="flex items-center gap-2 h-20 px-3 py-2 rounded-[6px] text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors text-sm w-full justify-center cursor-pointer"
               >
                 {uploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
                 ) : (
                   <>
                     <UploadImageIcon className="w-4 h-4" size={16} />
@@ -393,7 +395,7 @@ export function LabelSlideOver({
           </div>
 
           {error && (
-            <div className="text-red-700 dark:text-red-300 text-sm bg-red-50 dark:bg-red-900/30 rounded-lg px-4 py-2.5 font-mono whitespace-pre-wrap break-words">
+            <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-4 py-2.5 font-mono whitespace-pre-wrap break-words">
               {error}
             </div>
           )}
@@ -413,7 +415,7 @@ export function LabelSlideOver({
             disabled={saving}
             className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+            {saving && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
             {t('common.save')}
           </button>
         </div>

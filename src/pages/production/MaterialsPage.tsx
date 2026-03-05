@@ -15,7 +15,9 @@ import {
   getUniqueTargetProductOptions,
 } from '../../lib/compositionUtils';
 import { MaterialDetailSlideOver } from '../../components/MaterialDetailSlideOver';
-import { Plus, Pencil, Trash2, Package, Loader2, Copy, MoreVertical } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteIcon } from '../../components/icons/DeleteIcon';
+import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
 
 export default function MaterialsPage() {
   const { t } = useTranslation();
@@ -220,7 +222,7 @@ export default function MaterialsPage() {
             onClick={openAdd}
             className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
-            <Plus className="w-4 h-4" />
+            <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('materials.addMaterial')}
           </button>
         </div>
@@ -249,7 +251,7 @@ export default function MaterialsPage() {
           <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.totalStockValue')}
           </p>
-          <p className="text-xl font-medium text-emerald-400">
+          <p className="text-xl font-medium text-green-fg">
             {totalInventoryValueCzk.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
           </p>
         </div>
@@ -268,7 +270,7 @@ export default function MaterialsPage() {
       <div className="px-0 pb-4">
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-nokturo-500 animate-spin" />
+          <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : filteredMaterials.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
@@ -308,7 +310,7 @@ export default function MaterialsPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Package className="w-10 h-10 text-nokturo-400" />
+                    <MaterialIcon name="inventory_2" size={40} className="text-nokturo-400 shrink-0" />
                   </div>
                 )}
 
@@ -323,7 +325,7 @@ export default function MaterialsPage() {
                       }}
                       className={`p-1.5 rounded transition-all ${cardMenuOpen === mat.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-white' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
-                      <MoreVertical className="w-4 h-4" />
+                      <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
                     {cardMenuOpen === mat.id && (
                       <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[130px] z-20" onClick={(e) => e.stopPropagation()}>
@@ -332,7 +334,7 @@ export default function MaterialsPage() {
                           onClick={() => { openEdit(mat); setCardMenuOpen(null); }}
                           className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
-                          <Pencil className="w-3 h-3" />
+                          <MaterialIcon name="edit" size={12} className="shrink-0" />
                           {t('common.edit')}
                         </button>
                         <button
@@ -340,16 +342,16 @@ export default function MaterialsPage() {
                           onClick={() => { handleDuplicate(mat); setCardMenuOpen(null); }}
                           className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
-                          <Copy className="w-3 h-3" />
+                          <DuplicateIcon className="w-3 h-3" />
                           {t('materials.duplicate')}
                         </button>
                         {canDelete && (
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(mat.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red-500 text-white hover:bg-red-600 flex items-center gap-2"
+                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
                           >
-                            <Trash2 className="w-3 h-3" />
+                            <DeleteIcon className="w-3 h-3" />
                             {t('common.delete')}
                           </button>
                         )}
@@ -396,7 +398,7 @@ export default function MaterialsPage() {
               </button>
               <button
                 onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red-500 text-white hover:bg-red-600 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>

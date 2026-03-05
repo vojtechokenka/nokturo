@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from '../../components/icons/MaterialIcon';
 
 /**
  * Handles Supabase auth redirects (e.g. password recovery links).
@@ -45,7 +45,7 @@ export default function AuthCallback() {
   return (
     <div className="min-h-screen bg-nokturo-50 flex items-center justify-center">
       <div className="text-center">
-        <Loader2 className="w-8 h-8 text-nokturo-500 animate-spin mx-auto mb-4" />
+        <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 animate-spin mx-auto mb-4 shrink-0" />
         <p className="text-nokturo-600 text-sm">Verifying…</p>
       </div>
     </div>

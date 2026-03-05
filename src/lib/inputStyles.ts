@@ -18,3 +18,6 @@ export const INPUT_CLASS_DARK =
 /** Modal/slide-over heading – used in all modals with black background */
 export const MODAL_HEADING_CLASS =
   'text-heading-5 font-semibold text-white tracking-tight truncate min-w-0';
+
+/** Button and link text: 16px, 100% lh, Inter, regular (pro explicitní použití) */
+export const BUTTON_TEXT_CLASS = 'text-button-text font-body font-normal';

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { MaterialIcon } from './icons/MaterialIcon';
 
 interface SleepModeProps {
   onWakeUp: () => Promise<void>;
@@ -37,7 +37,7 @@ export function SleepMode({ onWakeUp }: SleepModeProps) {
         >
           {isWakingUp ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
               Back to App
             </>
           ) : (

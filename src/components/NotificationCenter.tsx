@@ -198,7 +198,7 @@ export function NotificationPanel({
           {notifications.length > 0 && (
             <button
               onClick={clearAll}
-              className="p-1 text-nokturo-400 dark:text-nokturo-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+              className="p-1 text-nokturo-400 dark:text-nokturo-500 hover:text-red-fg dark:hover:text-red-fg transition-colors"
               title={t('notifications.clearAll')}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0">
