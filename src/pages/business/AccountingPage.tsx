@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { useExchangeRates, convertToCzk } from '../../lib/currency';
@@ -21,6 +20,7 @@ import type { NotionSelectOption } from '../../components/NotionSelect';
 import { FilterGroup } from '../../components/FilterGroup';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SimpleDropdown } from '../../components/SimpleDropdown';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 type PageTab = 'orders' | 'subscriptions';
 
@@ -54,6 +54,8 @@ export default function AccountingPage() {
   const [subEditOpen, setSubEditOpen] = useState(false);
   const [editingSub, setEditingSub] = useState<Subscription | null>(null);
   const [subDeleteTarget, setSubDeleteTarget] = useState<string | null>(null);
+  const [ordersOverviewCollapsed, setOrdersOverviewCollapsed] = useState(false);
+  const [subsOverviewCollapsed, setSubsOverviewCollapsed] = useState(false);
 
   const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'error') => {
     setToasts((prev) => [...prev, { id: crypto.randomUUID(), message, type }]);
@@ -334,7 +336,7 @@ export default function AccountingPage() {
                 <button
                   type="button"
                   onClick={() => { setCategoryFilter([]); setStatusFilter([]); }}
-                  className="h-9 px-3 text-sm font-medium bg-red text-red-fg rounded-[6px] hover:bg-red/90 transition-colors shrink-0 inline-flex items-center"
+                  className="h-9 px-3 text-sm font-medium text-red rounded-[6px] hover:bg-red hover:text-red-fg transition-colors shrink-0 inline-flex items-center"
                 >
                   {t('common.clearFilters')}
                 </button>
@@ -385,7 +387,7 @@ export default function AccountingPage() {
 
       <div className="flex flex-col min-h-0 flex-1">
       {/* Page-level tabs: Orders | Subscriptions */}
-      <div className="shrink-0 flex gap-1 mb-6 border-b border-nokturo-200 dark:border-nokturo-700 pt-3 pl-6 pr-6">
+      <div className="shrink-0 flex items-center gap-1 mb-6 border-b border-nokturo-200 dark:border-nokturo-700 pt-3 pl-6 pr-6">
         {(['orders', 'subscriptions'] as PageTab[]).map((key) => (
           <button
             key={key}
@@ -411,35 +413,52 @@ export default function AccountingPage() {
             )}
           </button>
         ))}
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={() => (pageTab === 'orders' ? setOrdersOverviewCollapsed((c) => !c) : setSubsOverviewCollapsed((c) => !c))}
+          className="flex items-center justify-center size-6 rounded-[6px] bg-white/5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-200 transition-colors shrink-0"
+          aria-label={(pageTab === 'orders' && ordersOverviewCollapsed) || (pageTab === 'subscriptions' && subsOverviewCollapsed) ? t('common.expand') : t('common.minimize')}
+        >
+          <MaterialIcon
+            name={(pageTab === 'orders' && ordersOverviewCollapsed) || (pageTab === 'subscriptions' && subsOverviewCollapsed) ? 'expand_more' : 'expand_less'}
+            size={16}
+            className="shrink-0"
+          />
+        </button>
       </div>
 
       {pageTab === 'orders' && (<>
       {/* Overview stats */}
       <div className="sticky top-0 z-10 shrink-0 pl-6 pr-6 py-2 bg-transparent">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('accounting.overview.ordersComing')}
-          </p>
-          <p className="text-xl font-medium text-white">{ordersComing}</p>
+        <div className="relative">
+          {!ordersOverviewCollapsed && (
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('accounting.overview.ordersComing')}
+                  </p>
+                  <p className="text-xl font-medium text-white">{ordersComing}</p>
+                </div>
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('accounting.overview.spent')}
+                  </p>
+                  <p className="text-xl font-medium text-green-fg">
+                    {spentCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </p>
+                </div>
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('accounting.overview.spentThisMonth')}
+                  </p>
+                  <p className="text-xl font-medium text-white">
+                    {spentThisMonthCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </p>
+                </div>
+              </div>
+          )}
         </div>
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('accounting.overview.spent')}
-          </p>
-          <p className="text-xl font-medium text-green-fg">
-            {spentCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-        </div>
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('accounting.overview.spentThisMonth')}
-          </p>
-          <p className="text-xl font-medium text-white">
-            {spentThisMonthCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-        </div>
-      </div>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -501,26 +520,10 @@ export default function AccountingPage() {
       </div>
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 p-6 max-w-sm w-full mx-4 rounded-xl shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-            <p className="text-nokturo-400 text-sm mb-4">{t('accounting.deleteConfirm')}</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-400 hover:text-white transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-white text-nokturo-900 rounded-lg hover:bg-nokturo-100 transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
 
       <AccountingDetailSlideOver
@@ -563,52 +566,56 @@ export default function AccountingPage() {
       {pageTab === 'subscriptions' && (<>
       {/* Subscription overview stats */}
       <div className="sticky top-0 z-10 shrink-0 pl-6 pr-6 py-2 bg-transparent">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('subscriptions.overview.monthlyPay')}
-          </p>
-          <p className="text-xl font-medium text-white">
-            {subMonthlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-        </div>
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('subscriptions.overview.yearlyPay')}
-          </p>
-          <p className="text-xl font-medium text-white">
-            {subYearlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-        </div>
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('subscriptions.overview.totalYearly')}
-          </p>
-          <p className="text-xl font-medium text-green-fg">
-            {subTotalYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-          <p className="text-xs text-nokturo-400 mt-0.5">
-            {t('subscriptions.overview.avgYearly')}: {subAvgYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-          </p>
-        </div>
-        <div className="bg-black rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
-            {t('subscriptions.overview.nextPayment')}
-          </p>
-          {nextPaymentSub ? (
-            <>
-              <p className="text-xl font-medium text-white">
-                {formatNextBilling(nextPaymentSub.next_billing_date)}
-              </p>
-              <p className="text-sm text-nokturo-400 truncate" title={nextPaymentSub.name}>
-                {nextPaymentSub.name} — {convertToCzk(nextPaymentSub.amount ?? 0, nextPaymentSub.currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-              </p>
-            </>
-          ) : (
-            <p className="text-nokturo-400">—</p>
+        <div className="relative">
+          {!subsOverviewCollapsed && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('subscriptions.overview.monthlyPay')}
+                  </p>
+                  <p className="text-xl font-medium text-white">
+                    {subMonthlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </p>
+                </div>
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('subscriptions.overview.yearlyPay')}
+                  </p>
+                  <p className="text-xl font-medium text-white">
+                    {subYearlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </p>
+                </div>
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('subscriptions.overview.totalYearly')}
+                  </p>
+                  <p className="text-xl font-medium text-green-fg">
+                    {subTotalYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </p>
+                  <p className="text-xs text-nokturo-400 mt-0.5">
+                    {t('subscriptions.overview.avgYearly')}: {subAvgYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </p>
+                </div>
+                <div className="bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                    {t('subscriptions.overview.nextPayment')}
+                  </p>
+                  {nextPaymentSub ? (
+                    <>
+                      <p className="text-xl font-medium text-white">
+                        {formatNextBilling(nextPaymentSub.next_billing_date)}
+                      </p>
+                      <p className="text-sm text-nokturo-400 truncate" title={nextPaymentSub.name}>
+                        {nextPaymentSub.name} — {convertToCzk(nextPaymentSub.amount ?? 0, nextPaymentSub.currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-nokturo-400">—</p>
+                  )}
+                </div>
+              </div>
           )}
         </div>
-      </div>
       </div>
 
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -692,20 +699,10 @@ export default function AccountingPage() {
         </div>
 
         {subDeleteTarget && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-            <div className="bg-nokturo-900 p-6 max-w-sm w-full mx-4 rounded-xl shadow-2xl">
-              <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-              <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('subscriptions.deleteConfirm')}</p>
-              <div className="flex gap-3 justify-end">
-                <button onClick={() => setSubDeleteTarget(null)} className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors">
-                  {t('common.cancel')}
-                </button>
-                <button onClick={() => handleSubDelete(subDeleteTarget)} className="px-4 py-2 text-sm bg-nokturo-900 text-white rounded-lg hover:bg-nokturo-800 transition-colors">
-                  {t('common.delete')}
-                </button>
-              </div>
-            </div>
-          </div>
+          <DeleteConfirmModal
+            onCancel={() => setSubDeleteTarget(null)}
+            onConfirm={() => handleSubDelete(subDeleteTarget)}
+          />
         )}
 
         <SubscriptionSlideOver

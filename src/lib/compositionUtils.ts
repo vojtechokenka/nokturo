@@ -129,3 +129,40 @@ export function getUniqueTargetProductOptions(
     .map(([id, name]) => ({ id, name }))
     .sort((a, b) => a.name.localeCompare(b.name));
 }
+
+/**
+ * Get unique product categories from materials (via product_materials, targeted_product_ids, etc.).
+ * Returns category keys (coats, jackets, trousers) that have at least one material linked.
+ * productIdToCategory: Map<productId, category>
+ */
+export function getUniqueTargetCategoriesFromMaterials(
+  materials: Material[],
+  productIdToCategory: Map<string, string>
+): string[] {
+  const categories = new Set<string>();
+  materials.forEach((m) => {
+    getTargetProductIdsFromMaterial(m).forEach((id) => {
+      const cat = productIdToCategory.get(id);
+      if (cat) categories.add(cat);
+    });
+  });
+  return Array.from(categories).sort();
+}
+
+/**
+ * Check if a material is linked to any product in the selected categories.
+ * Uses product_materials, targeted_product_ids, and targeted_custom_targets.
+ */
+export function materialHasAnyTargetCategory(
+  m: Material,
+  selectedCategories: string[],
+  productIdToCategory: Map<string, string>
+): boolean {
+  if (selectedCategories.length === 0) return true;
+  const productIds = getTargetProductIdsFromMaterial(m);
+  const selSet = new Set(selectedCategories);
+  return productIds.some((id) => {
+    const cat = productIdToCategory.get(id);
+    return cat && selSet.has(cat);
+  });
+}

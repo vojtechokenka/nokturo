@@ -105,7 +105,7 @@ export function AccountingDetailSlideOver({
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(order.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                       >
                         <DeleteIcon className="w-3.5 h-3.5" />
                         {t('common.delete')}

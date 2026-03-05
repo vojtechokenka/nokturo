@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 export interface TocItem {
@@ -26,10 +26,11 @@ interface TableOfContentsProps {
 export function TableOfContents({ items, title, className = '', footerSlot, alignWithHeader, alignWithFirstHeading, topOffset, sticky }: TableOfContentsProps) {
   const { t } = useTranslation();
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const tocListRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
 
   useEffect(() => {
-    const root = document.querySelector('main');
-    if (!root || items.length === 0) return;
+    if (items.length === 0) return;
     const visible = new Map<string, number>();
     const observer = new IntersectionObserver(
       (entries) => {
@@ -45,7 +46,7 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
           setCurrentId(closest[0]);
         }
       },
-      { root, rootMargin: '-100px 0px -60% 0px', threshold: 0 }
+      { root: null, rootMargin: '-80px 0px -70% 0px', threshold: 0 }
     );
     items.forEach((item) => {
       const el = document.getElementById(item.id);
@@ -54,24 +55,34 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
     return () => observer.disconnect();
   }, [items]);
 
+  useEffect(() => {
+    if (!currentId) return;
+    const activeEl = itemRefs.current.get(currentId);
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }, [currentId]);
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const alignTop = '';
+  const stickyTop = sticky ? 'top-[24px]' : 'top-0';
   const asideClass = sticky
-    ? `sticky top-0 self-start shrink-0 w-[240px] flex flex-col max-h-[100vh] ${className}`
-    : `fixed left-auto right-0 bottom-0 w-[240px] flex flex-col ${topOffset == null ? 'top-0' : ''} ${className}`;
+    ? `sticky ${stickyTop} self-start shrink-0 w-[240px] h-fit p-0 ${alignTop} ${className}`
+    : `fixed left-auto right-0 w-[240px] h-fit p-0 top-[24px] ${alignTop} ${className}`;
   const asideStyle = !sticky && topOffset != null ? { top: topOffset } : undefined;
 
   return (
-    <aside className={asideClass} style={asideStyle}>
+    <aside className={`group/toc ${asideClass}`} style={asideStyle}>
       <nav
-        className="font-body flex-1 min-h-0 flex flex-col rounded-[12px] overflow-hidden bg-nokturo-100/50 dark:bg-nokturo-800/30"
+        className="font-body flex flex-col rounded-[16px] overflow-hidden bg-nokturo-100/70 dark:bg-nokturo-800/60"
         aria-label={t('richText.tableOfContents')}
       >
-        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
-          <ul className="space-y-0 text-[13px] leading-snug p-1">
+        <div ref={tocListRef} className="overflow-y-auto overflow-x-hidden max-h-[calc(100vh-120px)]">
+          <ul className="space-y-0 text-[13px] leading-snug pt-3 pb-3 px-2 rounded-[16px]">
           {items.filter((item) => item.level <= 2).map((item) => {
             const isActive = currentId === item.id;
             const weight = item.level === 1 ? 'font-medium' : 'font-normal';
@@ -84,6 +95,7 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
             return (
               <li key={item.id}>
                 <a
+                  ref={(el) => { if (el) itemRefs.current.set(item.id, el); }}
                   href={`#${item.id}`}
                   onClick={(e) => handleClick(e, item.id)}
                   className={`group flex items-center gap-2 px-4 py-3 transition-colors overflow-hidden whitespace-nowrap ${
@@ -105,12 +117,12 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
         </div>
       </nav>
       {footerSlot && !sticky && (
-        <div className="fixed right-0 bottom-0 w-[240px]">
+        <div className="fixed right-0 bottom-0 w-[240px] opacity-0 group-hover/toc:opacity-100 transition-opacity">
           {footerSlot}
         </div>
       )}
       {footerSlot && sticky && (
-        <div className="shrink-0">
+        <div className="shrink-0 w-full pt-2 opacity-0 group-hover/toc:opacity-100 transition-opacity">
           {footerSlot}
         </div>
       )}

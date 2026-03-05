@@ -29,6 +29,7 @@
     "security": "Security"
   },
   "common": {
+    "description": "Description",
     "filter": "Filter",
     "clearFilters": "Clear filters",
     "search": "Search",
@@ -41,6 +42,9 @@
     "loading": "Loading...",
     "noData": "No data available",
     "confirm": "Confirm",
+    "areYouSure": "Are you sure?",
+    "takeMeBack": "Take me back",
+    "yesDelete": "Yes, delete",
     "close": "Close",
     "saved": "Saved",
     "lastSaved": "Last saved",
@@ -54,7 +58,11 @@
     "duplicate": "Duplicate",
     "toggleSidebar": "Toggle sidebar",
     "collapseSidebar": "Collapse",
-    "expandSidebar": "Expand sidebar"
+    "expandSidebar": "Expand sidebar",
+    "expand": "Expand",
+    "minimize": "Minimize",
+    "composition": "Composition",
+    "product": "Product"
   },
   "roles": {
     "founder": "Founder",
@@ -700,6 +708,8 @@
       "other": "Other"
     },
     "noItems": "No moodboard images yet",
+    "filterAll": "All",
+    "noFilterResults": "No images match the selected filter",
     "addFirst": "Upload your first inspiration image to get started",
     "deleteConfirm": "Are you sure you want to delete this moodboard item?",
     "itemDeleted": "Item deleted",
@@ -866,6 +876,7 @@
     "noContent": "No content yet.",
     "tableOfContents": "Table of Contents",
     "pageStructure": "Page structure",
+    "blockActions": "Block actions",
     "deleteBlockConfirm": "Delete this block?",
     "defaultToc": {
 "seamFinishing": "Placeholder",
@@ -875,12 +886,13 @@
   "magazine": {
     "addNew": "Add new",
     "noArticles": "No articles yet",
-    "noHiddenArticles": "No hidden articles",
+    "noDrafts": "No drafts",
     "addFirst": "Create your first article.",
     "untitled": "Untitled",
-    "hiddenArticles": "Hidden",
-    "hide": "Hide",
-    "unhide": "Show",
+    "drafts": "Drafts",
+    "published": "Published",
+    "moveToDrafts": "Move to drafts",
+    "publish": "Publish",
     "deleteConfirm": "Are you sure you want to delete this article? This action cannot be undone.",
     "thumbnail": "Thumbnail",
     "uploadThumbnail": "Upload thumbnail image",

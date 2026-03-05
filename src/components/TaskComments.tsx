@@ -7,7 +7,8 @@ import { MaterialIcon } from './icons/MaterialIcon';
 import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
-import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS } from '../lib/inputStyles';
+import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
@@ -234,7 +235,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
               )}
             </p>
           </div>
-          <div className="flex justify-between items-center mt-4 min-w-0 gap-2">
+          <div className="flex justify-between items-end mt-4 min-w-0 gap-2">
             <div className="flex gap-2 items-center min-w-0 flex-1">
               {comment.profile?.avatar_url ? (
                 <img src={comment.profile.avatar_url} alt="" className="avatar-round w-7 h-7 object-cover shrink-0" />
@@ -317,20 +318,10 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
       </div>
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 rounded-[8px] p-6 max-w-sm w-full mx-4">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('comments.deleteConfirm')}</p>
-            <div className="flex gap-3 justify-end">
-              <button onClick={() => setDeleteTarget(null)} className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors">
-                {t('common.cancel')}
-              </button>
-              <button onClick={() => handleDelete(deleteTarget)} className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors">
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
     </div>
   );

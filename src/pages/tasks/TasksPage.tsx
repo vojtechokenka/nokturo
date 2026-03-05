@@ -104,7 +104,7 @@ function TaskRowMenu({
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-black py-1 px-1 w-max z-20">
+          <div className="dropdown-menu absolute right-0 top-full mt-1 py-1 px-1 w-max z-20">
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
               className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
@@ -136,7 +136,7 @@ function TaskRowMenu({
             {onDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
-                className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2 whitespace-nowrap"
+                className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
                   <path d="M9 17h2V8H9zm4 0h2V8h-2zm-8 4V6H4V4h5V3h6v1h5v2h-1v15z" />
@@ -588,7 +588,7 @@ export default function TasksPage() {
                 addToast(t('tasks.deleteForever'));
                 fetchTasks();
               }}
-              className="text-xs font-medium bg-red text-red-fg hover:bg-red/90 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
+              className="text-xs font-medium text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
             >
               {t('tasks.deleteAll')}
             </button>

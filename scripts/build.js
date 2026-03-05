@@ -11,9 +11,13 @@ const root = path.join(__dirname, '..');
 const owner = process.env.GITHUB_OWNER || 'vojtechokenka';
 const repo = process.env.GITHUB_REPO || 'nokturo';
 
-// 1. Generate icon
-console.log('[1/3] Generating icon...');
-execSync('node scripts/generate-icon.js', { cwd: root, stdio: 'inherit' });
+// 1. Generate icon (skip if user has custom icons in public/)
+if (!process.env.SKIP_ICON_GENERATION) {
+  console.log('[1/3] Generating icon...');
+  execSync('node scripts/generate-icon.js', { cwd: root, stdio: 'inherit' });
+} else {
+  console.log('[1/3] Skipping icon generation (SKIP_ICON_GENERATION=1, using custom icons)');
+}
 
 // 2. Vite build
 console.log('[2/3] Building Vite...');

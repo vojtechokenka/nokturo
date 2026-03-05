@@ -32,13 +32,12 @@ export default {
         'rta-h4': ['32px', { lineHeight: '1.35' }],
         'rta-h5': ['24px', { lineHeight: '1.4' }],
         'rta-h6': ['20px', { lineHeight: '1.45' }],
-        /* Rich Text Standard (Inter) – jiné velikosti než Nokturo */
-        'rta-std-h1': ['52px', { lineHeight: '1.2' }],
-        'rta-std-h2': ['44px', { lineHeight: '1.25' }],
-        'rta-std-h3': ['38px', { lineHeight: '1.3' }],
-        'rta-std-h4': ['32px', { lineHeight: '1.35' }],
-        'rta-std-h5': ['24px', { lineHeight: '1.4' }],
-        'rta-std-h6': ['20px', { lineHeight: '1.45' }],
+        /* Rich Text Standard (Instrument Sans) – jiné velikosti než Nokturo */
+        'rta-std-h1': ['44px', { lineHeight: '1.2', letterSpacing: '-0.04em' }],
+        'rta-std-h2': ['36px', { lineHeight: '1.25', letterSpacing: '-0.03em' }],
+        'rta-std-h3': ['24px', { lineHeight: '1.3', letterSpacing: '-0.02em' }],
+        'rta-std-h4': ['24px', { lineHeight: '1.35', letterSpacing: '-0.01em' }],
+        'rta-std-h5': ['20px', { lineHeight: '1.4', letterSpacing: '-0.01em' }],
         'rta-p-s': ['14px', { lineHeight: '1.6' }],
         'rta-p-m': ['16px', { lineHeight: '1.6' }],
         'rta-p-l': ['20px', { lineHeight: '1.4' }],
@@ -48,10 +47,10 @@ export default {
         'button-text': ['16px', { lineHeight: '1' }],
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Instrument Sans', 'sans-serif'],
         /* H1/H2 v rich textu – IvyPresto Headline z Adobe Fonts */
         headline: ['ivypresto-headline', 'Georgia', 'serif'],
-        body: ['Inter', 'sans-serif'],
+        body: ['Instrument Sans', 'sans-serif'],
       },
       colors: {
         /* Bíločerná paleta po 5% (0 = bílá, 100 = černá) */
@@ -103,7 +102,7 @@ export default {
         },
         orange: {
           DEFAULT: '#D98320',
-          fg: '#FEDBB4',
+          fg: 'rgba(255, 241, 224, 1)',
         },
         mention: '#D400FF',
       },

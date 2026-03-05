@@ -111,7 +111,7 @@ export function MaterialDetailSlideOver({
               {menuOpen && (
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
+                  <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20">
                     <button
                       onClick={() => { onEdit(material); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
@@ -131,7 +131,7 @@ export function MaterialDetailSlideOver({
                     {canDelete && onDelete && (
                       <button
                         onClick={() => { onDelete(material.id); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                       >
                         <DeleteIcon className="w-3.5 h-3.5" />
                         {t('common.delete')}

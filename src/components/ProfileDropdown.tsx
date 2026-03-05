@@ -7,7 +7,6 @@ import { DefaultAvatar } from './DefaultAvatar';
 import { useNotifications, NotificationPanel } from './NotificationCenter';
 import { MaterialIcon } from './icons/MaterialIcon';
 import { LogOutIcon } from './icons/LogOutIcon';
-import { SettingsIcon } from './icons/SettingsIcon';
 
 export function ProfileDropdown() {
   const { t } = useTranslation();
@@ -38,7 +37,7 @@ export function ProfileDropdown() {
     if (!open || !measureRef.current) return;
     const w = measureRef.current.getBoundingClientRect().width;
     // title + dot(8) + gap(12) + button px(32) + list p(24) = w + 76
-    const total = Math.min(window.innerWidth - 32, Math.max(320, Math.ceil(w) + 76));
+    const total = Math.min(window.innerWidth - 32, Math.max(420, Math.ceil(w) + 76));
     setDropdownWidth(total);
   }, [open, longestTitle]);
 
@@ -109,7 +108,8 @@ export function ProfileDropdown() {
               className="profile-dropdown absolute right-0 bg-white dark:bg-black shadow-xl z-20"
               style={{
                 top: 'calc(100% + 8px)',
-                width: dropdownWidth ? `${dropdownWidth}px` : 320,
+                width: dropdownWidth ? `${dropdownWidth}px` : 420,
+                minWidth: 420,
               }}
             >
               <span
@@ -121,7 +121,7 @@ export function ProfileDropdown() {
               </span>
               <div className="flex flex-col w-full">
               {/* User info + menu buttons row */}
-              <div className="flex items-center justify-between gap-4 px-4 py-3 dark:bg-white/10">
+              <div className="flex items-center justify-between gap-4 px-4 py-3 dark:bg-white/15">
                 <button
                   onClick={() => { setOpen(false); navigate('/settings/account'); }}
                   className="flex flex-col items-start text-left hover:opacity-80 transition-opacity"
@@ -133,14 +133,7 @@ export function ProfileDropdown() {
                     {user?.role && t(`roles.${user.role}`)}
                   </span>
                 </button>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => { setOpen(false); navigate('/settings/account'); }}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 bg-white/10 rounded-[6px] hover:bg-nokturo-50 dark:hover:bg-white/20 transition-colors"
-                  >
-                    <SettingsIcon size={16} className="text-nokturo-500 dark:text-nokturo-400 shrink-0" />
-                    {t('common.settings')}
-                  </button>
+                <div className="flex items-center gap-3 shrink-0">
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}

@@ -85,7 +85,6 @@ export function NotionSelect({
   const [optionMenuPosition, setOptionMenuPosition] = useState<{ top?: number; bottom?: number; left: number; maxHeight?: number } | null>(null);
 
   const searchPh = searchPlaceholder ?? t('notionSelect.searchPlaceholder');
-  const hint = createHint ?? (onOptionsChange ? t('notionSelect.selectOrCreate') : t('notionSelect.selectOption'));
 
   // Close on outside click (containerRef + dropdownRef + optionMenuRef when portaled)
   useEffect(() => {
@@ -257,7 +256,7 @@ export function NotionSelect({
   const exactMatch = options.find(
     (o) => o.name.toLowerCase() === search.trim().toLowerCase()
   );
-  const canCreate = search.trim().length > 0 && !exactMatch && !!onOptionsChange;
+  const canCreate = !filterStyle && search.trim().length > 0 && !exactMatch && !!onOptionsChange;
 
   const selectedValues = multiple
     ? (Array.isArray(value) ? value : value ? [value] : [])
@@ -365,7 +364,8 @@ export function NotionSelect({
               key={opt.id}
               type="button"
               onClick={() => handleSelect(opt.name)}
-              className={`inline-flex items-center px-2 py-1 rounded-[6px] text-xs font-medium transition-opacity cursor-pointer ${
+              style={{ fontSize: '12px' }}
+              className={`inline-flex items-center px-2 py-0.5 rounded-[4px] font-medium font-body transition-opacity cursor-pointer shrink-0 ${
                 getTagClass(opt.color)
               } ${isSelected ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
             >
@@ -402,7 +402,7 @@ export function NotionSelect({
             selectedOptions.map((opt) => (
               <span
                 key={opt.id}
-                className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium shrink-0 ${getTagClass(opt.color)}`}
+                className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[12px] font-medium font-body shrink-0 ${getTagClass(opt.color)}`}
               >
                 {getDisplayName(opt.name)}
               </span>
@@ -455,7 +455,6 @@ export function NotionSelect({
                 className={`${INPUT_CLASS} pl-8 py-1.5`}
               />
             </div>
-            <p className="text-nokturo-500 dark:text-nokturo-400 text-xs mt-1">{hint}</p>
           </div>
 
           {/* Options list */}
@@ -468,7 +467,7 @@ export function NotionSelect({
               <div className="space-y-px">
                 {filtered.map((opt, idx) => {
                   const optIndex = options.findIndex((o) => o.id === opt.id);
-                  const canDrag = !search.trim() && onOptionsChange && options.length > 1;
+                  const canDrag = !filterStyle && !search.trim() && onOptionsChange && options.length > 1;
                   const showDropBefore = canDrag && dropIndex === idx;
                   const showDropAfter = canDrag && dropIndex === idx + 1;
 
@@ -507,10 +506,10 @@ export function NotionSelect({
                     {showDropBefore && (
                       <div className="absolute -top-0.5 left-0 right-0 h-0.5 bg-nokturo-500 dark:bg-nokturo-400 rounded z-10" aria-hidden />
                     )}
+                    {canDrag && (
                     <div
-                      draggable={canDrag}
+                      draggable
                       onDragStart={(e) => {
-                        if (!canDrag) return;
                         setDraggedId(opt.id);
                         e.dataTransfer.effectAllowed = 'move';
                         e.dataTransfer.setData('text/plain', opt.id);
@@ -520,10 +519,11 @@ export function NotionSelect({
                         setDraggedId(null);
                         setDropIndex(null);
                       }}
-                      className={`shrink-0 text-nokturo-500 ${canDrag ? 'cursor-grab active:cursor-grabbing touch-none' : ''}`}
+                      className="shrink-0 text-nokturo-500 cursor-grab active:cursor-grabbing touch-none"
                     >
                       <MaterialIcon name="drag_indicator" size={16} className="shrink-0" />
                     </div>
+                    )}
 
                     {editingId === opt.id ? (
                       <input
@@ -547,7 +547,7 @@ export function NotionSelect({
                         className="flex-1 flex items-center gap-2 min-w-0 text-left"
                       >
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium shrink-0 ${getTagClass(opt.color)}`}
+                          className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[12px] font-medium font-body shrink-0 ${getTagClass(opt.color)}`}
                         >
                           {getDisplayName(opt.name)}
                         </span>
@@ -639,7 +639,7 @@ export function NotionSelect({
                 <button
                   type="button"
                   onClick={() => handleDelete(openOpt.id)}
-                  className="w-full px-2.5 py-1 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                  className="w-full px-2.5 py-1 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                 >
                   <MaterialIcon name="close" size={12} className="shrink-0" />
                   {t('common.delete')}

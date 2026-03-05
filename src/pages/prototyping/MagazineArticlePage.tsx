@@ -76,6 +76,7 @@ export default function MagazineArticlePage() {
     <PageShell
       titleKey="pages.magazine.title"
       descriptionKey="pages.magazine.description"
+      bare
       actionsSlot={
         <div className="flex items-center justify-between gap-4 w-full">
           <button
@@ -95,22 +96,22 @@ export default function MagazineArticlePage() {
         </div>
       }
     >
-      <div className="max-w-3xl">
-        {/* Thumbnail */}
+      <div className="max-w-[640px] mx-auto px-4 sm:px-6">
+        {/* Heading 48px */}
+        <h1 className="font-headline text-[48px] leading-[1.2] font-extralight text-nokturo-900 dark:text-nokturo-100 mb-8">
+          {article.title || t('magazine.untitled')}
+        </h1>
+
+        {/* Photo 4:5, 100% width */}
         {article.thumbnail_url && (
-          <div className="mb-8 rounded-lg overflow-hidden">
+          <div className="aspect-[4/5] w-full overflow-hidden mb-8">
             <img
               src={article.thumbnail_url}
               alt=""
-              className="w-full max-h-[400px] object-cover"
+              className="w-full h-full object-cover"
             />
           </div>
         )}
-
-        {/* Title */}
-        <h1 className="font-headline text-[32px] sm:text-[48px] leading-[1.2] font-extralight text-nokturo-900 dark:text-nokturo-100 mb-8">
-          {article.title || t('magazine.untitled')}
-        </h1>
 
         {/* Rich text content */}
         {article.content.length > 0 && (

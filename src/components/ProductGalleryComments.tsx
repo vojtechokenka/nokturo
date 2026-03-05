@@ -7,7 +7,8 @@ import { MaterialIcon } from './icons/MaterialIcon';
 import { SendArrowIcon } from './icons/SendArrowIcon';
 import { DefaultAvatar } from './DefaultAvatar';
 import { renderContentWithMentions } from '../lib/renderMentions';
-import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
+import { INPUT_CLASS } from '../lib/inputStyles';
+import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications, getGalleryNotificationLink, parseMentionsFromText } from '../lib/sendMentionNotifications';
@@ -415,7 +416,7 @@ export function ProductGalleryComments({
                     {commentMenuOpen === comment.id && (
                       <>
                         <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
-                        <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[100px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[100px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                           {isOwn && (
                             <button
                               type="button"
@@ -428,7 +429,7 @@ export function ProductGalleryComments({
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
+                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg"
                           >
                             {t('common.delete')}
                           </button>
@@ -519,26 +520,10 @@ export function ProductGalleryComments({
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl p-6 max-w-sm w-full mx-4">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('comments.deleteConfirm')}</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
     </section>
   );

@@ -29,6 +29,7 @@
     "security": "Zabezpe\u010den\u00ed"
   },
   "common": {
+    "description": "Popis",
     "filter": "Filtrovat",
     "clearFilters": "Zrušit filtry",
     "search": "Hledat",
@@ -41,6 +42,9 @@
     "loading": "Na\u010d\u00edt\u00e1n\u00ed...",
     "noData": "\u017d\u00e1dn\u00e1 data k dispozici",
     "confirm": "Potvrdit",
+    "areYouSure": "Jste si jisti?",
+    "takeMeBack": "Vrátit se zpět",
+    "yesDelete": "Ano, smazat",
     "close": "Zavřít",
     "saved": "Uloženo",
     "lastSaved": "Naposledy uloženo",
@@ -54,7 +58,11 @@
     "duplicate": "Duplikovat",
     "toggleSidebar": "Přepnout postranní panel",
     "collapseSidebar": "Zmenšit panel",
-    "expandSidebar": "Rozbalit panel"
+    "expandSidebar": "Rozbalit panel",
+    "expand": "Rozbalit",
+    "minimize": "Minimalizovat",
+    "composition": "Složení",
+    "product": "Produkt"
   },
   "roles": {
     "founder": "Zakladatel",
@@ -700,6 +708,8 @@
       "other": "Ostatn\u00ed"
     },
     "noItems": "Zat\u00edm \u017e\u00e1dn\u00e9 obr\u00e1zky na moodboardu",
+    "filterAll": "Vše",
+    "noFilterResults": "Žádné obrázky neodpovídají vybranému filtru",
     "addFirst": "Nahrajte sv\u016fj prvn\u00ed inspira\u010dn\u00ed obr\u00e1zek",
     "deleteConfirm": "Opravdu chcete smazat tuto polo\u017eku z moodboardu?",
     "itemDeleted": "Položka smazána",
@@ -872,6 +882,7 @@
     "noContent": "Zatím žádný obsah.",
     "tableOfContents": "Obsah",
     "pageStructure": "Struktura stránky",
+    "blockActions": "Akce bloku",
     "deleteBlockConfirm": "Smazat tento blok?",
     "defaultToc": {
       "seamFinishing": "Placeholder",
@@ -881,12 +892,13 @@
   "magazine": {
     "addNew": "Přidat nový",
     "noArticles": "Zatím žádné články",
-    "noHiddenArticles": "Žádné skryté články",
+    "noDrafts": "Žádné koncepty",
     "addFirst": "Vytvořte svůj první článek.",
     "untitled": "Bez názvu",
-    "hiddenArticles": "Skryté",
-    "hide": "Skrýt",
-    "unhide": "Zobrazit",
+    "drafts": "Koncepty",
+    "published": "Publikované",
+    "moveToDrafts": "Přesunout do konceptů",
+    "publish": "Publikovat",
     "deleteConfirm": "Opravdu chcete smazat tento článek? Tuto akci nelze vrátit.",
     "thumbnail": "Náhledový obrázek",
     "uploadThumbnail": "Nahrát náhledový obrázek",

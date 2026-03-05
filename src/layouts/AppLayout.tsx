@@ -1,4 +1,4 @@
-import { Outlet, Navigate, Link, useLocation } from 'react-router-dom';
+import { Outlet, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Sidebar } from '../components/Sidebar';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { ToastContainer } from '../components/Toast';
@@ -8,6 +8,7 @@ import { useSidebarStore } from '../stores/sidebarStore';
 import { useToastStore } from '../stores/toastStore';
 import { MaterialIcon } from '../components/icons/MaterialIcon';
 import { MyTasksIcon } from '../components/icons/MyTasksIcon';
+import { SettingsIcon } from '../components/icons/SettingsIcon';
 import { useTranslation } from 'react-i18next';
 
 export function AppLayout() {
@@ -18,6 +19,7 @@ export function AppLayout() {
   const isLoading = useAuthStore((s) => s.isLoading);
   const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const toggleSidebar = useSidebarStore((s) => s.toggle);
+  const navigate = useNavigate();
   const closeSidebar = useSidebarStore((s) => s.close);
   const globalToasts = useToastStore((s) => s.toasts);
   const removeToast = useToastStore((s) => s.removeToast);
@@ -76,7 +78,7 @@ export function AppLayout() {
         <main className="flex-1 flex flex-col overflow-hidden bg-nokturo-50 dark:bg-black">
           {/* Sticky top bar */}
           <div className="shrink-0 z-30 bg-nokturo-200 dark:bg-black">
-            <div className="flex items-center gap-2 px-4 sm:px-6 h-[60px]">
+            <div className="flex items-center gap-4 px-4 sm:px-6 h-[60px]">
               <Link
                 to="/tasks"
                 className="flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
@@ -85,6 +87,14 @@ export function AppLayout() {
                 {t('tasks.myTasks')}
               </Link>
               <div className="flex-1" />
+              <button
+                type="button"
+                onClick={() => navigate('/settings/account')}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
+              >
+                <SettingsIcon size={16} className="text-nokturo-500 dark:text-nokturo-400 shrink-0" />
+                {t('common.settings')}
+              </button>
               <ProfileDropdown />
             </div>
           </div>

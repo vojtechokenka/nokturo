@@ -22,6 +22,7 @@ import type { Material } from '../../components/MaterialSlideOver';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 // ── Parse description (legacy or rich blocks) ────────────────────
 function parseDescriptionBlocks(
@@ -187,8 +188,12 @@ export default function ProductDetailPage() {
   );
   const materials = product.product_materials ?? [];
   const labels = product.product_labels ?? [];
+  const descTags = extractTags(descriptionBlocks);
+  const descTocItems = descTags.length > 0
+    ? descTags
+    : (descriptionBlocks.length > 0 ? [{ id: 'section-description', text: t('common.description'), level: 1 as const }] : []);
   const sectionTocItems: TocItem[] = [
-    ...extractTags(descriptionBlocks),
+    ...descTocItems,
     ...(materials.length > 0 ? [{ id: 'section-materials', text: t('products.materials.title'), level: 1 as const }] : []),
     ...(labels.length > 0 ? [{ id: 'section-labels', text: t('products.labels.title'), level: 1 as const }] : []),
     ...(designGallery.length > 0 ? [{ id: 'section-design-gallery', text: t('products.designGallery'), level: 1 as const }] : []),
@@ -197,7 +202,9 @@ export default function ProductDetailPage() {
 
   return (
     <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
-      <div className={`max-w-[860px] mx-auto relative ${sectionTocItems.length > 0 ? 'pr-[264px]' : ''}`}>
+      <div className={sectionTocItems.length > 0 ? 'max-w-[1124px] mx-auto' : 'max-w-[860px] mx-auto'}>
+        <div className={sectionTocItems.length > 0 ? 'flex gap-[80px]' : ''}>
+          <div className={`min-w-0 flex-1 ${sectionTocItems.length > 0 ? 'max-w-[860px]' : ''}`}>
         {/* Back + Actions */}
         <div className="flex items-center justify-between mb-8">
           <button
@@ -217,7 +224,7 @@ export default function ProductDetailPage() {
             {pageMenuOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setPageMenuOpen(false)} />
-                <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
+                <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20">
                   <button
                     onClick={() => { setEditOpen(true); setPageMenuOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
@@ -228,7 +235,7 @@ export default function ProductDetailPage() {
                   {canDelete && (
                     <button
                       onClick={() => { setDeleteConfirm(true); setPageMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                     >
                       <DeleteIcon className="w-3.5 h-3.5" />
                       {t('common.delete')}
@@ -765,12 +772,14 @@ export default function ProductDetailPage() {
               </button>
             </div>
           )}
-      </div>
+          </div>
 
-      {/* TOC – at top, no header offset */}
-      {sectionTocItems.length > 0 && (
-        <TableOfContents items={sectionTocItems} title={t('pages.products.title')} />
-      )}
+        {/* TOC – sticky, same layout as Strategy page */}
+        {sectionTocItems.length > 0 && (
+          <TableOfContents items={sectionTocItems} title={t('pages.products.title')} sticky />
+        )}
+        </div>
+      </div>
 
       {/* Edit slide-over */}
       <ProductSlideOver
@@ -793,26 +802,10 @@ export default function ProductDetailPage() {
 
       {/* Delete confirmation */}
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('products.deleteConfirm')}</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteConfirm(false)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={handleDelete}
-                className="px-4 py-2 text-sm bg-red text-red-fg rounded-lg hover:bg-red/90"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteConfirm(false)}
+          onConfirm={handleDelete}
+        />
       )}
     </PageShell>
   );

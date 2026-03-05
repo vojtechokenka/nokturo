@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
@@ -9,9 +10,11 @@ import {
   type NotionSelectOption,
 } from '../../components/NotionSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
-import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../../lib/inputStyles';
+import { INPUT_CLASS } from '../../lib/inputStyles';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 const inputClass = INPUT_CLASS;
 
@@ -129,13 +132,28 @@ export default function IdeasPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   // Card three-dot menu
   const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
 
-  // Close card menu on outside click
+  useLayoutEffect(() => {
+    if (cardMenuOpen && menuButtonRef.current) {
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      setMenuPosition({ top: rect.bottom + 4, left: rect.right - 120 });
+    } else {
+      setMenuPosition(null);
+    }
+  }, [cardMenuOpen]);
+
+  // Close card menu on outside click (exclude menu button and portal dropdown)
   useEffect(() => {
     if (!cardMenuOpen) return;
-    const handle = () => setCardMenuOpen(null);
-    document.addEventListener('click', handle);
-    return () => document.removeEventListener('click', handle);
+    const handle = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (menuButtonRef.current?.contains(target) || document.getElementById('ideas-card-menu-portal')?.contains(target)) return;
+      setCardMenuOpen(null);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
   }, [cardMenuOpen]);
 
   // Drag-and-drop
@@ -517,7 +535,7 @@ export default function IdeasPage() {
       actionsSlot={
         <div className="flex flex-col sm:flex-row gap-2 items-center justify-between w-full">
           {categories.length > 0 ? (
-            <div className="flex flex-wrap gap-2 justify-start">
+            <div className="flex flex-wrap gap-2 justify-start max-w-[640px] [flex-wrap:wrap_balance]">
               <button
                 onClick={() => setFilterCategories([])}
                 className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
@@ -553,7 +571,7 @@ export default function IdeasPage() {
           )}
           <button
             onClick={openAdd}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-nokturo-700 dark:hover:bg-nokturo-600 transition-colors shrink-0"
+            className="flex items-center justify-center gap-2 h-9 bg-white text-nokturo-900 font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-50 dark:bg-white dark:text-nokturo-900 dark:hover:bg-nokturo-100 transition-colors shrink-0"
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('ideas.quickCapture')}
@@ -590,7 +608,7 @@ export default function IdeasPage() {
             const cats = idea.categories ?? (idea.category ? [idea.category] : []);
             const firstCatName = cats[0];
             const cat = firstCatName ? categories.find((c) => c.name === firstCatName) : null;
-            const colorClass = 'bg-orange/20';
+            const colorClass = 'bg-[#171717] text-[#e6e6e6]';
             const isDragging = draggedId === idea.id;
             const showDropBefore = dragDropIndex === idx;
             const showDropAfter = dragDropIndex === idx + 1;
@@ -638,7 +656,7 @@ export default function IdeasPage() {
                   if (fromIndex !== toIndex) handleReorder(fromIndex, toIndex);
                 }}
                 title={t('ideas.dragToReorder')}
-                className={`group ${colorClass} text-nokturo-85 transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
+                className={`group ${colorClass} transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
                   isDragging ? 'opacity-50 scale-95' : ''
                 } hover:-translate-y-0.25`}
               >
@@ -665,12 +683,12 @@ export default function IdeasPage() {
                 )}
 
                 {/* Body */}
-                <div className="p-4 rounded-none bg-orange/20">
+                <div className="p-6 rounded-none bg-[#171717] text-[#e6e6e6]">
                   {(() => {
                     const validNames = new Set(categories.map(c => c.name));
                     const cats = (idea.categories ?? (idea.category ? [idea.category] : [])).filter(c => validNames.has(c));
                     return cats.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 mb-1.5">
+                      <div className="flex flex-wrap gap-1 mb-3">
                         {cats.map((c) => {
                           const catOption = categories.find((opt) => opt.name === c);
                           const colorCls = catOption ? TAG_COLORS[catOption.color] ?? TAG_COLORS.gray : TAG_COLORS.gray;
@@ -686,19 +704,19 @@ export default function IdeasPage() {
                       </div>
                     ) : null;
                   })()}
-                  <h3 className="text-heading-5 font-semibold leading-tight [color:inherit]">
+                  <h3 className="text-heading-5 font-semibold leading-tight mt-2 [color:inherit]">
                     {idea.title}
                   </h3>
 
                   {idea.content && (
-                    <div className="text-sm mt-2 leading-relaxed opacity-100 [color:inherit]">
+                    <div className="text-sm mt-4 leading-relaxed opacity-60 [color:inherit]">
                       {renderNoteContent(idea.content)}
                     </div>
                   )}
 
                   {/* Footer – author vlevo dole jako u zpráv v komunikaci */}
                   <div
-                    className="flex items-center justify-between mt-3 pt-2"
+                    className="flex items-center justify-between mt-5 pt-3"
                     onPointerDown={(e) => e.stopPropagation()}
                   >
                     <div className="flex gap-2 items-center min-w-0">
@@ -728,32 +746,15 @@ export default function IdeasPage() {
                     </div>
                     <div className="relative shrink-0">
                       <button
+                        ref={cardMenuOpen === idea.id ? menuButtonRef : undefined}
                         onClick={(e) => {
                           e.stopPropagation();
                           setCardMenuOpen(cardMenuOpen === idea.id ? null : idea.id);
                         }}
-                        className={`p-1.5 rounded transition-all ${cardMenuOpen === idea.id ? 'opacity-100 bg-black/10 dark:bg-white/10' : 'opacity-0 group-hover:opacity-100'} hover:bg-black/10 dark:hover:bg-white/10`}
+                        className={`p-1.5 rounded transition-all ${cardMenuOpen === idea.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                       >
-                        <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
+                        <MaterialIcon name="more_vert" size={20} className="shrink-0" />
                       </button>
-                      {cardMenuOpen === idea.id && (
-                        <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-xl shadow-lg py-1 min-w-[120px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
-                          <button
-                            onClick={() => { openEdit(idea); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
-                          >
-                            {t('common.edit')}
-                          </button>
-                          {canDelete && (
-                            <button
-                              onClick={() => { setDeleteTarget(idea.id); setCardMenuOpen(null); }}
-                              className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
-                            >
-                              {t('common.delete')}
-                            </button>
-                          )}
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -767,6 +768,38 @@ export default function IdeasPage() {
           })}
         </div>
       )}
+
+      {/* Card menu dropdown – portál mimo overflow kontejnery */}
+      {cardMenuOpen && menuPosition && (() => {
+        const idea = filteredIdeas.find((i) => i.id === cardMenuOpen);
+        if (!idea) return null;
+        return createPortal(
+          <div
+            id="ideas-card-menu-portal"
+            className="dropdown-menu fixed z-[100] shadow-lg py-1 min-w-[140px] overflow-hidden"
+            style={{ top: menuPosition.top, left: menuPosition.left }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => { openEdit(idea); setCardMenuOpen(null); }}
+              className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+            >
+              <MaterialIcon name="edit" size={14} className="shrink-0" />
+              {t('common.edit')}
+            </button>
+            {canDelete && (
+              <button
+                onClick={() => { setDeleteTarget(idea.id); setCardMenuOpen(null); }}
+                className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+              >
+                <DeleteIcon size={14} className="shrink-0" />
+                {t('common.delete')}
+              </button>
+            )}
+          </div>,
+          document.body
+        );
+      })()}
 
       {/* ── Lightbox: fotka ve fullscreen při kliku ───────────── */}
       {lightboxIndex !== null && ideasWithImages[lightboxIndex] && (
@@ -946,26 +979,10 @@ export default function IdeasPage() {
 
       {/* ── Delete confirmation ─────────────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">{t('ideas.deleteConfirm')}</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
     </PageShell>
   );

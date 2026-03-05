@@ -185,7 +185,7 @@ export function NotificationPanel({
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 dark:bg-white/5">
+      <div className="flex items-center justify-between px-4 py-3 dark:bg-neutral-900">
         <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 flex items-center gap-2">
           {t('notifications.title')}
           {unreadCount > 0 && (
@@ -210,7 +210,7 @@ export function NotificationPanel({
       </div>
 
       {/* List */}
-      <div className="max-h-80 overflow-y-auto p-3">
+      <div className="max-h-80 overflow-y-auto p-3 dark:bg-white/5">
       <div className="flex flex-col gap-2">
         {notifications.length === 0 ? (
           <div className="py-10 text-center text-sm text-nokturo-500 dark:text-nokturo-500">

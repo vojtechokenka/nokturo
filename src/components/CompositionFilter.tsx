@@ -57,7 +57,7 @@ export function CompositionFilter({
   useEffect(() => {
     if (!open || !containerRef.current) return;
     const rect = containerRef.current.getBoundingClientRect();
-    const minDropdownWidth = 350;
+    const minDropdownWidth = 420;
     const padding = 16;
     const spaceOnRight = window.innerWidth - rect.left - padding;
     setAlignRight(spaceOnRight < minDropdownWidth);
@@ -99,7 +99,7 @@ export function CompositionFilter({
         <FilterChevronIcon className="w-4 h-4 text-nokturo-500 shrink-0" />
         <span>{t('common.filter')}</span>
         {activeCount > 0 && (
-          <span className="ml-1 min-w-[18px] w-[18px] h-[18px] flex items-center justify-center shrink-0 rounded-full bg-nokturo-900 text-white text-xs font-medium">
+          <span className="ml-1 min-w-[18px] w-[18px] h-[18px] flex items-center justify-center shrink-0 rounded-[9999px] bg-nokturo-900 text-white text-xs font-medium">
             {activeCount}
           </span>
         )}
@@ -109,35 +109,31 @@ export function CompositionFilter({
         <div
           ref={dropdownRef}
           onMouseDown={(e) => e.stopPropagation()}
-          className={`absolute top-full mt-1.5 z-50 min-w-[200px] bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-xl overflow-hidden ${
+          className={`absolute top-full mt-1.5 z-50 w-[420px] rounded-[6px] overflow-hidden p-6 bg-[#E6E6E6] dark:bg-[#1a1a1a] ${
             alignRight ? 'right-0 left-auto' : 'left-0'
           }`}
         >
-          {/* Composition section */}
-          <div className="px-3 py-2.5 border-b border-nokturo-200 dark:border-nokturo-700 bg-nokturo-50 dark:bg-nokturo-700/50">
-            <p className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100">{t(titleKey)}</p>
-          </div>
-          <div className="py-2 max-h-48 overflow-y-auto">
+          {/* Composition section: heading + checkbox+text items */}
+          <div>
+            <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 opacity-60 mb-3">{t('common.composition')}</p>
             {fibers.length === 0 ? (
-              <p className="px-3 py-2 text-sm text-nokturo-500">{t(emptyLabelKey)}</p>
+              <p className="text-sm text-nokturo-500">{t(emptyLabelKey)}</p>
             ) : (
-              <div className="space-y-px px-1">
+              <div className="flex flex-wrap gap-x-8 gap-y-4 max-h-48 overflow-y-auto">
                 {fibers.map((fiber) => {
                   const checked = selectedFibers.includes(fiber);
                   return (
                     <label
                       key={fiber}
-                      className="flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer hover:bg-nokturo-50 dark:hover:bg-nokturo-700 transition-colors"
+                      className="flex items-center gap-2 cursor-pointer text-sm text-nokturo-800 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
                     >
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleFiber(fiber)}
-                        className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300"
+                        className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300 shrink-0"
                       />
-                      <span className="text-sm text-nokturo-800 dark:text-nokturo-200 flex-1">
-                        {getFiberLabel(fiber)}
-                      </span>
+                      <span className="min-w-0 break-words">{getFiberLabel(fiber)}</span>
                     </label>
                   );
                 })}
@@ -145,36 +141,30 @@ export function CompositionFilter({
             )}
           </div>
 
-          {/* Target product section */}
+          {/* Target product section: 40px margin, heading, same design as composition (checkbox + text) */}
           {hasTargetProductSection && (
-            <>
-              <div className="px-3 py-2.5 border-t border-b border-nokturo-200 dark:border-nokturo-700 bg-nokturo-50 dark:bg-nokturo-700/50">
-                <p className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100">{t(targetProductTitleKey)}</p>
+            <div className="mt-10">
+              <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 opacity-60 mb-3">{t('common.product')}</p>
+              <div className="flex flex-wrap gap-x-8 gap-y-4 max-h-48 overflow-y-auto">
+                {targetProducts.map((tp) => {
+                  const checked = selectedTargetProductIds.includes(tp.id);
+                  return (
+                    <label
+                      key={tp.id}
+                      className="flex items-center gap-2 cursor-pointer text-sm text-nokturo-800 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleTargetProduct(tp.id)}
+                        className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300 shrink-0"
+                      />
+                      <span className="min-w-0 break-words">{tp.name}</span>
+                    </label>
+                  );
+                })}
               </div>
-              <div className="py-2 max-h-48 overflow-y-auto">
-                <div className="space-y-px px-1">
-                  {targetProducts.map((tp) => {
-                    const checked = selectedTargetProductIds.includes(tp.id);
-                    return (
-                      <label
-                        key={tp.id}
-                        className="flex items-center gap-2 px-2 py-2 rounded-md cursor-pointer hover:bg-nokturo-50 dark:hover:bg-nokturo-700 transition-colors"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggleTargetProduct(tp.id)}
-                          className="w-4 h-4 rounded-[4px] border-nokturo-300 text-nokturo-500 focus:ring-nokturo-300"
-                        />
-                        <span className="text-sm text-nokturo-800 dark:text-nokturo-200 flex-1 truncate">
-                          {tp.name}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-            </>
+            </div>
           )}
         </div>
       )}

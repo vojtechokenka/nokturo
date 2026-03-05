@@ -67,7 +67,7 @@ interface CommentableRichTextViewerProps {
   renderTocExternally?: boolean;
   /** Called with tocItems when renderTocExternally – parent renders TableOfContents */
   onTocItems?: (items: TocItem[]) => void;
-  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
+  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Instrument Sans */
   headingFont?: HeadingFontFamily;
 }
 
@@ -155,7 +155,7 @@ function CommentableBlockView({
     return (
       <span
         id={block.id}
-        className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-[80px] ${tagMb}` : 'sr-only mt-[80px]'}`}
+        className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-0 ${tagMb}` : 'sr-only mt-0'}`}
         aria-hidden={block.visible === false}
         data-block-id={block.id}
       >
@@ -944,12 +944,12 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   );
 
   const mainContent = showTocSidebar && !renderTocExternally ? (
-    <div className={`relative ${className}`}>
-      <div className="min-w-0 flex-1 pr-[252px]">
+    <div className={`flex gap-[80px] max-w-[1124px] mx-auto ${className}`}>
+      <div className="min-w-0 flex-1 max-w-[860px]">
         {content}
         {sections}
       </div>
-      <TableOfContents items={tocItems} title={tocTitle} alignWithFirstHeading />
+      <TableOfContents items={tocItems} title={tocTitle} sticky />
     </div>
   ) : (
     <div className={className}>
@@ -1249,7 +1249,7 @@ function CommentThreadPopover({
                           if (isRoot && !window.confirm(t('comments.deleteRootConfirm'))) return;
                           onDelete(c.id);
                         }}
-                        className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                        className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                       >
                         <DeleteIcon className="w-3 h-3" />
                         {t('common.delete')}
@@ -1310,7 +1310,7 @@ function CommentThreadPopover({
       >
         <div className="flex items-center justify-between mb-2 shrink-0">
           <span className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate">"{rootComment.selected_text}"</span>
-          <button onClick={onClose} className="text-nokturo-500 hover:text-nokturo-700 dark:text-nokturo-400 dark:hover:text-nokturo-200 text-xl p-1 -m-1 leading-none">
+          <button onClick={onClose} className="text-nokturo-500 hover:text-nokturo-700 dark:text-nokturo-400 dark:hover:text-nokturo-200 text-2xl p-2 -m-2 leading-none flex items-center justify-center size-8">
             ×
           </button>
         </div>

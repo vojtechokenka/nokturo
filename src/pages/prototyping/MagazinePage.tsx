@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
 
@@ -19,16 +19,6 @@ interface MagazineArticle {
   created_by: string | null;
   created_at: string;
   updated_at: string;
-}
-
-function extractPerex(content: RichTextBlock[]): string | null {
-  if (!Array.isArray(content)) return null;
-  const firstParagraph = content.find(
-    (b) => b.type === 'paragraph' && b.content?.trim(),
-  );
-  if (!firstParagraph?.content) return null;
-  const text = firstParagraph.content.replace(/<[^>]*>/g, '').trim();
-  return text || null;
 }
 
 export default function MagazinePage() {
@@ -100,26 +90,33 @@ export default function MagazinePage() {
     <PageShell
       titleKey="pages.magazine.title"
       descriptionKey="pages.magazine.description"
+      bare
       actionsSlot={
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
-          {isFounder && (
-            <button
-              type="button"
-              onClick={() => setShowHidden((v) => !v)}
-              className={`flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] transition-colors ${
-                showHidden
-                  ? 'bg-nokturo-200 dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100'
-                  : 'text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-100 dark:hover:bg-nokturo-700'
-              }`}
-            >
-              {showHidden ? (
-                <MaterialIcon name="visibility" size={16} className="shrink-0" />
-              ) : (
-                <MaterialIcon name="visibility_off" size={16} className="shrink-0" />
-              )}
-              {t('magazine.hiddenArticles')}
-            </button>
-          )}
+        <div className="sticky top-0 z-10 w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-[#0d0d0d] rounded-[6px]">
+          <div className="flex gap-1">
+            {(['published', 'drafts'] as const).map((tab) => {
+              const isActive = showHidden === (tab === 'drafts');
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setShowHidden(tab === 'drafts')}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors ${
+                    isActive
+                      ? 'bg-black text-nokturo-900 dark:text-nokturo-100 rounded-t-[6px] rounded-b-none'
+                      : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+                  }`}
+                >
+                  {tab === 'published' ? (
+                    <MaterialIcon name="article" size={20} className="shrink-0 opacity-60" />
+                  ) : (
+                    <MaterialIcon name="edit_note" size={20} className="shrink-0 opacity-60" />
+                  )}
+                  {t(`magazine.${tab}`)}
+                </button>
+              );
+            })}
+          </div>
           <button
             onClick={() => navigate('/prototyping/magazine/new')}
             className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
@@ -130,16 +127,17 @@ export default function MagazinePage() {
         </div>
       }
     >
-      {/* Content */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
+      <div className="flex flex-col min-h-0 flex-1">
+        {/* Content */}
+        {loading ? (
+        <div className="flex items-center justify-center py-20 px-4 sm:px-6">
           <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
       ) : visibleArticles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
+        <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
           <p className="text-nokturo-600 dark:text-nokturo-400 font-medium">
             {showHidden
-              ? t('magazine.noHiddenArticles')
+              ? t('magazine.noDrafts')
               : t('magazine.noArticles')}
           </p>
           {!showHidden && (
@@ -149,11 +147,16 @@ export default function MagazinePage() {
           )}
         </div>
       ) : (
-        <div className="flex flex-col divide-y divide-nokturo-200 dark:divide-nokturo-700">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 sm:px-6 pb-6">
           {visibleArticles.map((article) => {
-            const perex = extractPerex(article.content);
+            const dateStr = article.created_at
+              ? (() => {
+                  const d = new Date(article.created_at);
+                  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`;
+                })()
+              : null;
             return (
-              <div
+              <article
                 key={article.id}
                 role="button"
                 tabIndex={0}
@@ -166,10 +169,10 @@ export default function MagazinePage() {
                     navigate(`/prototyping/magazine/${article.id}`);
                   }
                 }}
-                className="flex items-center gap-4 py-4 hover:bg-nokturo-50/50 dark:hover:bg-nokturo-800/40 transition-colors cursor-pointer"
+                className="group flex flex-col cursor-pointer"
               >
-                {/* Thumbnail */}
-                <div className="w-14 h-14 sm:w-16 sm:h-16 shrink-0 rounded-lg overflow-hidden bg-nokturo-100 dark:bg-nokturo-700 flex items-center justify-center">
+                {/* Thumbnail 4:5, no corner radius */}
+                <div className="aspect-[4/5] w-full overflow-hidden bg-nokturo-100 dark:bg-nokturo-700 flex items-center justify-center relative">
                   {article.thumbnail_url ? (
                     <img
                       src={article.thumbnail_url}
@@ -177,43 +180,32 @@ export default function MagazinePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <MaterialIcon name="description" size={28} className="text-nokturo-400 shrink-0" />
+                    <MaterialIcon name="description" size={40} className="text-nokturo-400 shrink-0" />
                   )}
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 truncate">
-                    {article.title || t('magazine.untitled')}
-                  </h3>
-                  {perex && (
-                    <p className="text-sm text-nokturo-500 dark:text-nokturo-400 mt-0.5 truncate max-w-[480px]">
-                      {perex}
-                    </p>
-                  )}
-                </div>
-
-                {/* Three-dot menu */}
-                <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setMenuOpen(menuOpen === article.id ? null : article.id);
-                    }}
-                    className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+                  {/* Three-dot menu – top-right on hover */}
+                  <div
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <MaterialIcon name="more_vert" size={16} className="shrink-0" />
-                  </button>
-                  {menuOpen === article.id && (
-                    <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[140px] z-20">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpen(menuOpen === article.id ? null : article.id);
+                      }}
+                      className="p-2 text-white hover:text-white/90 rounded-[4px] hover:bg-black/20 transition-colors"
+                    >
+                      <MaterialIcon name="more_vert" size={16} className="shrink-0" />
+                    </button>
+                    {menuOpen === article.id && (
+                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 w-max min-w-[140px] z-20">
                       <button
                         type="button"
                         onClick={() => {
                           setMenuOpen(null);
                           navigate(`/prototyping/magazine/${article.id}/edit`);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                       >
                         <MaterialIcon name="edit" size={14} className="shrink-0" />
                         {t('common.edit')}
@@ -224,16 +216,16 @@ export default function MagazinePage() {
                           onClick={() =>
                             handleHide(article.id, !article.hidden)
                           }
-                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
                         >
                           {article.hidden ? (
-                            <MaterialIcon name="visibility" size={14} className="shrink-0" />
+                            <MaterialIcon name="article" size={14} className="shrink-0" />
                           ) : (
-                            <MaterialIcon name="visibility_off" size={14} className="shrink-0" />
+                            <MaterialIcon name="edit_note" size={14} className="shrink-0" />
                           )}
                           {article.hidden
-                            ? t('magazine.unhide')
-                            : t('magazine.hide')}
+                            ? t('magazine.publish')
+                            : t('magazine.moveToDrafts')}
                         </button>
                       )}
                       {canDelete && (
@@ -243,47 +235,42 @@ export default function MagazinePage() {
                             setMenuOpen(null);
                             setDeleteTarget(article.id);
                           }}
-                          className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
                         >
                           <DeleteIcon className="w-3.5 h-3.5" />
                           {t('common.delete')}
                         </button>
                       )}
                     </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-              </div>
+
+                {/* Content: date 14px, 12px gap, heading 32px IvyPresto */}
+                <div className="flex flex-col gap-3 mt-3">
+                  {dateStr && (
+                    <time className="text-[14px] text-nokturo-500 dark:text-nokturo-400">
+                      {dateStr}
+                    </time>
+                  )}
+                  <h3 className="font-headline text-[32px] leading-tight text-nokturo-900 dark:text-nokturo-100">
+                    {article.title || t('magazine.untitled')}
+                  </h3>
+                </div>
+              </article>
             );
           })}
         </div>
       )}
 
+      </div>
+
       {/* Delete confirmation */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
-              {t('common.confirm')}
-            </h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
-              {t('magazine.deleteConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
     </PageShell>
   );

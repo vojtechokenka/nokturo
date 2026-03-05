@@ -156,7 +156,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
           <button
             type="button"
             onClick={handleCheck}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-red text-red-fg text-sm hover:bg-red/90 transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none text-red text-sm hover:bg-red hover:text-red-fg transition-colors"
           >
             <MaterialIcon name="warning" size={14} className="shrink-0" />
             {t('settings.account.retryUpdate', 'Zkusit znovu')}

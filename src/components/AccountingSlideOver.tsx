@@ -540,7 +540,7 @@ export function AccountingSlideOver({
                     <button
                       type="button"
                       onClick={removeInvoice}
-                      className="text-sm bg-red text-red-fg hover:bg-red/90 px-3 py-1.5 rounded-lg transition-colors"
+                      className="text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-1.5 rounded-lg transition-colors"
                     >
                       {t('common.delete')}
                     </button>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -14,6 +13,7 @@ import { useExchangeRates, convertToCzk, CURRENCIES } from '../../lib/currency';
 import { FilterSelect } from '../../components/FilterSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
@@ -306,30 +306,10 @@ export default function ComponentsPage() {
 
       {/* ── Delete confirmation dialog ────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
-              {t('common.confirm')}
-            </h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
-              {t('components.deleteConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
 
       {/* ── Slide-over (add / edit) ───────────────────────── */}

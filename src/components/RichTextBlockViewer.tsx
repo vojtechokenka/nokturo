@@ -34,7 +34,7 @@ interface RichTextBlockViewerProps {
   defaultTocItems?: TocItem[];
   /** Optional footer slot for TOC (e.g. Edit button) – full width at bottom */
   tocFooterSlot?: React.ReactNode;
-  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
+  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Instrument Sans */
   headingFont?: HeadingFontFamily;
   /** When true, H3 uses 32px (About Nokturo); otherwise 20px */
   h3Large?: boolean;
@@ -103,7 +103,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
 
   if (showToc && effectiveTocItems.length > 0) {
     return (
-      <div className={`flex gap-6 ${className}`}>
+      <div className={`flex gap-[80px] ${className}`}>
         <div className="min-w-0 flex-1 max-w-[860px]">
           {headerImageWrapper}
           {content}
@@ -136,7 +136,7 @@ function BlockView({ block, prevBlock, nextBlock, headingFont = 'headline', h3La
         <span
           id={block.id}
           data-block-id={block.id}
-          className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-[80px] ${tagMb}` : 'sr-only mt-[80px]'}`}
+          className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-0 ${tagMb}` : 'sr-only mt-0'}`}
           aria-hidden={block.visible === false}
         >
           — {block.text}

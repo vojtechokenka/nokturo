@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -16,6 +15,7 @@ import { SupplierDetailSlideOver } from '../../components/SupplierDetailSlideOve
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { FilterSelect } from '../../components/FilterSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 const FETCH_TIMEOUT_MS = 5000;
 
@@ -320,7 +320,7 @@ export default function SuppliersPage() {
               type="button"
               onClick={() => openDetail(supplier)}
               className={`col-span-4 grid grid-cols-subgrid gap-x-3 group py-2.5 pl-4 text-sm text-nokturo-900 dark:text-nokturo-100 text-left cursor-pointer hover:!bg-nokturo-100/60 dark:hover:!bg-nokturo-800/60 transition-colors rounded-none ${
-                idx % 2 === 1 ? 'bg-black/10 dark:bg-white/10' : ''
+                idx % 2 === 1 ? 'bg-black/5 dark:bg-white/5' : ''
               }`}
             >
               <span className="flex items-center gap-2 min-w-0">
@@ -342,7 +342,7 @@ export default function SuppliersPage() {
                     href={supplier.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 hover:text-nokturo-900 dark:text-white dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white opacity-60 hover:opacity-100 hover:text-nokturo-900 dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
                     style={{ borderRadius: '6px' }}
                   >
                     <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
@@ -394,30 +394,10 @@ export default function SuppliersPage() {
 
       {/* ── Delete confirmation dialog ────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 p-6 max-w-sm w-full mx-4 rounded-xl shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
-              {t('common.confirm')}
-            </h3>
-            <p className="text-nokturo-400 text-sm mb-4">
-              {t('suppliers.deleteConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-400 hover:text-white transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-white text-nokturo-900 rounded-lg hover:bg-nokturo-100 transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
 
       {/* ── Slide-over (add / edit) ───────────────────────── */}

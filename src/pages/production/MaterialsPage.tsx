@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -11,12 +10,13 @@ import { useExchangeRates, convertToCzk, CURRENCIES } from '../../lib/currency';
 import {
   getUniqueFibersFromMaterials,
   materialContainsAnyFiber,
-  materialHasAnyTargetProduct,
-  getUniqueTargetProductOptions,
+  getUniqueTargetCategoriesFromMaterials,
+  materialHasAnyTargetCategory,
 } from '../../lib/compositionUtils';
 import { MaterialDetailSlideOver } from '../../components/MaterialDetailSlideOver';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
 
 export default function MaterialsPage() {
@@ -31,11 +31,11 @@ export default function MaterialsPage() {
 
   // Composition filter (checkboxes – fibers from materials)
   const [compositionFilters, setCompositionFilters] = useState<string[]>([]);
-  // Target product filter
-  const [targetProductFilters, setTargetProductFilters] = useState<string[]>([]);
+  // Target category filter (coats, jackets, trousers – not specific products)
+  const [targetCategoryFilters, setTargetCategoryFilters] = useState<string[]>([]);
 
-  // Products (for target product filter labels)
-  const [products, setProducts] = useState<{ id: string; name: string }[]>([]);
+  // Products (id, category) for target category filter
+  const [products, setProducts] = useState<{ id: string; category: string | null }[]>([]);
 
   // Slide-over (add/edit)
   const [slideOverOpen, setSlideOverOpen] = useState(false);
@@ -75,12 +75,16 @@ export default function MaterialsPage() {
   }, []);
 
   const uniqueFibers = getUniqueFibersFromMaterials(materials);
-  const productIdToName = new Map(products.map((p) => [p.id, p.name]));
-  const uniqueTargetProducts = getUniqueTargetProductOptions(materials, productIdToName);
+  const productIdToCategory = new Map(products.map((p) => [p.id, p.category]).filter(([, c]) => c) as [string, string][]);
+  const uniqueTargetCategories = getUniqueTargetCategoriesFromMaterials(materials, productIdToCategory);
+  const targetCategoryOptions = uniqueTargetCategories.map((cat) => ({
+    id: cat,
+    name: t(`products.categories.${cat}`) !== `products.categories.${cat}` ? t(`products.categories.${cat}`) : cat,
+  }));
   const filteredMaterials = materials.filter((m) => {
     const matchComposition = compositionFilters.length === 0 || materialContainsAnyFiber(m, compositionFilters);
-    const matchTargetProduct = targetProductFilters.length === 0 || materialHasAnyTargetProduct(m, targetProductFilters);
-    return matchComposition && matchTargetProduct;
+    const matchCategory = targetCategoryFilters.length === 0 || materialHasAnyTargetCategory(m, targetCategoryFilters, productIdToCategory);
+    return matchComposition && matchCategory;
   });
 
   // ── Overview stats (filtered materials) ──────────────────────
@@ -110,9 +114,8 @@ export default function MaterialsPage() {
   useEffect(() => {
     supabase
       .from('products')
-      .select('id, name')
-      .order('name')
-      .then(({ data }) => setProducts((data as { id: string; name: string }[]) || []));
+      .select('id, category')
+      .then(({ data }) => setProducts((data as { id: string; category: string | null }[]) || []));
   }, []);
 
   // ── Handlers ───────────────────────────────────────────────
@@ -198,19 +201,19 @@ export default function MaterialsPage() {
               onChange={setCompositionFilters}
               titleKey="materials.filterTitle"
               emptyLabelKey="materials.filterEmpty"
-              targetProducts={uniqueTargetProducts}
-              selectedTargetProductIds={targetProductFilters}
-              onTargetProductsChange={setTargetProductFilters}
+              targetProducts={targetCategoryOptions}
+              selectedTargetProductIds={targetCategoryFilters}
+              onTargetProductsChange={setTargetCategoryFilters}
               targetProductTitleKey="materials.filterTargetProduct"
               targetProductEmptyLabelKey="materials.filterTargetProductEmpty"
-              activeCount={compositionFilters.length + targetProductFilters.length}
+              activeCount={compositionFilters.length + targetCategoryFilters.length}
             />
-            {(compositionFilters.length > 0 || targetProductFilters.length > 0) && (
+            {(compositionFilters.length > 0 || targetCategoryFilters.length > 0) && (
               <button
                 type="button"
                 onClick={() => {
                   setCompositionFilters([]);
-                  setTargetProductFilters([]);
+                  setTargetCategoryFilters([]);
                 }}
                 className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
               >
@@ -275,12 +278,12 @@ export default function MaterialsPage() {
       ) : filteredMaterials.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-nokturo-600 font-medium">
-            {compositionFilters.length > 0 || targetProductFilters.length > 0
+            {compositionFilters.length > 0 || targetCategoryFilters.length > 0
               ? t('materials.noMatch')
               : t('materials.noMaterials')}
           </p>
           <p className="text-nokturo-500 text-sm mt-1">
-            {compositionFilters.length > 0 ? '' : t('materials.addFirst')}
+            {compositionFilters.length > 0 || targetCategoryFilters.length > 0 ? '' : t('materials.addFirst')}
           </p>
         </div>
       ) : (
@@ -328,30 +331,30 @@ export default function MaterialsPage() {
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
                     {cardMenuOpen === mat.id && (
-                      <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 min-w-[130px] z-20" onClick={(e) => e.stopPropagation()}>
+                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"
                           onClick={() => { openEdit(mat); setCardMenuOpen(null); }}
-                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
-                          <MaterialIcon name="edit" size={12} className="shrink-0" />
+                          <MaterialIcon name="edit" size={14} className="shrink-0" />
                           {t('common.edit')}
                         </button>
                         <button
                           type="button"
                           onClick={() => { handleDuplicate(mat); setCardMenuOpen(null); }}
-                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
-                          <DuplicateIcon className="w-3 h-3" />
+                          <DuplicateIcon size={14} className="shrink-0" />
                           {t('materials.duplicate')}
                         </button>
                         {canDelete && (
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(mat.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90 flex items-center gap-2"
+                            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                           >
-                            <DeleteIcon className="w-3 h-3" />
+                            <DeleteIcon size={14} className="shrink-0" />
                             {t('common.delete')}
                           </button>
                         )}
@@ -381,30 +384,10 @@ export default function MaterialsPage() {
 
       {/* ── Delete confirmation dialog ────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
-              {t('common.confirm')}
-            </h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
-              {t('materials.deleteConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
 
       {/* ── Slide-over (add / edit) ───────────────────────── */}

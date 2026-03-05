@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
@@ -11,6 +10,7 @@ import {
 } from '../../components/LabelSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
@@ -246,7 +246,7 @@ export default function LabelsPage() {
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
                     {cardMenuOpen === lbl.id && (
-                      <div className="absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 rounded-xl shadow-lg py-1 min-w-[120px] z-20 overflow-hidden">
+                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[120px] z-20 overflow-hidden">
                         <button
                           type="button"
                           onClick={() => { openEdit(lbl); setCardMenuOpen(null); }}
@@ -258,7 +258,7 @@ export default function LabelsPage() {
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(lbl.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
+                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg"
                           >
                             {t('common.delete')}
                           </button>
@@ -304,30 +304,10 @@ export default function LabelsPage() {
       )}
 
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>
-              {t('common.confirm')}
-            </h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
-              {t('labels.deleteConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
 
       <LabelSlideOver

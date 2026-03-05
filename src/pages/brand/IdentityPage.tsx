@@ -141,18 +141,7 @@ export default function IdentityPage() {
     <PageShell
       titleKey="pages.identity.title"
       descriptionKey="pages.identity.description"
-      actionsSlot={canEditBrand && mode === 'view' ? (
-        <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => setMode('edit')}
-            className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm"
-          >
-            <EditIcon size={16} />
-            {t('common.edit')}
-          </button>
-        </div>
-      ) : undefined}
+      actionsSlot={undefined}
     >
       <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
       {loading ? (
@@ -162,13 +151,23 @@ export default function IdentityPage() {
       ) : (
         <>
           {(mode === 'edit' || headerImage) && (
-          <div className="-ml-9 -mt-6 w-[calc(100%+4.5rem)] box-border mb-4">
+          <div className={`relative group ${mode === 'edit' || !headerImage ? 'min-w-0 w-full max-w-[860px] mx-auto mb-4 lg:pr-[288px]' : '-ml-9 -mt-6 w-[calc(100%+4.5rem)] box-border mb-6'}`}>
             <PageHeaderImage
               imageUrl={headerImage}
               onUpload={handleUploadImage}
               onChange={handleHeaderImageChange}
               editMode={mode === 'edit'}
             />
+            {canEditBrand && mode === 'view' && headerImage && (
+              <button
+                type="button"
+                onClick={() => setMode('edit')}
+                className="absolute top-3 right-3 flex items-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800/90 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <EditIcon size={16} />
+                {t('common.edit')}
+              </button>
+            )}
           </div>
           )}
           <div className={mode === 'view' ? 'max-w-[1124px] mx-auto' : 'relative'}>
@@ -178,10 +177,20 @@ export default function IdentityPage() {
               tocTitle={t('pages.identity.title')}
               defaultTocItems={getDefaultTocItems(t)}
               headingFont="body"
+              tocFooterSlot={canEditBrand && !headerImage ? (
+                <button
+                  type="button"
+                  onClick={() => setMode('edit')}
+                  className="w-full flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm"
+                >
+                  <EditIcon size={16} />
+                  {t('common.edit')}
+                </button>
+              ) : undefined}
             />
           ) : (
             <>
-              <div className="min-w-0 lg:pr-[264px] max-w-[860px] mx-auto">
+              <div className="min-w-0 lg:pr-[288px] max-w-[860px] mx-auto">
                 <RichTextBlockEditor
                   value={blocks}
                   onChange={setBlocks}

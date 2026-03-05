@@ -104,6 +104,7 @@ export default function MagazineEditorPage() {
         .insert({
           ...payload,
           created_by: getUserIdForDb(),
+          hidden: true,
         })
         .select('id')
         .single();

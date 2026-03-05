@@ -218,8 +218,9 @@ export default function SamplingDetailPage() {
       titleKey="pages.readyForSampling.title"
       descriptionKey="pages.readyForSampling.description"
     >
-      <div className="max-w-[860px] mx-auto relative">
-        <div className="min-w-0 flex-1 pr-[252px]">
+      <div className={tocItems.length > 0 ? 'max-w-[1124px] mx-auto' : 'max-w-[860px] mx-auto'}>
+        <div className={tocItems.length > 0 ? 'flex gap-[80px]' : ''}>
+          <div className={`min-w-0 flex-1 ${tocItems.length > 0 ? 'max-w-[860px]' : ''}`}>
           {/* Back */}
           <div className="flex items-center justify-between mb-8">
             <button
@@ -518,13 +519,14 @@ export default function SamplingDetailPage() {
               {moodboardGallerySection}
             </>
           );
+          const hasCommentableContent = descriptionBlocks.length > 0 || !!product.short_description;
           const sectionTocItems: TocItem[] = [
+            ...(hasCommentableContent ? [{ id: 'section-description', text: t('common.description'), level: 1 as const }] : []),
             ...(materials.length > 0 ? [{ id: 'section-materials', text: t('products.materials.title'), level: 1 as const }] : []),
             ...(labels.length > 0 ? [{ id: 'section-labels', text: t('products.labels.title'), level: 1 as const }] : []),
             ...(designGallery.length > 0 ? [{ id: 'section-design-gallery', text: t('products.designGallery'), level: 1 as const }] : []),
             ...(moodboardGallery.length > 0 ? [{ id: 'section-moodboard-gallery', text: t('products.moodboardGallery'), level: 1 as const }] : []),
           ];
-          const hasCommentableContent = descriptionBlocks.length > 0 || !!product.short_description;
           return hasCommentableContent ? (
             <section id="section-description" className="mb-12 scroll-mt-6">
               <CommentableRichTextViewer
@@ -723,10 +725,11 @@ export default function SamplingDetailPage() {
           )}
         </div>
 
-        {/* TOC – pinned to top, aligned with header */}
+        {/* TOC – sticky box beside content, same layout as Product page */}
         {tocItems.length > 0 && (
-          <TableOfContents items={tocItems} title={t('pages.readyForSampling.title')} />
+          <TableOfContents items={tocItems} title={t('pages.readyForSampling.title')} sticky />
         )}
+        </div>
       </div>
 
       <MaterialDetailSlideOver

@@ -394,7 +394,7 @@ function FormattingBar({
       <button
         type="button"
         onClick={onBold}
-        className={`p-1.5 rounded hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isBold ? 'bg-nokturo-200 dark:bg-nokturo-600' : ''}`}
+        className={`h-6 w-6 rounded-[16px] flex items-center justify-center hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isBold ? 'bg-nokturo-200 dark:bg-nokturo-600' : 'opacity-80 hover:opacity-100'}`}
         title={t('richText.bold')}
       >
         <MaterialIcon name="format_bold" size={14} className="shrink-0" />
@@ -402,7 +402,7 @@ function FormattingBar({
       <button
         type="button"
         onClick={onItalic}
-        className={`p-1.5 rounded hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isItalic ? 'bg-nokturo-200 dark:bg-nokturo-600' : ''}`}
+        className={`h-6 w-6 rounded-[16px] flex items-center justify-center hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isItalic ? 'bg-nokturo-200 dark:bg-nokturo-600' : 'opacity-80 hover:opacity-100'}`}
         title={t('richText.italic')}
       >
         <MaterialIcon name="format_italic" size={14} className="shrink-0" />
@@ -410,7 +410,7 @@ function FormattingBar({
       <button
         type="button"
         onClick={onLink}
-        className="p-1.5 rounded hover:bg-nokturo-200 dark:hover:bg-nokturo-600"
+        className="h-6 w-6 rounded-[16px] flex items-center justify-center opacity-80 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600"
         title={t('richText.link')}
       >
         <MaterialIcon name="link" size={14} className="shrink-0" />
@@ -523,7 +523,7 @@ function AddBlockMenu({
   ];
 
   return (
-    <div className="mt-1 w-52 p-1 rounded-[4px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg">
+    <div className="mt-1 w-52 p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg">
       {options.map((opt) => (
         <button
           key={opt.block.type}
@@ -575,13 +575,13 @@ function AspectRatioSelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="h-6 min-w-[4rem] pl-2 pr-6 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 focus:ring-inset"
+        className="h-6 min-w-[4rem] pl-2 pr-6 text-xs rounded-[16px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 focus:ring-inset"
       >
         <span>{selected ? t(selected.labelKey) : value}</span>
         <MaterialIcon name="expand_more" size={12} className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 pointer-events-none transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
       {open && (
-        <div className="absolute left-0 top-full mt-0.5 z-50 min-w-[4rem] p-1 rounded-[4px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden">
+        <div className="absolute left-0 top-full mt-0.5 z-50 min-w-[4rem] p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden">
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -684,22 +684,22 @@ function BlockActionsDropdown({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="p-0.5 rounded text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 opacity-20 hover:opacity-100 transition-opacity"
-        title={t('common.delete')}
+        className="h-6 w-6 rounded-[16px] flex items-center justify-center text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 opacity-50 group-hover:opacity-100 transition-opacity"
+        title={t('richText.blockActions')}
       >
-        <MaterialIcon name="more_vert" size={14} className="shrink-0" />
+        <MaterialIcon name="more_vert" size={16} className="shrink-0" />
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-0.5 z-50 p-1 rounded-[4px] bg-white dark:bg-nokturo-800 shadow-lg min-w-[120px]">
+        <div className="dropdown-menu absolute right-0 top-full mt-1 z-50 shadow-lg min-w-[120px]">
           <button
             type="button"
             onClick={() => {
               onDuplicate(block, index + 1);
               setOpen(false);
             }}
-            className="w-full text-left px-1.5 py-1 text-xs text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
           >
-            <DuplicateIcon size={12} />
+            <DuplicateIcon size={14} className="shrink-0" />
             {t('common.duplicate')}
           </button>
           <button
@@ -708,9 +708,9 @@ function BlockActionsDropdown({
               setOpen(false);
               setShowDeleteConfirm(true);
             }}
-            className="w-full text-left px-1.5 py-1 text-xs text-red dark:text-red-fg hover:bg-red/10 dark:hover:bg-red/20 rounded flex items-center gap-2"
+            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
           >
-            <DeleteIcon size={12} />
+            <DeleteIcon size={14} className="shrink-0" />
             {t('common.delete')}
           </button>
         </div>
@@ -741,7 +741,7 @@ function BlockActionsDropdown({
                   onRemove(block.id);
                   setShowDeleteConfirm(false);
                 }}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>
@@ -811,10 +811,10 @@ function BlockRenderer({
                       onUpdate(block.id, { level: lvl });
                     }
                   }}
-                  className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
+                  className={`h-6 px-2 rounded-[16px] text-[12px] font-medium flex items-center ${
                     block.level === lvl
                       ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                   }`}
                 >
                   H{lvl}
@@ -870,10 +870,10 @@ function BlockRenderer({
                     key={sz}
                     type="button"
                     onClick={() => onUpdate(block.id, { size: sz })}
-                    className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
+                    className={`h-6 px-2 rounded-[16px] text-xs font-medium flex items-center ${
                       block.size === sz
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                     }`}
                   >
                     {sz === 'small' ? 'S' : sz === 'normal' ? 'M' : 'L'}
@@ -886,10 +886,10 @@ function BlockRenderer({
                     key={al}
                     type="button"
                     onClick={() => onUpdate(block.id, { align: al })}
-                    className={`p-0.5 rounded-[4px] ${
+                    className={`h-6 px-1.5 rounded-[16px] flex items-center justify-center ${
                       (block.align ?? 'left') === al
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                     }`}
                     title={t(`richText.align${al === 'left' ? 'Left' : al === 'center' ? 'Center' : 'Right'}`)}
                   >
@@ -936,7 +936,7 @@ function BlockRenderer({
                   className={`px-2 py-1 rounded text-sm ${
                     block.style === st
                       ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                   }`}
                 >
                   {st === 'bullet' ? t('richText.bulletList') : t('richText.numberedList')}
@@ -1011,7 +1011,7 @@ function BlockRenderer({
                       className={`px-2 py-1 rounded text-sm ${
                         (block.fit ?? 'fill') === f
                           ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                          : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                          : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                       }`}
                     >
                       {t(`richText.image${f === 'fill' ? 'Fill' : 'Hug'}`)}
@@ -1044,7 +1044,7 @@ function BlockRenderer({
                   <button
                     type="button"
                     onClick={() => onUpdate(block.id, { url: '' })}
-                    className="px-3 py-1.5 bg-red text-red-fg text-sm hover:bg-red/90"
+                    className="px-3 py-1.5 text-nokturo-700 dark:text-nokturo-200 text-sm hover:bg-red hover:text-red-fg"
                   >
                     {t('common.delete')}
                   </button>
@@ -1099,10 +1099,10 @@ function BlockRenderer({
                     key={c}
                     type="button"
                     onClick={() => onUpdate(block.id, { columns: c })}
-                    className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
+                    className={`h-6 px-2 rounded-[16px] text-xs font-medium flex items-center ${
                       block.columns === c
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                     }`}
                   >
                     {c}
@@ -1186,10 +1186,10 @@ function BlockRenderer({
                     key={c}
                     type="button"
                     onClick={() => onUpdate(block.id, { columns: c })}
-                    className={`px-2 py-0.5 rounded-[4px] text-xs font-medium ${
+                    className={`h-6 px-2 rounded-[16px] text-xs font-medium flex items-center ${
                       block.columns === c
                         ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                     }`}
                   >
                     {c}
@@ -1204,6 +1204,7 @@ function BlockRenderer({
               />
               <span className="text-xs text-nokturo-500 dark:text-nokturo-400 leading-6">{t('richText.gap')}:</span>
               <div className="flex items-center gap-0.5">
+                <div className="relative w-10 h-6 shrink-0 overflow-hidden" style={{ borderRadius: 6 }}>
                 <input
                   type="number"
                   min={0}
@@ -1214,12 +1215,22 @@ function BlockRenderer({
                     if (block.gapLocked ?? true) update.gapCol = v;
                     onUpdate(block.id, update);
                   }}
-                  className="w-10 h-6 px-1.5 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100"
+                  disabled={block.gapLocked ?? true}
+                  className="absolute inset-0 w-full h-full px-2 text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 disabled:opacity-100"
+                  style={{ borderRadius: 6 }}
                 />
+                {(block.gapLocked ?? true) && (
+                  <div
+                    className="absolute inset-0 cursor-not-allowed pointer-events-auto bg-white/60 dark:bg-nokturo-800/60"
+                    aria-hidden
+                    style={{ borderRadius: 6 }}
+                  />
+                )}
+                </div>
                 <button
                   type="button"
                   onClick={() => onUpdate(block.id, { gapLocked: !(block.gapLocked ?? true) })}
-                  className="w-6 h-6 flex items-center justify-center shrink-0 rounded-[4px] text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300"
+                  className="w-6 h-6 flex items-center justify-center shrink-0 rounded-[16px] text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300"
                   title={t((block.gapLocked ?? true) ? 'richText.gapLocked' : 'richText.gapUnlocked')}
                 >
                   {(block.gapLocked ?? true) ? (
@@ -1228,7 +1239,7 @@ function BlockRenderer({
                     <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M13.413 16.413Q14 15.825 14 15t-.587-1.412T12 13t-1.412.588T10 15t.588 1.413T12 17t1.413-.587M4 22V8h9V6q0-2.075 1.463-3.537T18 1t3.538 1.463T23 6h-2q0-1.25-.875-2.125T18 3t-2.125.875T15 6v2h5v14z"/></svg>
                   )}
                 </button>
-                <div className="relative w-10 h-6 shrink-0">
+                <div className="relative w-10 h-6 shrink-0 overflow-hidden" style={{ borderRadius: 6 }}>
                 <input
                   type="number"
                   min={0}
@@ -1240,12 +1251,14 @@ function BlockRenderer({
                     onUpdate(block.id, update);
                   }}
                   disabled={block.gapLocked ?? true}
-                  className="absolute inset-0 w-full h-full px-1.5 text-xs rounded-[4px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 disabled:opacity-100"
+                  className="absolute inset-0 w-full h-full px-2 text-xs bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 disabled:opacity-100"
+                  style={{ borderRadius: 6 }}
                 />
                 {(block.gapLocked ?? true) && (
                   <div
-                    className="absolute inset-0 rounded-[4px] cursor-not-allowed pointer-events-auto bg-white/60 dark:bg-nokturo-800/60"
+                    className="absolute inset-0 cursor-not-allowed pointer-events-auto bg-white/60 dark:bg-nokturo-800/60"
                     aria-hidden
+                    style={{ borderRadius: 6 }}
                   />
                 )}
                 </div>
@@ -1407,10 +1420,10 @@ function BlockRenderer({
               <button
                 type="button"
                 onClick={headerRowCount === 0 ? addHeaderRow : removeHeaderRow}
-                className={`px-2 py-0.5 rounded-[4px] text-xs ${
+                className={`h-6 px-2 rounded-[16px] text-xs flex items-center ${
                   headerRowCount > 0
                     ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                 }`}
               >
                 {t('richText.addHeaderRow')}
@@ -1418,10 +1431,10 @@ function BlockRenderer({
               <button
                 type="button"
                 onClick={headerColumnCount === 0 ? addHeaderColumn : removeHeaderColumn}
-                className={`px-2 py-0.5 rounded-[4px] text-xs ${
+                className={`h-6 px-2 rounded-[16px] text-xs flex items-center ${
                   headerColumnCount > 0
                     ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-400 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
+                    : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                 }`}
               >
                 {t('richText.addHeaderColumn')}
@@ -1688,7 +1701,7 @@ function BlockRenderer({
         {block.type === 'tag' && (
           <div className="mb-4">
             <div className="flex items-center gap-2 mb-2">
-              <label className="flex items-center gap-1.5 text-xs text-nokturo-600 dark:text-nokturo-400 shrink-0">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-nokturo-600 dark:text-nokturo-400 shrink-0">
                 <input
                   type="checkbox"
                   checked={block.visible !== false}
@@ -1704,7 +1717,7 @@ function BlockRenderer({
               value={block.text}
               onChange={(e) => onUpdate(block.id, { text: e.target.value })}
               placeholder={t('richText.tagPlaceholder')}
-              className="w-full text-xs uppercase tracking-[0.2em] font-normal text-nokturo-600 dark:text-nokturo-400 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500"
+              className="w-full text-sm font-normal text-nokturo-600 dark:text-nokturo-400 bg-transparent border-0 focus:ring-0 focus:outline-none placeholder:text-nokturo-400 dark:placeholder:text-nokturo-500"
             />
           </div>
         )}
@@ -1725,7 +1738,7 @@ export interface RichTextBlockEditorProps {
   showHeadingSizes?: boolean;
   /** Optional: show paragraph size selector */
   showParagraphSizes?: boolean;
-  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Inter */
+  /** Which font family to use for headings: 'headline' = IvyPresto, 'body' = Instrument Sans */
   headingFont?: HeadingFontFamily;
   /** When true, H3 uses 32px (About Nokturo); otherwise 20px */
   h3Large?: boolean;

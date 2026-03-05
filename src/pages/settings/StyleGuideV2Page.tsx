@@ -41,6 +41,10 @@ export default function StyleGuideV2Page() {
               <MaterialIcon name="text_fields" size={16} className="shrink-0" />
               Mimo Rich Text
             </a>
+            <a href="#labels" className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-800 rounded-lg transition-colors">
+              <MaterialIcon name="label" size={16} className="shrink-0" />
+              Labels
+            </a>
           </nav>
         </aside>
 
@@ -88,17 +92,17 @@ export default function StyleGuideV2Page() {
                 <CodeBlock classes="font-headline text-rta-h3" />
               </div>
               <div>
-                <p className="font-body text-rta-p-s text-nokturo-900/70 dark:text-white/70">Paragraf S — Inter</p>
+                <p className="font-body text-rta-p-s text-nokturo-900/70 dark:text-white/70">Paragraf S — Instrument Sans</p>
                 <p className="text-xs text-nokturo-500 mt-1">14px, 70% opacity</p>
                 <CodeBlock classes="font-body text-rta-p-s text-nokturo-900/70 dark:text-white/70" />
               </div>
               <div>
-                <p className="font-body text-rta-p-m text-nokturo-900/80 dark:text-white/80">Paragraf M — Inter</p>
+                <p className="font-body text-rta-p-m text-nokturo-900/80 dark:text-white/80">Paragraf M — Instrument Sans</p>
                 <p className="text-xs text-nokturo-500 mt-1">16px, 80% opacity</p>
                 <CodeBlock classes="font-body text-rta-p-m text-nokturo-900/80 dark:text-white/80" />
               </div>
               <div>
-                <p className="font-body text-rta-p-l text-nokturo-900/90 dark:text-white/90">Paragraf L — Inter</p>
+                <p className="font-body text-rta-p-l text-nokturo-900/90 dark:text-white/90">Paragraf L — Instrument Sans</p>
                 <p className="text-xs text-nokturo-500 mt-1">20px, 90% opacity</p>
                 <CodeBlock classes="font-body text-rta-p-l text-nokturo-900/90 dark:text-white/90" />
               </div>
@@ -118,40 +122,35 @@ export default function StyleGuideV2Page() {
           </Section>
 
           {/* Rich Text Standard */}
-          <Section id="richtext-standard" title="Rich Text Standard (Inter)">
+          <Section id="richtext-standard" title="Rich Text Standard (Instrument Sans)">
             <p className="text-sm text-nokturo-600 dark:text-nokturo-400 mb-4">
-              H4–H6 se v Rich Textu pod H3 nezobrazují, ale jsou v guidu pro referenci.
+              H4–H5 se v Rich Textu pod H3 nezobrazují, ale jsou v guidu pro referenci.
             </p>
             <div className="space-y-6">
               <div>
-                <p className="font-body text-rta-std-h1 text-nokturo-900 dark:text-nokturo-100">H1</p>
-                <p className="text-xs text-nokturo-500 mt-1">52px</p>
+                <p className="font-body text-rta-std-h1 text-nokturo-900 dark:text-nokturo-100">Nová kolekce jaro 2025</p>
+                <p className="text-xs text-nokturo-500 mt-1">44px, CS -4%</p>
                 <CodeBlock classes="font-body text-rta-std-h1" />
               </div>
               <div>
-                <p className="font-body text-rta-std-h2 text-nokturo-900 dark:text-nokturo-100">H2</p>
-                <p className="text-xs text-nokturo-500 mt-1">44px</p>
+                <p className="font-body text-rta-std-h2 text-nokturo-900 dark:text-nokturo-100">Paleta barev a materiálů</p>
+                <p className="text-xs text-nokturo-500 mt-1">36px, CS -3%</p>
                 <CodeBlock classes="font-body text-rta-std-h2" />
               </div>
               <div>
-                <p className="font-body text-rta-std-h3 text-nokturo-900 dark:text-nokturo-100">H3</p>
-                <p className="text-xs text-nokturo-500 mt-1">38px</p>
+                <p className="font-body text-rta-std-h3 text-nokturo-900 dark:text-nokturo-100">Technické specifikace</p>
+                <p className="text-xs text-nokturo-500 mt-1">24px, CS -2%</p>
                 <CodeBlock classes="font-body text-rta-std-h3" />
               </div>
               <div>
-                <p className="font-body text-rta-std-h4 text-nokturo-900 dark:text-nokturo-100">H4</p>
-                <p className="text-xs text-nokturo-500 mt-1">32px</p>
+                <p className="font-body text-rta-std-h4 text-nokturo-900 dark:text-nokturo-100">Dodavatelé a výroba</p>
+                <p className="text-xs text-nokturo-500 mt-1">24px, CS -1%</p>
                 <CodeBlock classes="font-body text-rta-std-h4" />
               </div>
               <div>
-                <p className="font-body text-rta-std-h5 text-nokturo-900 dark:text-nokturo-100">H5</p>
-                <p className="text-xs text-nokturo-500 mt-1">24px</p>
+                <p className="font-body text-rta-std-h5 text-nokturo-900 dark:text-nokturo-100">Kvalita a testování</p>
+                <p className="text-xs text-nokturo-500 mt-1">20px, CS -1%</p>
                 <CodeBlock classes="font-body text-rta-std-h5" />
-              </div>
-              <div>
-                <p className="font-body text-rta-std-h6 text-nokturo-900 dark:text-nokturo-100">H6</p>
-                <p className="text-xs text-nokturo-500 mt-1">20px</p>
-                <CodeBlock classes="font-body text-rta-std-h6" />
               </div>
               <div>
                 <p className="text-sm text-nokturo-500 mb-2">Paragrafy jsou sharované (rta-p-s, rta-p-m, rta-p-l)</p>
@@ -186,6 +185,33 @@ export default function StyleGuideV2Page() {
                 </button>
                 <CodeBlock classes="text-button-text font-body font-medium px-4 py-2 bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900" />
               </div>
+            </div>
+          </Section>
+
+          {/* Labels — category/tag badges (Suppliers, Components, etc.) */}
+          <Section id="labels" title="Labels">
+            <p className="text-sm text-nokturo-600 dark:text-nokturo-400 mb-4">
+              Barevné labely pro kategorie, tagy — používají NotionSelect barvy.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-nokturo-500 text-[rgb(230,230,230)]">Gray</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-orange text-orange-fg">Orange</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-blue-600 text-white">Blue</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-green text-green-fg">Green</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-violet-600 text-white">Purple</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-pink-600 text-white">Pink</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-red text-red-fg">Red</span>
+              <span className="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-[6px] bg-orange text-nokturo-900">Yellow</span>
+            </div>
+            <div className="mt-4 space-y-2">
+              <p className="text-xs text-nokturo-500">gray: bg-nokturo-500 text-white</p>
+              <p className="text-xs text-nokturo-500">orange: bg-orange text-orange-fg</p>
+              <p className="text-xs text-nokturo-500">blue: bg-blue-600 text-white</p>
+              <p className="text-xs text-nokturo-500">green: bg-green text-green-fg</p>
+              <p className="text-xs text-nokturo-500">purple: bg-violet-600 text-white</p>
+              <p className="text-xs text-nokturo-500">pink: bg-pink-600 text-white</p>
+              <p className="text-xs text-nokturo-500">red: bg-red text-red-fg</p>
+              <p className="text-xs text-nokturo-500">yellow: bg-orange text-nokturo-900</p>
             </div>
           </Section>
         </div>

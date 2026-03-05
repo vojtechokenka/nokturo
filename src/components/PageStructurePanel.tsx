@@ -191,11 +191,11 @@ export function PageStructurePanel({ blocks, onChange, onSelectBlock, footerSlot
 
   const asideCls = inline
     ? `w-[240px] shrink-0 flex flex-col min-h-0 ${isDragging ? 'cursor-grabbing' : ''} ${className}`
-    : `fixed left-auto right-6 top-[60px] bottom-6 w-[240px] flex flex-col shrink-0 ${isDragging ? 'cursor-grabbing' : ''} ${className}`;
+    : `fixed left-auto right-6 top-[60px] bottom-6 w-[240px] flex flex-col shrink-0 rounded-b-[8px] bg-white/10 dark:bg-nokturo-900/60 overflow-hidden ${isDragging ? 'cursor-grabbing' : ''} ${className}`;
 
   return (
     <aside className={asideCls}>
-      <nav className={`space-y-0.5 flex-1 min-h-0 overflow-y-auto font-body ${footerSlot && !inline ? 'pb-[88px]' : ''} ${isDragging ? 'cursor-grabbing' : ''}`} aria-label={t('richText.pageStructure')}>
+      <nav className={`space-y-0.5 flex-1 min-h-0 overflow-y-auto font-body p-2 ${footerSlot && !inline ? 'pb-[88px]' : ''} ${isDragging ? 'cursor-grabbing' : ''}`} aria-label={t('richText.pageStructure')}>
         {blocks.length === 0 ? (
           <div className="text-xs text-nokturo-400 dark:text-nokturo-500 px-2 py-4 italic">
             {t('richText.noContent')}
@@ -251,7 +251,7 @@ export function PageStructurePanel({ blocks, onChange, onSelectBlock, footerSlot
         )}
       </nav>
       {footerSlot && (
-        <div className={inline ? 'shrink-0 p-4 bg-nokturo-50 dark:bg-nokturo-900' : 'fixed right-6 bottom-6 w-[240px] p-4 bg-nokturo-50 dark:bg-nokturo-900'}>
+        <div className={inline ? 'shrink-0 p-4 bg-nokturo-0 dark:bg-nokturo-800' : 'fixed right-6 bottom-6 w-[240px] p-4 bg-nokturo-0 dark:bg-nokturo-800'}>
           {footerSlot}
         </div>
       )}

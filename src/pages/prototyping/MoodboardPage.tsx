@@ -15,10 +15,12 @@ import {
   type NotionSelectOption,
 } from '../../components/NotionSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
 import { useMentionSuggestions, MentionDropdown } from '../../components/MentionSuggestions';
 import type { MentionProfile } from '../../components/MentionSuggestions';
 import { INPUT_CLASS, MODAL_HEADING_CLASS, TEXTAREA_CLASS } from '../../lib/inputStyles';
+import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { distributeToColumns } from '../../utils/masonryColumns';
 
 const inputClass = INPUT_CLASS;
@@ -379,6 +381,7 @@ export default function MoodboardPage() {
       setUploadError('');
 
       setCategories(newOptions);
+      setCategoryFilter((prev) => prev.filter((fc) => newOptions.some((n) => n.name === fc)));
 
       try {
         for (const opt of newOptions) {
@@ -841,32 +844,57 @@ export default function MoodboardPage() {
       descriptionKey="pages.moodboard.description"
       bare
       actionsSlot={
-        <>
-          <button
-            onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
-            className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
-            title={t('moodboard.layoutCycle')}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 opacity-50"><path fill="currentColor" d="M3 21v-6h8v6zm10 0V11h8v10zM3 13V3h8v10zm10-4V3h8v6z"/></svg>
-          </button>
-          <NotionSelect
-            value={categoryFilter}
-            onChange={(v) => setCategoryFilter(Array.isArray(v) ? v : v ? [v] : [])}
-            options={categories}
-            onOptionsChange={handleCategoriesChange}
-            placeholder={t('moodboard.allCategories')}
-            optionsI18nKey="moodboard.categories"
-            multiple
-            filterStyle
-          />
-          <button
-            onClick={() => setShowUpload(true)}
-            className="flex items-center justify-center gap-2 h-9 shrink-0 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+        <div className="flex flex-col sm:flex-row gap-2 items-center justify-between w-full">
+          <div className="flex flex-wrap items-center gap-2 justify-start max-w-[640px] [flex-wrap:wrap_balance]">
+            {categories.length > 0 ? (
+              <>
+                <button
+                  onClick={() => setCategoryFilter([])}
+                  className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
+                    categoryFilter.length === 0
+                      ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                      : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+                  }`}
+                >
+                  {t('moodboard.filterAll')}
+                </button>
+                {categories.map((cat) => {
+                  const active = categoryFilter.includes(cat.name);
+                  const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setCategoryFilter((prev) =>
+                        active ? prev.filter((c) => c !== cat.name) : [...prev, cat.name]
+                      )}
+                      className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
+                        active ? '' : 'opacity-40 hover:opacity-70'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </>
+            ) : null}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
+              className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+              title={t('moodboard.layoutCycle')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 opacity-50"><path fill="currentColor" d="M3 21v-6h8v6zm10 0V11h8v10zM3 13V3h8v10zm10-4V3h8v6z"/></svg>
+            </button>
+            <button
+              onClick={() => setShowUpload(true)}
+              className="flex items-center justify-center gap-2 h-9 shrink-0 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
             <MaterialIcon name="add" size={16} className="shrink-0" />
-            {t('moodboard.addItem')}
-          </button>
-        </>
+              {t('moodboard.addItem')}
+            </button>
+          </div>
+        </div>
       }
     >
       {/* ── Content ─────────────────────────────────────────── */}
@@ -883,8 +911,12 @@ export default function MoodboardPage() {
       ) : items.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-4 sm:px-6">
           <MaterialIcon name="image" size={48} className="text-nokturo-600 mb-4 shrink-0" />
-          <p className="text-nokturo-600 font-medium">{t('moodboard.noItems')}</p>
-          <p className="text-nokturo-500 text-sm mt-1">{t('moodboard.addFirst')}</p>
+          <p className="text-nokturo-600 font-medium">
+            {categoryFilter.length > 0 ? t('moodboard.noFilterResults') : t('moodboard.noItems')}
+          </p>
+          {categoryFilter.length === 0 && (
+            <p className="text-nokturo-500 text-sm mt-1">{t('moodboard.addFirst')}</p>
+          )}
         </div>
       ) : (
         /* Masonry grid – left-to-right distribution (Pinterest-style) */
@@ -933,18 +965,20 @@ export default function MoodboardPage() {
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
                     {cardMenuOpen === item.id && (
-                      <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 px-1 min-w-[120px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => { openEdit(item); setCardMenuOpen(null); }}
-                          className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
+                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                         >
+                          <MaterialIcon name="edit" size={14} className="shrink-0" />
                           {t('common.edit')}
                         </button>
                         {canDelete && (
                           <button
                             onClick={() => { setDeleteTarget(item.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs bg-red text-red-fg hover:bg-red/90"
+                            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                           >
+                            <DeleteIcon size={14} className="shrink-0" />
                             {t('common.delete')}
                           </button>
                         )}
@@ -1439,15 +1473,16 @@ export default function MoodboardPage() {
                   <MaterialIcon name="more_vert" size={20} className="shrink-0" />
                 </button>
                 {lightboxMenuOpen && (
-                  <div className="dropdown-menu absolute right-0 top-full mt-1 bg-white dark:bg-nokturo-700 shadow-lg py-1 px-1 min-w-[120px] z-20 overflow-hidden">
+                  <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20 overflow-hidden">
                     <button
                       onClick={() => {
                         openEdit(lbItem);
                         setLightboxIndex(null);
                         setLightboxMenuOpen(false);
                       }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600"
+                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                     >
+                      <MaterialIcon name="edit" size={14} className="shrink-0" />
                       {t('common.edit')}
                     </button>
                     {canDelete && (
@@ -1457,8 +1492,9 @@ export default function MoodboardPage() {
                           setLightboxIndex(null);
                           setLightboxMenuOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm bg-red text-red-fg hover:bg-red/90"
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                       >
+                        <DeleteIcon size={14} className="shrink-0" />
                         {t('common.delete')}
                       </button>
                     )}
@@ -1523,28 +1559,10 @@ export default function MoodboardPage() {
 
       {/* ── Delete confirmation ─────────────────────────────── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="bg-nokturo-900 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className={`${MODAL_HEADING_CLASS} mb-2`}>{t('common.confirm')}</h3>
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
-              {t('moodboard.deleteConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteTarget)}
-                className="px-4 py-2 text-sm bg-red text-red-fg hover:bg-red/90 rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => handleDelete(deleteTarget)}
+        />
       )}
 
       {/* ── Toasts ───────────────────────────────────────────── */}

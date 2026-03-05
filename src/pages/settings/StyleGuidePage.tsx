@@ -181,7 +181,7 @@ export default function StyleGuidePage() {
                 </h3>
                 <p className="text-sm text-nokturo-600 dark:text-nokturo-400 mb-3 break-words">
                   <code className="font-mono text-xs bg-nokturo-100 dark:bg-nokturo-800 px-1.5 py-0.5 rounded-[4px]">font-headline</code> = IvyPresto Headline (Adobe Fonts) — pro About Nokturo, Magazine, názvy produktů<br />
-                  <code className="font-mono text-xs bg-nokturo-100 dark:bg-nokturo-800 px-1.5 py-0.5 rounded-[4px]">font-body</code> = Inter — pro Identity, sekce produktů, auth stránky
+                  <code className="font-mono text-xs bg-nokturo-100 dark:bg-nokturo-800 px-1.5 py-0.5 rounded-[4px]">font-body</code> = Instrument Sans — pro Identity, sekce produktů, auth stránky
                 </p>
               </div>
 
@@ -232,10 +232,10 @@ export default function StyleGuidePage() {
                 </div>
               </div>
 
-              {/* Inter (font-body) */}
+              {/* Instrument Sans (font-body) */}
               <div>
                 <h3 className="text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100 mb-3 font-body">
-                  Inter (font-body) — Identity, sekce produktů, auth
+                  Instrument Sans (font-body) — Identity, sekce produktů, auth
                 </h3>
                 <div className="space-y-4">
                   <div>

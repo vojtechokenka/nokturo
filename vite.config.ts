@@ -23,16 +23,32 @@ const packageJson = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.
 const packageVersion = packageJson.version;
 
 // PWA manifest a ikony musí zůstat na rootu (/manifest.json, /icons/) — Vite s base /app/ je přepisuje
+// Cache-busting ?v=VERSION pro ikony (web + PWA)
 function fixPwaPathsPlugin() {
+  const v = `?v=${packageVersion}`;
   return {
     name: 'fix-pwa-paths',
     transformIndexHtml: {
       order: 'post',
       handler(html) {
         return html
-          .replace('href="/app/manifest.json"', 'href="/manifest.json"')
-          .replace('href="/app/icons/icon-192.png"', 'href="/icons/icon-192.png"');
+          .replace('href="/app/manifest.json"', `href="/manifest.json${v}"`)
+          .replace('href="/app/icons/icon-192.png"', `href="/icons/icon-192.png${v}"`)
+          .replace('href="icon_32.png"', `href="icon_32.png${v}"`);
       },
+    },
+    writeBundle(_, bundle) {
+      const manifestPath = path.resolve(__dirname, 'dist', 'manifest.json');
+      if (fs.existsSync(manifestPath)) {
+        const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+        if (manifest.icons) {
+          manifest.icons = manifest.icons.map((i) => ({
+            ...i,
+            src: i.src.includes('?') ? i.src : `${i.src}${v}`,
+          }));
+          fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
+        }
+      }
     },
   };
 }
