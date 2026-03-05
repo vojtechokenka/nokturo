@@ -45,16 +45,16 @@ async function generateIcons() {
   for (const p of pngPaths) fs.unlinkSync(p);
   console.log(`Icon generated: build/icon.ico (${icoSizes.join(', ')}px)`);
 
-  // 4. PWA ikony (192, 512) – tmavé pozadí #0a0a0a, bílý symbol
+  // 4. PWA ikony (192, 512) – černé pozadí, červená tečka (deploy verifikace)
   const iconsDir = path.join(__dirname, '..', 'public', 'icons');
   if (!fs.existsSync(iconsDir)) fs.mkdirSync(iconsDir, { recursive: true });
-  const svgDark = svg
-    .replace(/fill="white"/g, 'fill="#0a0a0a"')
-    .replace(/fill="black"/g, 'fill="white"')
-    .replace(/stroke="black"/g, 'stroke="white"');
+  const pwaSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <rect width="100" height="100" fill="#0a0a0a"/>
+    <circle cx="50" cy="50" r="20" fill="#e53935"/>
+  </svg>`;
   for (const size of [192, 512]) {
     const outPath = path.join(iconsDir, `icon-${size}.png`);
-    await sharp(Buffer.from(svgDark))
+    await sharp(Buffer.from(pwaSvg))
       .resize(size, size)
       .png({ compressionLevel: 6 })
       .toFile(outPath);
