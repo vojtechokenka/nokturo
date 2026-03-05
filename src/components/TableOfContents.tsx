@@ -60,17 +60,18 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
   };
 
   const asideClass = sticky
-    ? `sticky top-6 self-start shrink-0 w-[240px] flex flex-col max-h-[calc(100vh-6rem)] ${alignWithHeader ? 'pt-[108px]' : ''} ${className}`
-    : `fixed left-auto right-6 bottom-6 w-[240px] flex flex-col ${topOffset == null ? 'top-[60px]' : ''} ${alignWithHeader ? 'pt-[108px]' : ''} ${className}`;
+    ? `sticky top-0 self-start shrink-0 w-[240px] flex flex-col max-h-[100vh] ${className}`
+    : `fixed left-auto right-0 bottom-0 w-[240px] flex flex-col ${topOffset == null ? 'top-0' : ''} ${className}`;
   const asideStyle = !sticky && topOffset != null ? { top: topOffset } : undefined;
 
   return (
     <aside className={asideClass} style={asideStyle}>
       <nav
-        className="font-body bg-transparent flex-1 min-h-0 flex flex-col overflow-y-auto border-l border-nokturo-200 dark:border-nokturo-700"
+        className="font-body flex-1 min-h-0 flex flex-col rounded-[12px] overflow-hidden bg-nokturo-100/50 dark:bg-nokturo-800/30"
         aria-label={t('richText.tableOfContents')}
       >
-        <ul className="space-y-0 text-[13px] leading-snug pt-6 pb-6 flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <ul className="space-y-0 text-[13px] leading-snug p-1">
           {items.filter((item) => item.level <= 2).map((item) => {
             const isActive = currentId === item.id;
             const weight = item.level === 1 ? 'font-medium' : 'font-normal';
@@ -85,27 +86,31 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
                 <a
                   href={`#${item.id}`}
                   onClick={(e) => handleClick(e, item.id)}
-                  className={`block py-2 px-4 border-l-2 transition-colors overflow-hidden whitespace-nowrap ${
+                  className={`group flex items-center gap-2 px-4 py-3 transition-colors overflow-hidden whitespace-nowrap ${
                     isActive
-                      ? 'border-nokturo-800 dark:border-nokturo-200 text-nokturo-900 dark:text-nokturo-100'
-                      : 'border-transparent text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 hover:border-nokturo-300 dark:hover:border-nokturo-500'
+                      ? 'text-nokturo-900 dark:text-nokturo-100'
+                      : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200'
                   } ${weight}`}
                   style={fadeStyle}
                 >
+                  <span className="w-1.5 h-1.5 shrink-0 flex items-center justify-center">
+                    <span className={`w-1 h-1 m-px group-hover:w-1.5 group-hover:h-1.5 group-hover:m-0 transition-all duration-150 bg-current shrink-0 opacity-40 group-hover:opacity-60 ${isActive ? '!w-1.5 !h-1.5 !m-0 !opacity-80' : ''}`} style={{ borderRadius: '50%' }} />
+                  </span>
                   {item.text}
                 </a>
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
       </nav>
       {footerSlot && !sticky && (
-        <div className="fixed right-6 bottom-6 w-[240px] p-4">
+        <div className="fixed right-0 bottom-0 w-[240px]">
           {footerSlot}
         </div>
       )}
       {footerSlot && sticky && (
-        <div className="shrink-0 p-4 pt-0">
+        <div className="shrink-0">
           {footerSlot}
         </div>
       )}

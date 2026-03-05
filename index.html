@@ -5,9 +5,15 @@
     <script>
       (function(){var s=localStorage.getItem('nokturo-theme');if(s==='dark')document.documentElement.classList.add('dark');else if(s)try{var j=JSON.parse(s);if(j&&j.state&&j.state.theme==='dark')document.documentElement.classList.add('dark');}catch(e){}})();
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Nokturo</title>
     <link rel="icon" type="image/png" href="icon_32.png" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Nokturo" />
+    <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+    <meta name="theme-color" content="#0a0a0a" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://use.typekit.net" crossorigin />

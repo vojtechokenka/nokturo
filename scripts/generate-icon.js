@@ -10,11 +10,12 @@ const icoPath = path.join(buildDir, 'icon.ico');
 // Velikosti pro Windows .ico – každá vykreslena nativně z vektoru (bez škálování = ostré hrany)
 const icoSizes = [16, 32, 48, 64, 128, 256];
 
-const svg = fs.readFileSync(svgPath);
+const svgBuffer = fs.readFileSync(svgPath);
+const svg = svgBuffer.toString('utf-8');
 
 async function generateIcons() {
   // 1. Hlavní PNG 1024x1024 (pro macOS, web, atd.)
-  await sharp(svg)
+  await sharp(svgBuffer)
     .resize(1024, 1024)
     .png({ compressionLevel: 0 })
     .toFile(pngPath);
@@ -28,7 +29,7 @@ async function generateIcons() {
   const pngPaths = [];
   for (const size of icoSizes) {
     const tempPath = path.join(buildDir, `icon-${size}x${size}.png`);
-    await sharp(svg)
+    await sharp(svgBuffer)
       .resize(size, size)
       .png({ compressionLevel: 0 })
       .toFile(tempPath);
@@ -43,6 +44,22 @@ async function generateIcons() {
   // Smazat dočasné PNG soubory
   for (const p of pngPaths) fs.unlinkSync(p);
   console.log(`Icon generated: build/icon.ico (${icoSizes.join(', ')}px)`);
+
+  // 4. PWA ikony (192, 512) – tmavé pozadí #0a0a0a, bílý symbol
+  const iconsDir = path.join(__dirname, '..', 'public', 'icons');
+  if (!fs.existsSync(iconsDir)) fs.mkdirSync(iconsDir, { recursive: true });
+  const svgDark = svg
+    .replace(/fill="white"/g, 'fill="#0a0a0a"')
+    .replace(/fill="black"/g, 'fill="white"')
+    .replace(/stroke="black"/g, 'stroke="white"');
+  for (const size of [192, 512]) {
+    const outPath = path.join(iconsDir, `icon-${size}.png`);
+    await sharp(Buffer.from(svgDark))
+      .resize(size, size)
+      .png({ compressionLevel: 6 })
+      .toFile(outPath);
+    console.log(`PWA icon generated: public/icons/icon-${size}.png`);
+  }
 }
 
 generateIcons().catch((err) => {
