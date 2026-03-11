@@ -185,7 +185,7 @@ export function NotificationPanel({
   return (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 dark:bg-neutral-900">
+      <div className="flex items-center justify-between px-4 py-3 dark:bg-white/5">
         <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 flex items-center gap-2">
           {t('notifications.title')}
           {unreadCount > 0 && (
