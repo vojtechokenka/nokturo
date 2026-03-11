@@ -1,6 +1,6 @@
 {
   "name": "nokturo",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "Nokturo PLM/ERP – Product Lifecycle Management for high-end fashion",
   "main": "electron/main.js",
   "repository": {
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "install-and-run": "npm install && npm run electron:dev",
-    "dev": "vite --port 5173",
+    "dev": "npx kill-port 5173 && vite --port 5173",
     "build": "vite build",
     "build:web": "vite build --mode production --base=/app/",
     "preview": "vite preview",

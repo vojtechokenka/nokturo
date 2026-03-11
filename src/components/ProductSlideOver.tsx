@@ -24,12 +24,13 @@ import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 // ── Constants ─────────────────────────────────────────────────
 export const PRODUCT_CATEGORIES = ['coats', 'jackets', 'trousers'] as const;
 
-const PRODUCT_CATEGORY_OPTIONS = PRODUCT_CATEGORIES.map((cat, i) => ({
-  id: cat,
-  name: cat,
-  color: ['gray', 'blue', 'green'][i] as string,
-  sort_order: i,
-}));
+/** Fallback when product_categories fetch fails (migration not run) */
+const FALLBACK_CATEGORY_OPTIONS: NotionSelectOption[] = [
+  { id: 'coats', name: 'coats', color: 'gray', sort_order: 0 },
+  { id: 'jackets', name: 'jackets', color: 'blue', sort_order: 1 },
+  { id: 'trousers', name: 'trousers', color: 'green', sort_order: 2 },
+];
+
 export const PRODUCT_STATUSES = [
   'concept',
   'pattern',
@@ -223,6 +224,9 @@ interface ProductSlideOverProps {
   product: ProductWithMaterials | null;
   onClose: () => void;
   onSaved: (productId?: string, options?: { autoSave?: boolean }) => void;
+  /** Dynamic categories from product_categories table */
+  categories: NotionSelectOption[];
+  onCategoriesChange?: (options: NotionSelectOption[]) => void;
   /** Only founder can delete. Hides remove material, delete version, etc. */
   canDelete?: boolean;
 }
@@ -427,6 +431,8 @@ export function ProductSlideOver({
   product,
   onClose,
   onSaved,
+  categories,
+  onCategoriesChange,
   canDelete = true,
 }: ProductSlideOverProps) {
   const { t } = useTranslation();
@@ -900,7 +906,7 @@ export function ProductSlideOver({
       setError(t('products.nameRequired') || 'Product name is required');
       return;
     }
-    setSaving(true);
+    if (!options?.autoSave)     setSaving(true);
 
     const techPack: ProductTechPack = {
       ...((product?.tech_pack as ProductTechPack) || {}),
@@ -987,7 +993,6 @@ export function ProductSlideOver({
     clearDraftFromStorage();
     if (options?.autoSave) {
       setLastSavedAt(new Date());
-      addToast({ type: 'success', message: t('common.saved') });
     }
     onSaved(productId, options);
   };
@@ -1143,10 +1148,24 @@ export function ProductSlideOver({
             <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">{t('products.category')}</label>
             <NotionSelect
               value={form.category}
-              onChange={(v) => handleChange('category', v)}
-              options={PRODUCT_CATEGORY_OPTIONS}
+              onChange={(v) => handleChange('category', Array.isArray(v) ? (v[0] ?? '') : String(v))}
+              options={categories.length > 0 ? categories : FALLBACK_CATEGORY_OPTIONS}
+              onOptionsChange={
+                onCategoriesChange
+                  ? (opts) => {
+                      if (categories.length > 0) {
+                        onCategoriesChange(opts);
+                      } else {
+                        const fallbackNames = FALLBACK_CATEGORY_OPTIONS.map((o) => o.name);
+                        const newOnes = opts.filter((o) => !fallbackNames.includes(o.name));
+                        if (newOnes.length > 0) onCategoriesChange([...categories, ...newOnes]);
+                      }
+                    }
+                  : undefined
+              }
               optionsI18nKey="products.categories"
               dropdownZIndex={10000}
+              canDelete={canDelete}
             />
           </div>
 
