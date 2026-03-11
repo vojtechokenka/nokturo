@@ -256,7 +256,7 @@ export default function SamplingDetailPage() {
                   <div>
                     <p className="text-[11px] text-nokturo-500 dark:text-nokturo-400 uppercase tracking-wider">{t('products.category')}</p>
                     <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 mt-0.5">
-                      {product.category ? t(`products.categories.${product.category}`) : '—'}
+                      {product.category ? (t(`products.categories.${product.category}`) !== `products.categories.${product.category}` ? t(`products.categories.${product.category}`) : product.category) : '—'}
                     </p>
                   </div>
                   <div className="w-px bg-nokturo-400 dark:bg-nokturo-600 self-stretch shrink-0" aria-hidden />

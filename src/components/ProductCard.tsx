@@ -56,7 +56,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
               <MaterialIcon name="inventory_2" size={40} className="text-nokturo-400 mb-2 shrink-0" />
               {product.category && (
                 <span className="text-xs text-nokturo-500 dark:text-nokturo-400">
-                  {t(`products.categories.${product.category}`)}
+                  {t(`products.categories.${product.category}`) !== `products.categories.${product.category}` ? t(`products.categories.${product.category}`) : product.category}
                 </span>
               )}
             </>
@@ -73,7 +73,7 @@ export function ProductCard({ product, to, showReadyBadge = false }: ProductCard
           </h3>
           <p className="text-nokturo-700 dark:text-nokturo-300 text-xs mt-0.5 opacity-80">
             {[
-              product.category && t(`products.categories.${product.category}`),
+              product.category && (t(`products.categories.${product.category}`) !== `products.categories.${product.category}` ? t(`products.categories.${product.category}`) : product.category),
               t(`products.statuses.${product.status}`),
             ]
               .filter(Boolean)

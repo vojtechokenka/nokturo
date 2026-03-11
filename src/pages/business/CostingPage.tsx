@@ -349,7 +349,7 @@ export default function CostingPage() {
                           {row.sku || '—'}
                           {row.category && (
                             <span className="ml-2 text-nokturo-500">
-                              {t(`products.categories.${row.category}`)}
+                              {t(`products.categories.${row.category}`) !== `products.categories.${row.category}` ? t(`products.categories.${row.category}`) : row.category}
                             </span>
                           )}
                         </p>

@@ -11,6 +11,7 @@ import {
   PRODUCT_STATUSES,
   type ProductWithMaterials,
 } from '../../components/ProductSlideOver';
+import type { NotionSelectOption } from '../../components/NotionSelect';
 import { ProductCard } from '../../components/ProductCard';
 import { FilterGroup } from '../../components/FilterGroup';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
@@ -25,6 +26,7 @@ export default function ProductsPage() {
   // ── State ───────────────────────────────────────────────────
   const [products, setProducts] = useState<ProductWithMaterials[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<NotionSelectOption[]>([]);
 
   // Filters (multi-select: empty = show all)
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -90,6 +92,68 @@ export default function ProductsPage() {
     fetchProducts();
   }, [fetchProducts]);
 
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .select('*')
+      .order('sort_order');
+    if (!error && data) {
+      setCategories(
+        data.map((r: { id: string; name: string; color: string; sort_order: number }) => ({
+          id: r.id,
+          name: r.name,
+          color: r.color || 'gray',
+          sort_order: r.sort_order,
+        }))
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleCategoriesChange = useCallback(
+    async (newOptions: NotionSelectOption[]) => {
+      const prevById = new Map(categories.map((o) => [o.id, o]));
+      const prevCategories = categories;
+      setCategories(newOptions);
+
+      try {
+        for (const opt of newOptions) {
+          if (!prevById.has(opt.id)) {
+            const { error: insErr } = await supabase.from('product_categories').insert({
+              id: opt.id,
+              name: opt.name,
+              color: opt.color,
+              sort_order: opt.sort_order,
+            });
+            if (insErr) throw insErr;
+          } else {
+            const prev = prevById.get(opt.id);
+            if (prev && (prev.name !== opt.name || prev.color !== opt.color || prev.sort_order !== opt.sort_order)) {
+              const { error: updErr } = await supabase
+                .from('product_categories')
+                .update({ name: opt.name, color: opt.color, sort_order: opt.sort_order })
+                .eq('id', opt.id);
+              if (updErr) throw updErr;
+            }
+          }
+        }
+        for (const o of prevCategories) {
+          if (!newOptions.some((n) => n.id === o.id)) {
+            const { error: delErr } = await supabase.from('product_categories').delete().eq('id', o.id);
+            if (delErr) throw delErr;
+          }
+        }
+        await fetchCategories();
+      } catch {
+        setCategories(prevCategories);
+      }
+    },
+    [categories, fetchCategories]
+  );
+
   // ── Handlers ────────────────────────────────────────────────
   const openAdd = () => {
     setEditingProduct(null);
@@ -144,10 +208,15 @@ export default function ProductsPage() {
                 onChange: setCategoryFilter,
                 options: [
                   { value: 'all', label: t('products.allCategories') },
-                  ...PRODUCT_CATEGORIES.map((cat) => ({
-                    value: cat,
-                    label: t(`products.categories.${cat}`),
-                  })),
+                  ...(categories.length > 0
+                    ? categories.map((cat) => ({
+                        value: cat.name,
+                        label: t(`products.categories.${cat.name}`) !== `products.categories.${cat.name}` ? t(`products.categories.${cat.name}`) : cat.name,
+                      }))
+                    : PRODUCT_CATEGORIES.map((cat) => ({
+                        value: cat,
+                        label: t(`products.categories.${cat}`),
+                      }))),
                 ],
               },
               {
@@ -220,6 +289,8 @@ export default function ProductsPage() {
           setEditingProduct(null);
         }}
         onSaved={handleSaved}
+        categories={categories}
+        onCategoriesChange={handleCategoriesChange}
         canDelete={canDelete}
       />
 

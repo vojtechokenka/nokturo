@@ -209,7 +209,7 @@
       "installUpdate": "Install and restart",
       "upToDate": "You have the latest version",
       "retryUpdate": "Retry",
-      "updateNotAvailable": "Update is currently not available.",
+      "updateNotAvailable": "Update check failed (missing metadata on server). Download manually from GitHub Releases.",
       "downloadFromReleases": "Download from GitHub Releases",
       "downloadDesktopApp": "Download desktop app"
     },

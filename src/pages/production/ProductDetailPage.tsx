@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,7 @@ import {
   type ProductWithMaterials,
   type ProductTechPack as TechPackType,
 } from '../../components/ProductSlideOver';
+import type { NotionSelectOption } from '../../components/NotionSelect';
 import { RichTextBlockViewer, extractTags } from '../../components/RichTextBlockViewer';
 import { TableOfContents } from '../../components/TableOfContents';
 import type { TocItem } from '../../components/TableOfContents';
@@ -60,6 +61,7 @@ export default function ProductDetailPage() {
   useExchangeRates();
   const [product, setProduct] = useState<ProductWithMaterials | null>(null);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<NotionSelectOption[]>([]);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [pageMenuOpen, setPageMenuOpen] = useState(false);
@@ -117,6 +119,68 @@ export default function ProductDetailPage() {
         if (!error && data) setProduct(data as unknown as ProductWithMaterials);
       });
   }, [id]);
+
+  const fetchCategories = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('product_categories')
+      .select('*')
+      .order('sort_order');
+    if (!error && data) {
+      setCategories(
+        data.map((r: { id: string; name: string; color: string; sort_order: number }) => ({
+          id: r.id,
+          name: r.name,
+          color: r.color || 'gray',
+          sort_order: r.sort_order,
+        }))
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
+
+  const handleCategoriesChange = useCallback(
+    async (newOptions: NotionSelectOption[]) => {
+      const prevById = new Map(categories.map((o) => [o.id, o]));
+      const prevCategories = categories;
+      setCategories(newOptions);
+
+      try {
+        for (const opt of newOptions) {
+          if (!prevById.has(opt.id)) {
+            const { error: insErr } = await supabase.from('product_categories').insert({
+              id: opt.id,
+              name: opt.name,
+              color: opt.color,
+              sort_order: opt.sort_order,
+            });
+            if (insErr) throw insErr;
+          } else {
+            const prev = prevById.get(opt.id);
+            if (prev && (prev.name !== opt.name || prev.color !== opt.color || prev.sort_order !== opt.sort_order)) {
+              const { error: updErr } = await supabase
+                .from('product_categories')
+                .update({ name: opt.name, color: opt.color, sort_order: opt.sort_order })
+                .eq('id', opt.id);
+              if (updErr) throw updErr;
+            }
+          }
+        }
+        for (const o of prevCategories) {
+          if (!newOptions.some((n) => n.id === o.id)) {
+            const { error: delErr } = await supabase.from('product_categories').delete().eq('id', o.id);
+            if (delErr) throw delErr;
+          }
+        }
+        await fetchCategories();
+      } catch {
+        setCategories(prevCategories);
+      }
+    },
+    [categories, fetchCategories]
+  );
 
   const handleSaved = (productId?: string, options?: { autoSave?: boolean }) => {
     if (options?.autoSave) {
@@ -321,7 +385,7 @@ export default function ProductDetailPage() {
                 <div>
                   <p className="text-[11px] text-nokturo-500 dark:text-nokturo-400 uppercase tracking-wider">{t('products.category')}</p>
                   <p className="text-base font-medium text-nokturo-900 dark:text-nokturo-100 mt-0.5">
-                    {product.category ? t(`products.categories.${product.category}`) : '—'}
+                    {product.category ? (t(`products.categories.${product.category}`) !== `products.categories.${product.category}` ? t(`products.categories.${product.category}`) : product.category) : '—'}
                   </p>
                 </div>
                 <div className="w-px bg-nokturo-400 self-stretch shrink-0" aria-hidden />
@@ -837,6 +901,8 @@ export default function ProductDetailPage() {
         product={product}
         onClose={() => setEditOpen(false)}
         onSaved={handleSaved}
+        categories={categories}
+        onCategoriesChange={handleCategoriesChange}
         canDelete={canDelete}
       />
 

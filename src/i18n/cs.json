@@ -209,7 +209,7 @@
       "installUpdate": "Nainstalovat a restartovat",
       "upToDate": "Máš nejnovější verzi",
       "retryUpdate": "Zkusit znovu",
-      "updateNotAvailable": "Aktualizace momentálně není k dispozici.",
+      "updateNotAvailable": "Kontrola aktualizací selhala (chybí metadata na serveru). Stáhni ručně z GitHub Releases.",
       "downloadFromReleases": "Stáhnout z GitHub Releases",
       "downloadDesktopApp": "Stáhnout desktop aplikaci"
     },

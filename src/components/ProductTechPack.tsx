@@ -136,7 +136,7 @@ export function ProductTechPack({
                         </span>
                         <span className="text-nokturo-200 ml-2">
                           {product.category
-                            ? t(`products.categories.${product.category}`)
+                            ? (t(`products.categories.${product.category}`) !== `products.categories.${product.category}` ? t(`products.categories.${product.category}`) : product.category)
                             : '—'}
                         </span>
                       </div>
