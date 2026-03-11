@@ -201,7 +201,17 @@
 "saveProfile": "Save profile",
     "saved": "Profile saved",
     "error": "Error saving profile.",
-    "signInRequired": "Please sign in to save your profile."
+    "signInRequired": "Please sign in to save your profile.",
+      "checkUpdate": "Check for updates",
+      "checkingUpdate": "Checking...",
+      "downloadUpdate": "Download",
+      "downloadingUpdate": "Downloading...",
+      "installUpdate": "Install and restart",
+      "upToDate": "You have the latest version",
+      "retryUpdate": "Retry",
+      "updateNotAvailable": "Update is currently not available.",
+      "downloadFromReleases": "Download from GitHub Releases",
+      "downloadDesktopApp": "Download desktop app"
     },
     "users": {
       "title": "Create User",

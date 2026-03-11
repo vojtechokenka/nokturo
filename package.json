@@ -1,6 +1,6 @@
 {
   "name": "nokturo",
-  "version": "6.0.0",
+  "version": "6.0.1",
   "description": "Nokturo PLM/ERP – Product Lifecycle Management for high-end fashion",
   "main": "electron/main.js",
   "repository": {
@@ -55,7 +55,8 @@
     "productName": "Nokturo",
     "icon": "public/icon.png",
     "win": {
-      "icon": "build/icon.ico"
+      "icon": "build/icon.ico",
+      "target": ["nsis"]
     },
     "forceCodeSigning": false,
     "directories": {

@@ -201,7 +201,17 @@
       "saveProfile": "Uložit profil",
       "saved": "Profil uložen",
       "error": "Chyba při ukládání profilu.",
-      "signInRequired": "Pro uložení profilu se prosím přihlaste."
+      "signInRequired": "Pro uložení profilu se prosím přihlaste.",
+      "checkUpdate": "Zkontrolovat update",
+      "checkingUpdate": "Kontroluji...",
+      "downloadUpdate": "Stáhnout",
+      "downloadingUpdate": "Stahuji...",
+      "installUpdate": "Nainstalovat a restartovat",
+      "upToDate": "Máš nejnovější verzi",
+      "retryUpdate": "Zkusit znovu",
+      "updateNotAvailable": "Aktualizace momentálně není k dispozici.",
+      "downloadFromReleases": "Stáhnout z GitHub Releases",
+      "downloadDesktopApp": "Stáhnout desktop aplikaci"
     },
     "users": {
       "title": "Vytvořit uživatele",

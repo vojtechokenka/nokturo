@@ -85,6 +85,12 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
     window.electronAPI.installUpdate();
   }, []);
 
+  const RELEASES_URL = 'https://github.com/vojtechokenka/nokturo/releases';
+  const isUpdateNotAvailableError =
+    status === 'error' &&
+    errorMsg &&
+    (errorMsg.includes('latest.yml') || errorMsg.includes('404') || errorMsg.includes('Not Found'));
+
   const containerClass = compact
     ? 'pt-4 mt-4 border-t border-nokturo-200 dark:border-nokturo-700 space-y-2'
     : 'pt-6 border-t border-nokturo-200 dark:border-nokturo-700 space-y-3';
@@ -153,14 +159,28 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         )}
 
         {status === 'error' && (
-          <button
-            type="button"
-            onClick={handleCheck}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none text-red text-sm hover:bg-red hover:text-red-fg transition-colors"
-          >
-            <MaterialIcon name="warning" size={14} className="shrink-0" />
-            {t('settings.account.retryUpdate', 'Zkusit znovu')}
-          </button>
+          <div className="flex items-center gap-3">
+            {isUpdateNotAvailableError ? (
+              <a
+                href={RELEASES_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-nokturo-700 dark:bg-nokturo-600 text-sm text-white hover:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
+              >
+                <MaterialIcon name="download" size={14} className="shrink-0" />
+                {t('settings.account.downloadFromReleases', 'Stáhnout z GitHub Releases')}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={handleCheck}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none text-red text-sm hover:bg-red hover:text-red-fg transition-colors"
+              >
+                <MaterialIcon name="warning" size={14} className="shrink-0" />
+                {t('settings.account.retryUpdate', 'Zkusit znovu')}
+              </button>
+            )}
+          </div>
         )}
 
         {status === 'dev' && (
@@ -168,7 +188,13 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         )}
       </div>
 
-      {status === 'error' && errorMsg && <p className="text-xs text-red-fg">{errorMsg}</p>}
+      {status === 'error' && (isUpdateNotAvailableError || errorMsg) && (
+        <p className="text-xs text-nokturo-500 dark:text-nokturo-400">
+          {isUpdateNotAvailableError
+            ? t('settings.account.updateNotAvailable', 'Aktualizace momentálně není k dispozici.')
+            : errorMsg}
+        </p>
+      )}
     </div>
   );
 }

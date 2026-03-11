@@ -508,11 +508,20 @@ export default function AccountPage() {
         {isElectron() ? (
           <AppUpdateSection />
         ) : (
-          <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700">
+          <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700 flex items-center justify-between gap-4">
             <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
               Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'}</span>
               <span className="ml-2 text-nokturo-400 dark:text-nokturo-500">— web</span>
             </p>
+            <a
+              href="https://github.com/vojtechokenka/nokturo/releases"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
+            >
+              <MaterialIcon name="download" size={14} className="shrink-0" />
+              {t('settings.account.downloadDesktopApp', 'Stáhnout desktop aplikaci')}
+            </a>
           </div>
         )}
       </div>
