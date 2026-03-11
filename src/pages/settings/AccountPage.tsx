@@ -305,7 +305,7 @@ export default function AccountPage() {
                       <button
                         type="button"
                         onClick={handleRemoveAvatar}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-sm opacity-60 hover:opacity-100 hover:bg-red hover:text-red-fg transition-colors"
+                        className="dropdown-menu-item-destructive inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-white text-sm opacity-60 hover:opacity-100 hover:bg-red hover:text-red-fg transition-colors"
                       >
                         <MaterialIcon name="close" size={16} className="shrink-0" />
                         {t('settings.account.removePhoto')}

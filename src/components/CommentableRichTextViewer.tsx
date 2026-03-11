@@ -1249,7 +1249,7 @@ function CommentThreadPopover({
                           if (isRoot && !window.confirm(t('comments.deleteRootConfirm'))) return;
                           onDelete(c.id);
                         }}
-                        className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                        className="dropdown-menu-item-destructive w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                       >
                         <DeleteIcon className="w-3 h-3" />
                         {t('common.delete')}

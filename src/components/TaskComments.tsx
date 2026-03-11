@@ -254,7 +254,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
                 <button
                   type="button"
                   onClick={(e) => { e.stopPropagation(); setDeleteTarget(comment.id); }}
-                  className="px-2 py-1 text-xs rounded text-white bg-white/10 hover:bg-red hover:text-red-fg transition-colors"
+                  className="dropdown-menu-item-destructive px-2 py-1 text-xs rounded text-white bg-white/10 hover:bg-red hover:text-red-fg transition-colors"
                 >
                   {t('common.delete')}
                 </button>

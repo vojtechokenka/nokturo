@@ -162,7 +162,7 @@ export default function IdentityPage() {
               <button
                 type="button"
                 onClick={() => setMode('edit')}
-                className="absolute top-3 right-3 flex items-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800/90 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute top-3 right-3 flex items-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800/90 dark:bg-white/10 text-white rounded-[6px] hover:bg-white/10 dark:hover:bg-white/20 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
               >
                 <EditIcon size={16} />
                 {t('common.edit')}

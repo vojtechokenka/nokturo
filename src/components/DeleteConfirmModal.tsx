@@ -26,7 +26,7 @@ export function DeleteConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 px-4 py-3 text-sm font-medium text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-[6px] transition-colors"
+            className="dropdown-menu-item-destructive flex-1 px-4 py-3 text-sm font-medium text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-[6px] transition-colors"
           >
             {t('common.yesDelete')}
           </button>

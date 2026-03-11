@@ -234,35 +234,35 @@ export default function MaterialsPage() {
       {/* ── Overview stats (sticky at top) ───────────────────── */}
       <div className="sticky top-0 z-20 bg-nokturo-50 dark:bg-black">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-0 pb-6">
-        <div className="bg-white/5 rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-nokturo-200/80 dark:bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.totalStock')}
           </p>
-          <p className="text-xl font-medium text-white">
+          <p className="text-xl font-medium text-nokturo-900 dark:text-white">
             {totalMeters.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} m
           </p>
         </div>
-        <div className="bg-white/5 rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-nokturo-200/80 dark:bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.avgPricePerM')}
           </p>
-          <p className="text-xl font-medium text-white">
+          <p className="text-xl font-medium text-nokturo-900 dark:text-white">
             {avgPricePerMCzk.toFixed(2)} {t('materials.overview.perM')}
           </p>
         </div>
-        <div className="bg-white/5 rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-nokturo-200/80 dark:bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.totalStockValue')}
           </p>
           <p className="text-xl font-medium text-green-fg">
             {totalInventoryValueCzk.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
           </p>
         </div>
-        <div className="bg-white/5 rounded-[6px] p-4">
-          <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+        <div className="bg-nokturo-200/80 dark:bg-white/5 rounded-[6px] p-4">
+          <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.materialCount')}
           </p>
-          <p className="text-xl font-medium text-white">
+          <p className="text-xl font-medium text-nokturo-900 dark:text-white">
             {filteredMaterials.length}
           </p>
         </div>
@@ -352,7 +352,7 @@ export default function MaterialsPage() {
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(mat.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                            className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                           >
                             <DeleteIcon size={14} className="shrink-0" />
                             {t('common.delete')}
@@ -366,7 +366,7 @@ export default function MaterialsPage() {
 
               {/* Card body */}
               <div className="p-3">
-                <h3 className="text-heading-5 font-medium text-white truncate">
+                <h3 className="text-heading-5 font-medium text-nokturo-900 dark:text-white truncate">
                   {mat.name}
                 </h3>
 

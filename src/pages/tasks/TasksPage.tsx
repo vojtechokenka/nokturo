@@ -136,7 +136,7 @@ function TaskRowMenu({
             {onDelete && (
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete(); setOpen(false); }}
-                className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
+                className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" fill="currentColor">
                   <path d="M9 17h2V8H9zm4 0h2V8h-2zm-8 4V6H4V4h5V3h6v1h5v2h-1v15z" />
@@ -588,7 +588,7 @@ export default function TasksPage() {
                 addToast(t('tasks.deleteForever'));
                 fetchTasks();
               }}
-              className="text-xs font-medium text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
+              className="dropdown-menu-item-destructive text-xs font-medium text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap ml-4"
             >
               {t('tasks.deleteAll')}
             </button>

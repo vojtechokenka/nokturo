@@ -97,7 +97,7 @@ export function Sidebar() {
 
   return (
     <aside
-      className={`h-screen bg-nokturo-100 dark:bg-black flex flex-col transition-all duration-300 ease-in-out ${
+      className={`h-screen bg-nokturo-200 dark:bg-black flex flex-col transition-all duration-300 ease-in-out ${
         collapsed ? 'w-[60px]' : 'w-60'
       }`}
     >

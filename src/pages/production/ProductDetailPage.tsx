@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { MODAL_HEADING_CLASS } from '../../lib/inputStyles';
 import { useExchangeRates } from '../../lib/currency';
 import { supabase } from '../../lib/supabase';
-import { useAuthStore } from '../../stores/authStore';
+import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import {
@@ -22,6 +22,7 @@ import type { Material } from '../../components/MaterialSlideOver';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
+import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 // ── Parse description (legacy or rich blocks) ────────────────────
@@ -153,6 +154,48 @@ export default function ProductDetailPage() {
     setDeleteConfirm(false);
   };
 
+  const handleDuplicate = async () => {
+    if (!product) return;
+    setPageMenuOpen(false);
+    const { id: _id, created_at: _ca, updated_at: _ua, product_materials: pms, product_labels: pls, ...rest } = product;
+    const record = {
+      ...rest,
+      name: `${product.name} ${t('common.duplicateSuffix')}`,
+      sku: null,
+      created_by: getUserIdForDb(),
+    };
+    const { data: newProduct, error: insertError } = await supabase
+      .from('products')
+      .insert(record)
+      .select()
+      .single();
+    if (insertError || !newProduct) return;
+    const newId = (newProduct as { id: string }).id;
+    if (pms?.length) {
+      await supabase.from('product_materials').insert(
+        pms.map((pm) => ({
+          product_id: newId,
+          material_id: pm.material_id,
+          consumption_amount: pm.consumption_amount,
+          notes: pm.notes,
+          role: pm.role ?? null,
+          variant: pm.variant ?? null,
+        }))
+      );
+    }
+    if (pls?.length) {
+      await supabase.from('product_labels').insert(
+        pls.map((pl) => ({
+          product_id: newId,
+          label_id: pl.label_id,
+          placement: pl.placement ?? [],
+          notes: pl.notes,
+        }))
+      );
+    }
+    navigate(`/production/products/${newId}`);
+  };
+
   if (loading) {
     return (
       <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
@@ -232,10 +275,17 @@ export default function ProductDetailPage() {
                     <MaterialIcon name="edit" size={14} className="shrink-0" />
                     {t('common.edit')}
                   </button>
+                  <button
+                    onClick={handleDuplicate}
+                    className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+                  >
+                    <DuplicateIcon size={14} className="shrink-0" />
+                    {t('common.duplicate')}
+                  </button>
                   {canDelete && (
                     <button
                       onClick={() => { setDeleteConfirm(true); setPageMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                      className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                     >
                       <DeleteIcon className="w-3.5 h-3.5" />
                       {t('common.delete')}
@@ -347,13 +397,13 @@ export default function ProductDetailPage() {
                           return (
                             <div
                               key={pm.id ?? idx}
-                              className="flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0"
+                              className="flex items-center gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0"
                               style={{ borderRadius: '8px' }}
                             >
                               <button
                                 type="button"
                                 onClick={() => mat && setViewingMaterial(mat as Material)}
-                                className="flex items-start gap-4 min-w-0 flex-1 text-left hover:opacity-90 transition-opacity cursor-pointer"
+                                className="flex items-center gap-4 min-w-0 flex-1 text-left hover:opacity-90 transition-opacity cursor-pointer"
                               >
                                 <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-nokturo-100 flex items-center justify-center">
                                   {mat?.image_url ? (
@@ -522,7 +572,7 @@ export default function ProductDetailPage() {
                       <img
                         src={img.url}
                         alt={img.caption ?? ''}
-                        className={`w-full aspect-square rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors bg-nokturo-50 dark:bg-nokturo-800 ${
+                        className={`w-full aspect-square rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors bg-nokturo-50 dark:bg-nokturo-800 cursor-zoom-in ${
                           isSvg ? 'object-contain p-2' : 'object-cover'
                         }`}
                         style={isSvg ? { imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] } : undefined}
@@ -561,7 +611,7 @@ export default function ProductDetailPage() {
                     <img
                       src={img.url}
                       alt={img.caption ?? ''}
-                      className="w-full aspect-square object-cover rounded-lg transition-colors bg-nokturo-50 dark:bg-nokturo-800"
+                      className="w-full aspect-square object-cover rounded-lg transition-colors bg-nokturo-50 dark:bg-nokturo-800 cursor-zoom-in"
                     />
                   </button>
                   {img.caption && (

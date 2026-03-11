@@ -78,7 +78,7 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
   return (
     <aside className={`group/toc ${asideClass}`} style={asideStyle}>
       <nav
-        className="font-body flex flex-col rounded-[16px] overflow-hidden bg-nokturo-100/70 dark:bg-nokturo-800/60"
+        className="font-body flex flex-col rounded-[16px] overflow-hidden bg-nokturo-200/90 dark:bg-nokturo-800/60"
         aria-label={t('richText.tableOfContents')}
       >
         <div ref={tocListRef} className="overflow-y-auto overflow-x-hidden max-h-[calc(100vh-120px)]">

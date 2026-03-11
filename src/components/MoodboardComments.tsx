@@ -361,7 +361,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     return (
       <div
         key={comment.id}
-        className={`group flex flex-col py-2 px-2 rounded-[12px] min-w-0 animate-fade-in-item ${isOwn ? 'ml-6 bg-white/20 text-white' : 'mr-6 bg-white/10 text-white'}`}
+        className={`group flex flex-col py-2 px-2 rounded-[12px] min-w-0 animate-fade-in-item ${isOwn ? 'ml-6 bg-nokturo-100 text-nokturo-900 dark:bg-white/20 dark:text-white' : 'mr-6 bg-nokturo-200/80 text-nokturo-900 dark:bg-white/10 dark:text-white'}`}
       >
         {isEditing ? (
           <div className="flex flex-col gap-2 -mx-2 px-3 py-2">
@@ -438,7 +438,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                           setCommentMenuOpen(comment.id);
                         }
                       }}
-                      className={`p-1 rounded text-white/60 hover:text-white/90 hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+                      className={`p-1 rounded text-nokturo-500 hover:text-nokturo-900 dark:text-white/60 dark:hover:text-white/90 hover:bg-nokturo-100 dark:hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     >
                       <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                     </button>
@@ -451,7 +451,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                       e.stopPropagation();
                       handleReplyTo(comment);
                     }}
-                    className="shrink-0 px-2 py-1 rounded-[4px] text-xs border-none text-white/90 bg-white/10"
+                    className="shrink-0 px-2 py-1 rounded-[4px] text-xs border-none text-nokturo-800 hover:text-nokturo-900 dark:text-white/90 dark:hover:text-white bg-nokturo-200/80 dark:bg-white/10"
                   >
                     {t('comments.reply')}
                   </button>
@@ -489,7 +489,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       {/* New comment input with tag picker - fixed at bottom (only if role can comment) */}
       {canComment && (
       <div className="flex flex-col gap-2 shrink-0 pt-0">
-        <div className="relative flex gap-2 p-3 bg-white/5">
+        <div className="relative flex gap-2 p-3 bg-nokturo-100 dark:bg-white/5">
           <div className="flex-1 relative">
             {mention.active && (
               <MentionDropdown
@@ -517,7 +517,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
                 }
               }}
               placeholder={t('comments.placeholder')}
-              className="w-full h-11 bg-white/5 rounded-[6px] px-3 py-2 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 transition-shadow duration-150"
+              className={INPUT_CLASS}
             />
           </div>
           <button
@@ -560,7 +560,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
               <button
                 type="button"
                 onClick={() => { setDeleteTarget(comment.id); setCommentMenuOpen(null); }}
-                className="w-full flex flex-col justify-center items-center p-1 text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-[4px]"
+                className="dropdown-menu-item-destructive w-full flex flex-col justify-center items-center p-1 text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-[4px]"
               >
                 {t('common.delete')}
               </button>

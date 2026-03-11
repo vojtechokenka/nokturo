@@ -1254,7 +1254,7 @@ export function ProductSlideOver({
                   <button
                     type="button"
                     onClick={() => setPreviewPhotoUrl(null)}
-                    className="flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-2 rounded-lg transition-colors"
+                    className="dropdown-menu-item-destructive flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-2 rounded-lg transition-colors"
                   >
                     <DeleteIcon className="w-3.5 h-3.5" />
                     {t('common.delete')}
@@ -1333,7 +1333,7 @@ export function ProductSlideOver({
                       <button
                         type="button"
                         onClick={() => removeVersion(version)}
-                        className="text-xs font-medium px-2 py-1 rounded text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg transition-colors"
+                        className="dropdown-menu-item-destructive text-xs font-medium px-2 py-1 rounded text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg transition-colors"
                       >
                         {t('common.delete')}
                       </button>

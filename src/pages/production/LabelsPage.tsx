@@ -258,7 +258,7 @@ export default function LabelsPage() {
                           <button
                             type="button"
                             onClick={() => { setDeleteTarget(lbl.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg"
+                            className="dropdown-menu-item-destructive w-full px-3 py-1.5 text-left text-xs text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg"
                           >
                             {t('common.delete')}
                           </button>

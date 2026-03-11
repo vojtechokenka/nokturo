@@ -659,6 +659,12 @@
       "paused": "Paused",
       "cancelled": "Cancelled"
     },
+    "filterTitle": "Filter subscriptions",
+    "filterByStatus": "Status",
+    "allStatuses": "All statuses",
+    "sortByDateAdded": "By date added",
+    "sortByAmount": "By amount",
+    "sortByNextBilling": "By next billing",
     "noSubscriptions": "No subscriptions found",
     "addFirst": "Add your first subscription to get started",
     "deleteConfirm": "Are you sure you want to delete this subscription?",

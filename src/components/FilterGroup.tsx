@@ -55,14 +55,14 @@ export function FilterGroup({
       </button>
 
       {open && (
-        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-black rounded-[8px] overflow-hidden">
-          <div className="px-3 py-2.5 bg-white/10">
-            <p className="text-sm font-medium text-white">{t(titleKey)}</p>
+        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-nokturo-100 dark:bg-black rounded-[8px] overflow-hidden">
+          <div className="px-3 py-2.5 bg-nokturo-200 dark:bg-white/10">
+            <p className="text-sm font-medium text-nokturo-900 dark:text-white">{t(titleKey)}</p>
           </div>
           <div className="py-2 max-h-60 overflow-y-auto">
             {sections.map((section) => (
               <div key={section.labelKey} className="mb-2 last:mb-0">
-                <p className="px-2 py-0.5 text-[10px] font-medium text-white/60 uppercase tracking-wider">
+                <p className="px-2 py-0.5 text-[10px] font-medium text-nokturo-500 dark:text-white/60 uppercase tracking-wider">
                   {t(section.labelKey)}
                 </p>
                 <div className="space-y-px px-1">
@@ -73,7 +73,7 @@ export function FilterGroup({
                       return (
                         <label
                           key={opt.value}
-                          className="flex items-center gap-2 px-2 py-2 rounded-[4px] cursor-pointer hover:bg-white/10 transition-colors"
+                          className="flex items-center gap-2 px-2 py-2 rounded-[4px] cursor-pointer hover:bg-nokturo-200 dark:hover:bg-white/10 transition-colors"
                         >
                           <input
                             type="checkbox"
@@ -86,7 +86,7 @@ export function FilterGroup({
                             }}
                             className="w-4 h-4 rounded outline-none focus:ring-2 focus:ring-nokturo-400"
                           />
-                          <span className="text-sm text-white flex-1 whitespace-nowrap">
+                          <span className="text-sm text-nokturo-900 dark:text-white flex-1 whitespace-nowrap">
                             {opt.label}
                           </span>
                         </label>

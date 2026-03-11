@@ -639,7 +639,7 @@ export function NotionSelect({
                 <button
                   type="button"
                   onClick={() => handleDelete(openOpt.id)}
-                  className="w-full px-2.5 py-1 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                  className="dropdown-menu-item-destructive w-full px-2.5 py-1 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                 >
                   <MaterialIcon name="close" size={12} className="shrink-0" />
                   {t('common.delete')}

@@ -88,7 +88,7 @@ export default function MagazineArticlePage() {
           </button>
           <button
             onClick={() => navigate(`/prototyping/magazine/${id}/edit`)}
-            className="flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 bg-white/10 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
+            className="flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 bg-white/10 hover:bg-white/20 dark:hover:bg-nokturo-700 transition-colors"
           >
             <EditIcon size={16} />
             {t('common.edit')}

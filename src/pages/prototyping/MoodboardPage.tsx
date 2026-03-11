@@ -976,7 +976,7 @@ export default function MoodboardPage() {
                         {canDelete && (
                           <button
                             onClick={() => { setDeleteTarget(item.id); setCardMenuOpen(null); }}
-                            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                            className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                           >
                             <DeleteIcon size={14} className="shrink-0" />
                             {t('common.delete')}
@@ -1492,7 +1492,7 @@ export default function MoodboardPage() {
                           setLightboxIndex(null);
                           setLightboxMenuOpen(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                        className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
                       >
                         <DeleteIcon size={14} className="shrink-0" />
                         {t('common.delete')}
@@ -1510,7 +1510,7 @@ export default function MoodboardPage() {
             onClick={(e) => e.stopPropagation()}
           >
             {(lbItem.title || lbItem.notes || (lbItem.categories && lbItem.categories.length > 0)) && (
-              <div className="px-6 pt-6 pb-6 shrink-0 flex flex-col gap-4 bg-white/5">
+              <div className="px-6 pt-6 pb-6 shrink-0 flex flex-col gap-4 bg-nokturo-100 dark:bg-white/5">
                 {(lbItem.title || lbItem.notes) && (
                   <div className="flex flex-col gap-1">
                     {lbItem.title && (

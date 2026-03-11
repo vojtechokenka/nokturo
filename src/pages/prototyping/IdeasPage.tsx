@@ -608,7 +608,6 @@ export default function IdeasPage() {
             const cats = idea.categories ?? (idea.category ? [idea.category] : []);
             const firstCatName = cats[0];
             const cat = firstCatName ? categories.find((c) => c.name === firstCatName) : null;
-            const colorClass = 'bg-[#171717] text-[#e6e6e6]';
             const isDragging = draggedId === idea.id;
             const showDropBefore = dragDropIndex === idx;
             const showDropAfter = dragDropIndex === idx + 1;
@@ -656,7 +655,7 @@ export default function IdeasPage() {
                   if (fromIndex !== toIndex) handleReorder(fromIndex, toIndex);
                 }}
                 title={t('ideas.dragToReorder')}
-                className={`group ${colorClass} transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
+                className={`group bg-nokturo-100 text-nokturo-900 dark:bg-[#171717] dark:text-[#e6e6e6] transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
                   isDragging ? 'opacity-50 scale-95' : ''
                 } hover:-translate-y-0.25`}
               >
@@ -683,7 +682,7 @@ export default function IdeasPage() {
                 )}
 
                 {/* Body */}
-                <div className="p-6 rounded-none bg-[#171717] text-[#e6e6e6]">
+                <div className="p-6 rounded-none bg-nokturo-100 text-nokturo-900 dark:bg-[#171717] dark:text-[#e6e6e6]">
                   {(() => {
                     const validNames = new Set(categories.map(c => c.name));
                     const cats = (idea.categories ?? (idea.category ? [idea.category] : [])).filter(c => validNames.has(c));
@@ -790,7 +789,7 @@ export default function IdeasPage() {
             {canDelete && (
               <button
                 onClick={() => { setDeleteTarget(idea.id); setCardMenuOpen(null); }}
-                className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
               >
                 <DeleteIcon size={14} className="shrink-0" />
                 {t('common.delete')}

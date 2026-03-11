@@ -121,7 +121,7 @@ export function ProfileDropdown() {
               </span>
               <div className="flex flex-col w-full">
               {/* User info + menu buttons row */}
-              <div className="flex items-center justify-between gap-4 px-4 py-3 dark:bg-white/15">
+              <div className="flex items-center justify-between gap-4 px-4 py-3 bg-nokturo-100 dark:bg-white/15">
                 <button
                   onClick={() => { setOpen(false); navigate('/settings/account'); }}
                   className="flex flex-col items-start text-left hover:opacity-80 transition-opacity"
@@ -137,7 +137,7 @@ export function ProfileDropdown() {
                   <button
                     onClick={handleLogout}
                     disabled={isLoggingOut}
-                    className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 bg-white/10 rounded-[6px] hover:bg-nokturo-50 dark:hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 bg-white/10 rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-white/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoggingOut ? (
                       <MaterialIcon name="progress_activity" size={16} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />

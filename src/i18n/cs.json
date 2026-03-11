@@ -659,6 +659,12 @@
       "paused": "Pozastaveno",
       "cancelled": "Zrušeno"
     },
+    "filterTitle": "Filtrovat předplatná",
+    "filterByStatus": "Stav",
+    "allStatuses": "Všechny stavy",
+    "sortByDateAdded": "Podle přidání",
+    "sortByAmount": "Podle částky",
+    "sortByNextBilling": "Podle příští fakturace",
     "noSubscriptions": "Žádná předplatná nenalezena",
     "addFirst": "Přidejte své první předplatné",
     "deleteConfirm": "Opravdu chcete smazat toto předplatné?",

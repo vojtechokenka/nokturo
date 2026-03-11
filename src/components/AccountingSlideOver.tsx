@@ -314,7 +314,7 @@ export function AccountingSlideOver({
                   onDelete(order.id);
                   onClose();
                 }}
-                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red hover:text-red-fg transition-colors rounded-lg"
+                className="dropdown-menu-item-destructive p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red hover:text-red-fg transition-colors rounded-lg"
                 title={t('common.delete')}
               >
                 <DeleteIcon className="w-5 h-5" />
@@ -540,7 +540,7 @@ export function AccountingSlideOver({
                     <button
                       type="button"
                       onClick={removeInvoice}
-                      className="text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-1.5 rounded-lg transition-colors"
+                      className="dropdown-menu-item-destructive text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-1.5 rounded-lg transition-colors"
                     >
                       {t('common.delete')}
                     </button>

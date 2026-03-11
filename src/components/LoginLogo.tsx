@@ -16,7 +16,7 @@ export function LoginLogo({ className }: LoginLogoProps) {
         fillRule="evenodd"
         clipRule="evenodd"
         d="M20.0001 20.9989C14.9611 20.9989 10.1273 23.0012 6.56397 26.5645C3.00091 30.1278 0.999917 34.9614 0.999917 40H0V0H0.999917C0.999917 5.03865 3.00091 9.87217 6.56397 13.4355C10.1273 16.9988 14.9611 18.9985 20.0001 18.9985H22C32.4933 18.9985 41.0002 10.4928 41.0002 0H42.0001V40H41.0002C41.0002 29.5072 32.4933 20.9989 22 20.9989H20.0001Z"
-        className="fill-nokturo-300 dark:fill-[#ECEEF2]"
+        className="fill-nokturo-900 dark:fill-[#ECEEF2]"
       />
       <path
         fillRule="evenodd"

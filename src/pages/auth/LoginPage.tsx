@@ -74,7 +74,7 @@ export default function LoginPage() {
                   required
                   autoComplete="email"
                   aria-label={t('auth.email')}
-                  className={`${INPUT_CLASS} h-11 border-0 focus:border-0 !bg-white/10`}
+                  className={`${INPUT_CLASS} h-11 border-0 focus:border-0`}
                   placeholder="you@example.com"
                 />
               </div>
@@ -90,7 +90,7 @@ export default function LoginPage() {
                   required
                   autoComplete="current-password"
                   aria-label={t('auth.password')}
-                  className={`${INPUT_CLASS} h-11 border-0 focus:border-0 !bg-white/10`}
+                  className={`${INPUT_CLASS} h-11 border-0 focus:border-0`}
                   placeholder="••••••••"
                 />
               </div>

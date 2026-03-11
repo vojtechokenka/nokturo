@@ -708,7 +708,7 @@ function BlockActionsDropdown({
               setOpen(false);
               setShowDeleteConfirm(true);
             }}
-            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+            className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
           >
             <DeleteIcon size={14} className="shrink-0" />
             {t('common.delete')}
@@ -741,7 +741,7 @@ function BlockActionsDropdown({
                   onRemove(block.id);
                   setShowDeleteConfirm(false);
                 }}
-                className="px-4 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-lg transition-colors"
+                className="dropdown-menu-item-destructive px-4 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-lg transition-colors"
               >
                 {t('common.delete')}
               </button>
@@ -1044,7 +1044,7 @@ function BlockRenderer({
                   <button
                     type="button"
                     onClick={() => onUpdate(block.id, { url: '' })}
-                    className="px-3 py-1.5 text-nokturo-700 dark:text-nokturo-200 text-sm hover:bg-red hover:text-red-fg"
+                    className="dropdown-menu-item-destructive px-3 py-1.5 text-nokturo-700 dark:text-nokturo-200 text-sm hover:bg-red hover:text-red-fg"
                   >
                     {t('common.delete')}
                   </button>

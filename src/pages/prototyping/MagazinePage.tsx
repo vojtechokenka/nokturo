@@ -92,7 +92,7 @@ export default function MagazinePage() {
       descriptionKey="pages.magazine.description"
       bare
       actionsSlot={
-        <div className="sticky top-0 z-10 w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-[#0d0d0d] rounded-[6px]">
+        <div className="sticky top-0 z-10 w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-nokturo-200 dark:bg-[#0d0d0d] rounded-[6px]">
           <div className="flex gap-1">
             {(['published', 'drafts'] as const).map((tab) => {
               const isActive = showHidden === (tab === 'drafts');
@@ -103,7 +103,7 @@ export default function MagazinePage() {
                   onClick={() => setShowHidden(tab === 'drafts')}
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-black text-nokturo-900 dark:text-nokturo-100 rounded-t-[6px] rounded-b-none'
+                      ? 'bg-nokturo-800 text-white dark:bg-black dark:text-nokturo-100 rounded-t-[6px] rounded-b-none'
                       : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
                   }`}
                 >
@@ -235,7 +235,7 @@ export default function MagazinePage() {
                             setMenuOpen(null);
                             setDeleteTarget(article.id);
                           }}
-                          className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
+                          className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
                         >
                           <DeleteIcon className="w-3.5 h-3.5" />
                           {t('common.delete')}

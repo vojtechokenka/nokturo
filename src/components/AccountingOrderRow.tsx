@@ -38,7 +38,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
       tabIndex={0}
       onClick={onClick}
       onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onClick()}
-      className={`cursor-pointer hover:bg-nokturo-100/60 dark:hover:bg-nokturo-800/60 transition-colors ${index % 2 === 0 ? 'bg-white/5' : ''}`}
+      className={`cursor-pointer hover:bg-nokturo-100/60 dark:hover:bg-nokturo-800/60 transition-colors ${index % 2 === 0 ? 'bg-nokturo-50/80 dark:bg-white/5' : ''}`}
     >
       <td className="py-2.5 pl-6 pr-6 align-middle">
         <span
@@ -59,7 +59,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-[4px] font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/15 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-[4px] font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-nokturo-200/60 dark:bg-white/10 hover:bg-nokturo-300/80 dark:hover:bg-white/20 transition-colors truncate max-w-full"
           >
             <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
             <span className="truncate">{order.eshop_link.replace(/^https?:\/\//, '').slice(0, 14)}…</span>

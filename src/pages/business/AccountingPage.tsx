@@ -56,6 +56,9 @@ export default function AccountingPage() {
   const [subDeleteTarget, setSubDeleteTarget] = useState<string | null>(null);
   const [ordersOverviewCollapsed, setOrdersOverviewCollapsed] = useState(false);
   const [subsOverviewCollapsed, setSubsOverviewCollapsed] = useState(false);
+  const [subStatusFilter, setSubStatusFilter] = useState<string[]>([]);
+  const [subSortBy, setSubSortBy] = useState<'date' | 'amount' | 'nextBilling'>('date');
+  const [subSortAsc, setSubSortAsc] = useState(false);
 
   const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'error') => {
     setToasts((prev) => [...prev, { id: crypto.randomUUID(), message, type }]);
@@ -214,13 +217,39 @@ export default function AccountingPage() {
   // ── Subscriptions ────────────────────────────────────────
   const fetchSubscriptions = useCallback(async () => {
     setSubsLoading(true);
-    const { data, error } = await supabase
+
+    const dateAsc = subSortBy === 'date' ? subSortAsc : false;
+    let query = supabase
       .from('subscriptions')
       .select('*, supplier:suppliers(name)')
-      .order('created_at', { ascending: false });
-    if (!error && data) setSubscriptions(data as Subscription[]);
+      .order('created_at', { ascending: dateAsc });
+
+    if (subStatusFilter.length > 0) {
+      query = query.in('status', subStatusFilter);
+    }
+
+    const { data, error } = await query;
+
+    if (!error && data) {
+      let list = data as Subscription[];
+      if (subSortBy === 'amount') {
+        const mult = subSortAsc ? -1 : 1;
+        list = [...list].sort((a, b) => {
+          const aCzk = convertToCzk(a.amount ?? 0, a.currency || 'EUR');
+          const bCzk = convertToCzk(b.amount ?? 0, b.currency || 'EUR');
+          return mult * (bCzk - aCzk);
+        });
+      } else if (subSortBy === 'nextBilling') {
+        list = [...list].sort((a, b) => {
+          const aTime = a.next_billing_date ? new Date(a.next_billing_date).getTime() : Number.MAX_SAFE_INTEGER;
+          const bTime = b.next_billing_date ? new Date(b.next_billing_date).getTime() : Number.MAX_SAFE_INTEGER;
+          return subSortAsc ? aTime - bTime : bTime - aTime;
+        });
+      }
+      setSubscriptions(list);
+    }
     setSubsLoading(false);
-  }, []);
+  }, [subStatusFilter, subSortBy, subSortAsc]);
 
   useEffect(() => {
     fetchSubscriptions();
@@ -336,7 +365,7 @@ export default function AccountingPage() {
                 <button
                   type="button"
                   onClick={() => { setCategoryFilter([]); setStatusFilter([]); }}
-                  className="h-9 px-3 text-sm font-medium text-red rounded-[6px] hover:bg-red hover:text-red-fg transition-colors shrink-0 inline-flex items-center"
+                  className="h-9 px-3 text-sm font-medium text-nokturo-900 dark:text-white bg-nokturo-200/80 dark:bg-white/10 rounded-[6px] hover:bg-red hover:text-red-fg transition-colors shrink-0 inline-flex items-center"
                 >
                   {t('common.clearFilters')}
                 </button>
@@ -355,7 +384,7 @@ export default function AccountingPage() {
                 type="button"
                 onClick={() => setSortAsc((a) => !a)}
                 title={sortAsc ? t('accounting.sortDesc') : t('accounting.sortAsc')}
-                className="flex items-center justify-center size-9 shrink-0 rounded-[6px] bg-white/10 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+                className="flex items-center justify-center size-9 shrink-0 rounded-[6px] bg-nokturo-200/80 dark:bg-white/10 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-300 dark:hover:bg-nokturo-700 transition-colors"
               >
                 <MaterialIcon name="swap_vert" size={16} className={`transition-transform shrink-0 ${sortAsc ? 'rotate-180' : ''}`} />
               </button>
@@ -371,14 +400,62 @@ export default function AccountingPage() {
             </div>
           </div>
         ) : (
-          <div className="flex justify-end">
-            <button
-              onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
-              className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-            >
-              <MaterialIcon name="add" size={16} className="shrink-0" />
-              {t('subscriptions.add')}
-            </button>
+          <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
+            <div className="flex items-center gap-2 shrink-0">
+              <FilterGroup
+                titleKey="subscriptions.filterTitle"
+                sections={[
+                  {
+                    labelKey: 'subscriptions.filterByStatus',
+                    value: subStatusFilter,
+                    onChange: setSubStatusFilter,
+                    options: [
+                      { value: 'all', label: t('subscriptions.allStatuses') },
+                      { value: 'active', label: t('subscriptions.statuses.active') },
+                      { value: 'paused', label: t('subscriptions.statuses.paused') },
+                      { value: 'cancelled', label: t('subscriptions.statuses.cancelled') },
+                    ],
+                  },
+                ]}
+              />
+              {subStatusFilter.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSubStatusFilter([])}
+                  className="h-9 px-3 text-sm font-medium text-nokturo-900 dark:text-white bg-nokturo-200/80 dark:bg-white/10 rounded-[6px] hover:bg-red hover:text-red-fg transition-colors shrink-0 inline-flex items-center"
+                >
+                  {t('common.clearFilters')}
+                </button>
+              )}
+              <SimpleDropdown
+                value={subSortBy}
+                onChange={(v) => setSubSortBy(v as 'date' | 'amount' | 'nextBilling')}
+                options={[
+                  { value: 'date', label: t('subscriptions.sortByDateAdded') },
+                  { value: 'amount', label: t('subscriptions.sortByAmount') },
+                  { value: 'nextBilling', label: t('subscriptions.sortByNextBilling') },
+                ]}
+                compact
+                className="min-w-[140px]"
+              />
+              <button
+                type="button"
+                onClick={() => setSubSortAsc((a) => !a)}
+                title={subSortAsc ? t('accounting.sortDesc') : t('accounting.sortAsc')}
+                className="flex items-center justify-center size-9 shrink-0 rounded-[6px] bg-nokturo-200/80 dark:bg-white/10 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-300 dark:hover:bg-nokturo-700 transition-colors"
+              >
+                <MaterialIcon name="swap_vert" size={16} className={`transition-transform shrink-0 ${subSortAsc ? 'rotate-180' : ''}`} />
+              </button>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
+                className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+              >
+                <MaterialIcon name="add" size={16} className="shrink-0" />
+                {t('subscriptions.add')}
+              </button>
+            </div>
           </div>
         )
       }
@@ -434,25 +511,25 @@ export default function AccountingPage() {
         <div className="relative">
           {!ordersOverviewCollapsed && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('accounting.overview.ordersComing')}
                   </p>
-                  <p className="text-xl font-medium text-white">{ordersComing}</p>
+                  <p className="text-xl font-medium text-nokturo-900 dark:text-white">{ordersComing}</p>
                 </div>
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('accounting.overview.spent')}
                   </p>
                   <p className="text-xl font-medium text-green-fg">
                     {spentCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('accounting.overview.spentThisMonth')}
                   </p>
-                  <p className="text-xl font-medium text-white">
+                  <p className="text-xl font-medium text-nokturo-900 dark:text-white">
                     {spentThisMonthCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
@@ -484,12 +561,12 @@ export default function AccountingPage() {
                 <col style={{ width: '100px' }} />
               </colgroup>
               <thead>
-                <tr style={{ backgroundColor: '#0D0D0D' }}>
+                <tr className="bg-nokturo-200 dark:bg-[#0D0D0D]">
                   <th className="py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.colStatus')}</th>
                   <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.supplier')}</th>
                   <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.eshopLink')}</th>
                   <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.note')}</th>
-                  <th className="sticky top-0 z-10 py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right bg-[#0d0d0d]">{t('accounting.colValue')}</th>
+                  <th className="sticky top-0 z-10 py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right bg-nokturo-200 dark:bg-[#0d0d0d]">{t('accounting.colValue')}</th>
                 </tr>
               </thead>
             </table>
@@ -569,24 +646,24 @@ export default function AccountingPage() {
         <div className="relative">
           {!subsOverviewCollapsed && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.monthlyPay')}
                   </p>
-                  <p className="text-xl font-medium text-white">
+                  <p className="text-xl font-medium text-nokturo-900 dark:text-white">
                     {subMonthlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.yearlyPay')}
                   </p>
-                  <p className="text-xl font-medium text-white">
+                  <p className="text-xl font-medium text-nokturo-900 dark:text-white">
                     {subYearlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.totalYearly')}
                   </p>
                   <p className="text-xl font-medium text-green-fg">
@@ -596,13 +673,13 @@ export default function AccountingPage() {
                     {t('subscriptions.overview.avgYearly')}: {subAvgYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-black rounded-[6px] p-4">
-                  <p className="text-nokturo-400 text-xs uppercase tracking-wider mb-1">
+                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.nextPayment')}
                   </p>
                   {nextPaymentSub ? (
                     <>
-                      <p className="text-xl font-medium text-white">
+                      <p className="text-xl font-medium text-nokturo-900 dark:text-white">
                         {formatNextBilling(nextPaymentSub.next_billing_date)}
                       </p>
                       <p className="text-sm text-nokturo-400 truncate" title={nextPaymentSub.name}>
@@ -641,7 +718,7 @@ export default function AccountingPage() {
                   <col style={{ width: '18%' }} />
                 </colgroup>
                 <thead>
-                  <tr style={{ backgroundColor: '#0D0D0D' }}>
+                  <tr className="bg-nokturo-200 dark:bg-[#0D0D0D]">
                     <th className="py-2 pl-6 pr-4 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.status')}</th>
                     <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.name')}</th>
                     <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.billingCycle')}</th>

@@ -195,7 +195,7 @@ export function SubscriptionSlideOver({
               <button
                 type="button"
                 onClick={() => { onDelete(subscription.id); onClose(); }}
-                className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red hover:text-red-fg transition-colors rounded-lg"
+                className="dropdown-menu-item-destructive p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:bg-red hover:text-red-fg transition-colors rounded-lg"
                 title={t('common.delete')}
               >
                 <DeleteIcon className="w-5 h-5" />

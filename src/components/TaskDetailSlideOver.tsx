@@ -195,7 +195,7 @@ export function TaskDetailSlideOver({
                     {onDelete && (
                       <button
                         onClick={() => { onDelete(task.id); onClose(); setMenuOpen(false); }}
-                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
+                        className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2 whitespace-nowrap"
                       >
                         <DeleteIcon className="w-3.5 h-3.5 shrink-0" />
                         {t('common.delete')}
