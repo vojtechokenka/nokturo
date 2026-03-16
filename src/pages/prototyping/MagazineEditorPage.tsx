@@ -7,7 +7,7 @@ import { PageShell } from '../../components/PageShell';
 import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTextBlockEditor';
 import { PageStructurePanel } from '../../components/PageStructurePanel';
 import { ToastContainer, type ToastData } from '../../components/Toast';
-import { INPUT_CLASS } from '../../lib/inputStyles';
+import { INPUT_CLASS, PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SaveIcon } from '../../components/icons/SaveIcon';
 
@@ -159,7 +159,7 @@ export default function MagazineEditorPage() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 disabled:opacity-60 transition-colors"
+            className={PRIMARY_BUTTON_CLASS}
           >
             {saving ? (
               <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />
@@ -209,7 +209,7 @@ export default function MagazineEditorPage() {
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                      className="px-2 py-1 text-xs text-white bg-black/60 hover:bg-black/80 rounded transition-colors"
+                      className="px-2 py-1 text-xs text-white bg-page/60 hover:bg-page/80 rounded transition-colors"
                     >
                       {t('magazine.replaceThumbnail')}
                     </button>

@@ -61,7 +61,7 @@ export default function StrategyPage() {
       setDocId(data.id);
       const parsed = parseContent(data.content);
       setBlocks(parsed.blocks);
-      setHeaderImage(parsed.headerImage);
+      setHeaderImage(parsed.headerImage ?? null);
     } else {
       setDocId(null);
       setBlocks([]);

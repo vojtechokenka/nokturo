@@ -3,7 +3,7 @@ import { MaterialIcon } from './icons/MaterialIcon';
 
 // ── Types ────────────────────────────────────────────────────────
 export interface ToastData {
-  id: string;
+  id?: string;
   message: string;
   type: 'success' | 'error' | 'info';
   actionLabel?: string;
@@ -12,12 +12,13 @@ export interface ToastData {
 
 // ── Single toast item ────────────────────────────────────────────
 function ToastItem({ toast, onClose }: { toast: ToastData; onClose: (id: string) => void }) {
+  const id = toast.id ?? crypto.randomUUID();
   const [visible, setVisible] = useState(false);
 
   const dismiss = useCallback(() => {
     setVisible(false);
-    setTimeout(() => onClose(toast.id), 300);
-  }, [onClose, toast.id]);
+    setTimeout(() => onClose(id), 300);
+  }, [onClose, id]);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setVisible(true));
@@ -86,7 +87,7 @@ export function ToastContainer({
   return (
     <div className={`fixed bottom-6 z-[100] flex flex-col gap-2 pointer-events-auto ${position === 'left' ? 'left-6' : 'right-6'}`}>
       {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onClose={onClose} />
+        <ToastItem key={toast.id ?? toast.message + toast.type} toast={toast} onClose={onClose} />
       ))}
     </div>
   );

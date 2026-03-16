@@ -17,7 +17,6 @@ import { supabase } from '../../lib/supabase';
 import { DefaultAvatar } from '../../components/DefaultAvatar';
 import { resizeAvatarImage } from '../../lib/resizeImage';
 import { INPUT_CLASS } from '../../lib/inputStyles';
-import { isElectron } from '../../utils/platform';
 import { AppUpdateSection } from '../../components/AppUpdateSection';
 
 export default function AccountPage() {
@@ -144,9 +143,10 @@ export default function AccountPage() {
       const displayName =
         [fName, lName].filter(Boolean).join(' ') ||
         user?.email ||
-        user?.name;
+        user?.name ||
+        '';
       setUser({
-        ...(user ?? { id: userId, email: '', name: '', role: 'client' as const }),
+        ...(user ?? { id: userId ?? '', email: '', name: '', role: 'client' as const }),
         name: displayName,
         firstName: fName || undefined,
         lastName: lName || undefined,
@@ -190,7 +190,7 @@ export default function AccountPage() {
       }
 
       const { data } = supabase.storage.from('uploads').getPublicUrl(path);
-      setAvatarUrl(data.publicUrl);
+      setAvatarUrl(data?.publicUrl ?? '');
       // Aktualizovat authStore hned po uploadu, aby sidebar zobrazil profilovku bez čekání na Save
       if (user) {
         setUser({ ...user, avatarUrl: data.publicUrl });
@@ -482,10 +482,6 @@ export default function AccountPage() {
                 <MaterialIcon name="chevron_right" size={20} className="text-nokturo-400 dark:text-nokturo-500 group-hover:text-nokturo-500 dark:group-hover:text-nokturo-400 shrink-0 transition-colors" />
               </div>
             </NavLink>
-            <div className="flex gap-3 mt-1 ml-[52px]">
-              <NavLink to="/settings/style-guide" className="text-xs text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300">v1</NavLink>
-              <NavLink to="/settings/style-guide-v2" className="text-xs text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300">v2</NavLink>
-            </div>
           </div>
         )}
 
@@ -496,7 +492,7 @@ export default function AccountPage() {
               type="button"
               onClick={handleSave}
               disabled={saving}
-              className="w-full py-3 rounded-lg bg-nokturo-700 hover:bg-nokturo-600 dark:bg-nokturo-600 dark:hover:bg-nokturo-500 text-white font-medium flex items-center justify-center gap-2 disabled:opacity-50 transition-colors"
+              className={`w-full flex items-center justify-center gap-2 py-3 rounded-[6px] text-button-text font-body font-medium bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               {saving && <MaterialIcon name="progress_activity" size={20} className="animate-spin shrink-0" />}
               {t('settings.account.saveProfile')}
@@ -504,26 +500,8 @@ export default function AccountPage() {
           </div>
         )}
 
-        {/* App version & update (Electron only) */}
-        {isElectron() ? (
-          <AppUpdateSection />
-        ) : (
-          <div className="pt-6 border-t border-nokturo-200 dark:border-nokturo-700 flex items-center justify-between gap-4">
-            <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
-              Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">{typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?'}</span>
-              <span className="ml-2 text-nokturo-400 dark:text-nokturo-500">— web</span>
-            </p>
-            <a
-              href="https://github.com/vojtechokenka/nokturo/releases"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-none bg-white dark:bg-nokturo-700 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
-            >
-              <MaterialIcon name="download" size={14} className="shrink-0" />
-              {t('settings.account.downloadDesktopApp', 'Stáhnout desktop aplikaci')}
-            </a>
-          </div>
-        )}
+        {/* App version & update (Electron: full flow; Web: "always up to date") */}
+        <AppUpdateSection />
       </div>
 
       {/* Toast */}

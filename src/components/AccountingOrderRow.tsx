@@ -42,7 +42,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
     >
       <td className="py-2.5 pl-6 pr-6 align-middle">
         <span
-          className={`inline-block text-xs px-2 py-0.5 rounded-[4px] font-medium whitespace-nowrap ${
+          className={`inline-block text-xs px-2.5 py-1 rounded-[6px] font-medium whitespace-nowrap ${
             TAG_BADGE_CLASSES[ORDER_STATUS_COLORS[order.order_status] ?? 'gray'] ?? TAG_BADGE_CLASSES.gray
           }`}
         >
@@ -59,7 +59,7 @@ export function AccountingOrderRow({ order, index, onClick }: AccountingOrderRow
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-[4px] font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-nokturo-200/60 dark:bg-white/10 hover:bg-nokturo-300/80 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+            className="inline-flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-[6px] font-medium text-nokturo-600 dark:text-white hover:text-nokturo-900 dark:hover:text-white bg-nokturo-200/60 dark:bg-white/10 hover:bg-nokturo-300/80 dark:hover:bg-white/20 transition-colors truncate max-w-full"
           >
             <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
             <span className="truncate">{order.eshop_link.replace(/^https?:\/\//, '').slice(0, 14)}…</span>

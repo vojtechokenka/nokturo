@@ -184,7 +184,7 @@ export function SubscriptionSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
           <h3 className={MODAL_HEADING_CLASS}>
@@ -227,7 +227,7 @@ export function SubscriptionSlideOver({
               <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">{t('subscriptions.status')}</label>
               <NotionSelect
                 value={form.status}
-                onChange={(v) => handleChange('status', v)}
+                onChange={(v) => handleChange('status', Array.isArray(v) ? v[0] ?? '' : v)}
                 options={STATUS_OPTIONS}
                 placeholder={t('subscriptions.selectStatus')}
                 optionsI18nKey="subscriptions.statuses"
@@ -322,7 +322,7 @@ export function SubscriptionSlideOver({
               <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">{t('accounting.paymentMethod')}</label>
               <NotionSelect
                 value={form.payment_method}
-                onChange={(v) => handleChange('payment_method', v)}
+                onChange={(v) => handleChange('payment_method', Array.isArray(v) ? v[0] ?? '' : v)}
                 options={PAYMENT_METHOD_OPTIONS}
                 placeholder={t('accounting.selectPaymentMethod')}
                 optionsI18nKey="accounting.paymentMethods"
@@ -341,7 +341,7 @@ export function SubscriptionSlideOver({
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-elevated">
             {error && (
               <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">{error}</div>
             )}

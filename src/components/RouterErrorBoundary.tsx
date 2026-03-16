@@ -1,5 +1,6 @@
 import { useRouteError, isRouteErrorResponse, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PRIMARY_BUTTON_CLASS } from '../lib/inputStyles';
 
 /**
  * Catches React Router errors (404, load errors) and shows a friendly fallback.
@@ -19,7 +20,7 @@ export function RouterErrorBoundary() {
           ? t('errors.pageNotFound', 'Page not found')
           : t('errors.pageNotLoaded', 'Page could not be loaded.')}
       </p>
-      {import.meta.env.DEV && error && (
+      {import.meta.env.DEV && error != null && (
         <pre className="text-xs text-nokturo-500 mb-4 max-w-md overflow-auto text-left">
           {error instanceof Error ? error.message : String(error)}
         </pre>
@@ -27,7 +28,7 @@ export function RouterErrorBoundary() {
       <button
         type="button"
         onClick={() => navigate('/')}
-        className="px-4 py-2 bg-nokturo-700 text-white rounded-lg hover:bg-nokturo-600 dark:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
+        className={PRIMARY_BUTTON_CLASS}
       >
         {t('errors.backToHome', 'Back to home')}
       </button>

@@ -19,7 +19,7 @@ import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { UploadImageIcon } from '../../components/icons/UploadImageIcon';
 import { useMentionSuggestions, MentionDropdown } from '../../components/MentionSuggestions';
 import type { MentionProfile } from '../../components/MentionSuggestions';
-import { INPUT_CLASS, MODAL_HEADING_CLASS, TEXTAREA_CLASS } from '../../lib/inputStyles';
+import { INPUT_CLASS, MODAL_HEADING_CLASS, TEXTAREA_CLASS, PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { distributeToColumns } from '../../utils/masonryColumns';
 
@@ -142,9 +142,9 @@ export default function MoodboardPage() {
   const [galleryColumns, setGalleryColumns] = useState<3 | 4 | 5 | 6>(4);
 
   // Responsive column count: cap user preference by viewport
-  const [effectiveColumns, setEffectiveColumns] = useState(galleryColumns);
+  const [effectiveColumns, setEffectiveColumns] = useState<number>(galleryColumns);
   useEffect(() => {
-    const getColumns = () => {
+    const getColumns = (): number => {
       if (typeof window === 'undefined') return galleryColumns;
       if (window.innerWidth < 640) return 1;
       if (window.innerWidth < 1024) return 2;
@@ -888,7 +888,7 @@ export default function MoodboardPage() {
             </button>
             <button
               onClick={() => setShowUpload(true)}
-              className="flex items-center justify-center gap-2 h-9 shrink-0 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-all duration-150 hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`${PRIMARY_BUTTON_CLASS} shrink-0 active:scale-95`}
             >
             <MaterialIcon name="add" size={16} className="shrink-0" />
               {t('moodboard.addItem')}
@@ -946,7 +946,7 @@ export default function MoodboardPage() {
                 />
                 {/* Multi-image badge */}
                 {item.sub_images && item.sub_images.length > 0 && (
-                  <div className="absolute bottom-2 left-2 flex items-center justify-center bg-black/60 text-white p-1 rounded-[4px] z-[1]">
+                  <div className="absolute bottom-2 left-2 flex items-center justify-center bg-page/60 text-white p-1 rounded-[4px] z-[1]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" className="text-white">
                       <path fill="currentColor" d="M1 19V5h14v14zm16-8V5h6v6zM4 15h8l-2.625-3.5L7.5 14l-1.375-1.825zm13 4v-6h6v6z" />
                     </svg>
@@ -997,7 +997,7 @@ export default function MoodboardPage() {
       {/* ── Upload Slide-over ────────────────────────────────────── */}
       {showUpload && (
         <>
-          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm" onClick={resetUpload} aria-hidden="true" />
+          <div className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm" onClick={resetUpload} aria-hidden="true" />
           <div
             className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col"
             onClick={(e) => e.stopPropagation()}
@@ -1100,7 +1100,7 @@ export default function MoodboardPage() {
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); removeUploadImage(img.id); }}
-                        className="absolute top-1 right-1 p-0.5 bg-black/60 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 p-0.5 bg-page/60 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <MaterialIcon name="close" size={12} className="shrink-0" />
                       </button>
@@ -1264,7 +1264,7 @@ export default function MoodboardPage() {
       {/* ── Edit Modal ───────────────────────────────────────── */}
       {editTarget && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm"
           onClick={closeEdit}
         >
           <div
@@ -1385,7 +1385,7 @@ export default function MoodboardPage() {
         const totalImages = items.reduce((acc, it) => acc + 1 + (it.sub_images?.length || 0), 0);
         return (
         <div
-          className="fixed inset-0 z-50 bg-black/80 flex flex-col lg:flex-row"
+          className="fixed inset-0 z-50 bg-overlay flex flex-col lg:flex-row"
           onClick={() => setLightboxIndex(null)}
         >
           {/* 1. Photo area (left) */}
@@ -1436,7 +1436,7 @@ export default function MoodboardPage() {
             {/* Mini-gallery thumbnails */}
             {lbGallery.length > 1 && (
               <div
-                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-black/60 rounded-lg p-1.5 z-10 max-w-[80%] overflow-x-auto"
+                className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 bg-page/60 rounded-lg p-1.5 z-10 max-w-[80%] overflow-x-auto"
                 onClick={(e) => e.stopPropagation()}
               >
                 {lbGallery.map((url, idx) => (
@@ -1506,7 +1506,7 @@ export default function MoodboardPage() {
 
           {/* 2. Modal: info + comments (right) */}
           <div
-            className="w-full lg:w-[380px] bg-white dark:bg-black flex flex-col overflow-hidden shrink-0 max-h-[40vh] lg:max-h-none order-2"
+            className="w-full lg:w-[380px] bg-white dark:bg-surface flex flex-col overflow-hidden shrink-0 max-h-[40vh] lg:max-h-none order-2"
             onClick={(e) => e.stopPropagation()}
           >
             {(lbItem.title || lbItem.notes || (lbItem.categories && lbItem.categories.length > 0)) && (
@@ -1533,7 +1533,7 @@ export default function MoodboardPage() {
                       return (
                         <span
                           key={cat}
-                          className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium shrink-0 ${colorClass}`}
+                          className={`inline-flex items-center px-2.5 py-1 rounded-[6px] text-xs font-medium shrink-0 ${colorClass}`}
                         >
                           {t(`moodboard.categories.${cat}`) !== `moodboard.categories.${cat}`
                             ? t(`moodboard.categories.${cat}`)

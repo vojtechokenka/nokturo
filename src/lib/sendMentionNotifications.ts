@@ -53,6 +53,11 @@ export async function sendMentionNotifications({
   moodboardItemId,
   commentId,
 }: SendMentionNotificationsParams) {
+  if (!Array.isArray(taggedUserIds)) {
+    console.error('[sendMentionNotifications] taggedUserIds must be an array', taggedUserIds);
+    return;
+  }
+
   const DEBUG = import.meta.env.DEV;
 
   if (DEBUG) {

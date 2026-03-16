@@ -15,6 +15,7 @@ import {
 } from '../../lib/compositionUtils';
 import { MaterialDetailSlideOver } from '../../components/MaterialDetailSlideOver';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
@@ -223,7 +224,7 @@ export default function MaterialsPage() {
           </div>
           <button
             onClick={openAdd}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('materials.addMaterial')}
@@ -232,7 +233,7 @@ export default function MaterialsPage() {
       }
     >
       {/* ── Overview stats (sticky at top) ───────────────────── */}
-      <div className="sticky top-0 z-20 bg-nokturo-50 dark:bg-black">
+      <div className="sticky top-0 z-20 bg-page">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-0 pb-6">
         <div className="bg-nokturo-200/80 dark:bg-white/5 rounded-[6px] p-4">
           <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">

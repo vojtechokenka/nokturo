@@ -115,7 +115,7 @@ export function TaskDetailSlideOver({
 
   return (
     <>
-      {!inline && <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />}
+      {!inline && <div className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm" onClick={onClose} />}
       <div className={`flex flex-col ${inline ? 'flex-1 min-h-0 bg-transparent' : 'fixed top-12 bottom-0 left-1/2 -translate-x-1/2 z-50 w-[80vw] max-w-[860px] bg-nokturo-900 shadow-2xl min-h-0'}`}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0 gap-3">

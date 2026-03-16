@@ -198,7 +198,7 @@ export function LabelSlideOver({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
@@ -277,7 +277,7 @@ export function LabelSlideOver({
             </label>
             <NotionSelect
               value={form.typ}
-              onChange={(v) => handleChange('typ', v)}
+              onChange={(v) => handleChange('typ', Array.isArray(v) ? v[0] ?? '' : v)}
               options={typOptions}
               onOptionsChange={onTypOptionsChange}
               placeholder={t('labels.selectTyp')}
@@ -340,7 +340,7 @@ export function LabelSlideOver({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                    className="px-2 py-1 text-xs text-white bg-black/60 hover:bg-black/80 rounded transition-colors"
+                    className="px-2 py-1 text-xs text-white bg-page/60 hover:bg-page/80 rounded transition-colors"
                   >
                     {t('labels.replaceDesign')}
                   </button>
@@ -353,7 +353,7 @@ export function LabelSlideOver({
                   </button>
                 </div>
                 {uploading && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg pointer-events-none">
+                  <div className="absolute inset-0 bg-page/60 flex items-center justify-center rounded-lg pointer-events-none">
                     <MaterialIcon name="progress_activity" size={24} className="text-white animate-spin shrink-0" />
                   </div>
                 )}

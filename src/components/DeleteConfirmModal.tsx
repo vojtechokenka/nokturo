@@ -12,8 +12,8 @@ export function DeleteConfirmModal({
   const { t } = useTranslation();
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-      <div className="flex flex-col items-center text-center max-w-sm w-full mx-4 bg-black rounded-xl p-8 shadow-2xl">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-overlay backdrop-blur-sm">
+      <div className="flex flex-col items-center text-center max-w-sm w-full mx-4 bg-elevated rounded-xl p-8 shadow-2xl">
         <h3 className="font-body text-[32px] sm:text-[40px] leading-tight font-medium text-white mb-6 tracking-[-0.02em]">
           {t('common.areYouSure')}
         </h3>

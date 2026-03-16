@@ -50,14 +50,18 @@ export async function resizeAvatarImage(
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) {
-      bitmap.close();
+      if ('close' in bitmap && typeof (bitmap as ImageBitmap).close === 'function') {
+        (bitmap as ImageBitmap).close();
+      }
       throw new Error('Canvas not supported');
     }
 
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
     ctx.drawImage(bitmap, 0, 0, width, height);
-    if (typeof bitmap.close === 'function') bitmap.close();
+    if ('close' in bitmap && typeof (bitmap as ImageBitmap).close === 'function') {
+      (bitmap as ImageBitmap).close();
+    }
 
     const mime = 'image/jpeg';
     let quality = targetQuality;

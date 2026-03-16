@@ -53,6 +53,12 @@ export default {
         body: ['Instrument Sans', 'sans-serif'],
       },
       colors: {
+        /* Semantic theme tokens – use these for bg/border, not hardcoded hex */
+        page: 'var(--bg-page)',
+        surface: 'var(--bg-surface)',
+        elevated: 'var(--bg-elevated)',
+        borderDefault: 'var(--border-default)',
+        overlay: 'var(--overlay)',
         /* Bíločerná paleta po 5% (0 = bílá, 100 = černá) */
         nokturo: {
           0: '#FFFFFF',

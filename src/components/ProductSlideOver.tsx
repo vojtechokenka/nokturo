@@ -649,9 +649,10 @@ export function ProductSlideOver({
         .from('moodboard_items')
         .select('id, title, image_url, moodboard_item_images(image_url, sort_order)')
         .order('created_at', { ascending: false });
+      let rawData: { id: string; title: string | null; image_url: string; moodboard_item_images?: { image_url: string; sort_order: number }[] }[] | null = data;
       if (error) {
         const fallback = await supabase.from('moodboard_items').select('id, title, image_url').order('created_at', { ascending: false });
-        data = fallback.data;
+        rawData = fallback.data;
         error = fallback.error;
       }
       setMoodboardPickerLoading(false);
@@ -659,7 +660,7 @@ export function ProductSlideOver({
         addToast({ id: crypto.randomUUID(), type: 'error', message: error.message });
         return;
       }
-      const items = (data || []).map((row: { id: string; title: string | null; image_url: string; moodboard_item_images?: { image_url: string; sort_order: number }[] }) => ({
+      const items = (rawData || []).map((row) => ({
         id: row.id,
         title: row.title,
         image_url: row.image_url,
@@ -1090,7 +1091,7 @@ export function ProductSlideOver({
 
   const slideOverContent = (
     <>
-      <div className="fixed inset-0 z-[9998] bg-black/80 backdrop-blur-sm" onClick={handleClose} />
+      <div className="fixed inset-0 z-[9998] bg-overlay backdrop-blur-sm" onClick={handleClose} />
       <div
         className="fixed inset-y-0 right-0 z-[9999] w-full max-w-2xl bg-nokturo-900 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
@@ -1712,7 +1713,7 @@ export function ProductSlideOver({
                   galleryDragOver?.gallery === 'design' && galleryDragOver?.index === i;
                 return (
                   <div
-                    key={i}
+                    key={img.url || `design-${i}`}
                     draggable
                     onDragStart={() => setGalleryDragFrom({ gallery: 'design', index: i })}
                     onDragEnd={() => {
@@ -1825,7 +1826,7 @@ export function ProductSlideOver({
                   galleryDragOver?.gallery === 'moodboard' && galleryDragOver?.index === i;
                 return (
                   <div
-                    key={i}
+                    key={img.url || `moodboard-${i}`}
                     draggable
                     onDragStart={() => setGalleryDragFrom({ gallery: 'moodboard', index: i })}
                     onDragEnd={() => {
@@ -1981,7 +1982,7 @@ export function ProductSlideOver({
       {/* Moodboard picker modal */}
       {showMoodboardPicker && (
         <div
-          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-page/60 backdrop-blur-sm p-4"
           onClick={() => setShowMoodboardPicker(false)}
         >
           <div

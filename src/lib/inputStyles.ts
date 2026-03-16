@@ -11,13 +11,21 @@ export const INPUT_CLASS =
 export const TEXTAREA_CLASS =
   'w-full min-h-[44px] bg-nokturo-200/60 dark:bg-nokturo-700/60 rounded-[6px] px-3 py-2 text-sm text-nokturo-900 dark:text-nokturo-100 placeholder-nokturo-500 dark:placeholder-nokturo-500 focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 transition-shadow duration-150';
 
-/** For inputs on black/dark modal backgrounds */
+/** For inputs on elevated/dark modal backgrounds */
 export const INPUT_CLASS_DARK =
   'w-full h-11 bg-white/10 rounded-[6px] px-3 py-2 text-sm text-white placeholder-nokturo-400 focus:outline-none focus:ring-2 focus:ring-white/30 transition-shadow duration-150';
 
-/** Modal/slide-over heading – used in all modals with black background */
+/** Modal/slide-over heading – used in all modals with elevated/dark background */
 export const MODAL_HEADING_CLASS =
   'text-heading-5 font-semibold text-white tracking-tight truncate min-w-0';
 
 /** Button and link text: 16px, 100% lh, Instrument Sans, regular (pro explicitní použití) */
 export const BUTTON_TEXT_CLASS = 'text-button-text font-body font-normal';
+
+/** Primary button — V2 style guide */
+export const PRIMARY_BUTTON_CLASS =
+  'inline-flex items-center justify-center gap-2 h-9 px-4 rounded-[6px] text-button-text font-body font-medium bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed';
+
+/** Secondary button — V2 style guide */
+export const SECONDARY_BUTTON_CLASS =
+  'inline-flex items-center justify-center gap-2 h-9 px-3 rounded-[6px] text-sm font-medium bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors';

@@ -300,7 +300,7 @@ export function AccountingSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
           <h3 className={MODAL_HEADING_CLASS}>
@@ -329,7 +329,7 @@ export function AccountingSlideOver({
         <form
           id="accounting-form"
           onSubmit={handleSubmit}
-          formNoValidate
+          noValidate
           className="flex flex-1 flex-col min-h-0 overflow-hidden"
         >
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
@@ -338,7 +338,7 @@ export function AccountingSlideOver({
               <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">{t('accounting.orderStatus')}</label>
               <NotionSelect
                 value={form.order_status}
-                onChange={(v) => handleChange('order_status', v)}
+                onChange={(v) => handleChange('order_status', Array.isArray(v) ? v[0] ?? '' : v)}
                 options={ORDER_STATUS_OPTIONS}
                 placeholder={t('accounting.selectStatus')}
                 optionsI18nKey="accounting.orderStatuses"
@@ -350,7 +350,7 @@ export function AccountingSlideOver({
               <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">{t('accounting.category')}</label>
               <NotionSelect
                 value={form.category}
-                onChange={(v) => handleChange('category', v)}
+                onChange={(v) => handleChange('category', Array.isArray(v) ? v[0] ?? '' : v)}
                 options={categories}
                 onOptionsChange={onCategoriesChange}
                 placeholder={t('accounting.selectCategory')}
@@ -509,7 +509,7 @@ export function AccountingSlideOver({
               <label className="block text-sm text-nokturo-700 dark:text-nokturo-400 mb-1.5">{t('accounting.paymentMethod')}</label>
               <NotionSelect
                 value={form.payment_method}
-                onChange={(v) => handleChange('payment_method', v)}
+                onChange={(v) => handleChange('payment_method', Array.isArray(v) ? v[0] ?? '' : v)}
                 options={PAYMENT_METHOD_OPTIONS}
                 placeholder={t('accounting.selectPaymentMethod')}
                 optionsI18nKey="accounting.paymentMethods"
@@ -560,7 +560,7 @@ export function AccountingSlideOver({
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-elevated">
             {error && (
               <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">
                 {error}

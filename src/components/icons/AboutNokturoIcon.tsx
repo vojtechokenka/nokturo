@@ -6,24 +6,14 @@ interface AboutNokturoIconProps {
 export function AboutNokturoIcon({ className, size = 20 }: AboutNokturoIconProps) {
   return (
     <svg
+      xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 -960 960 960"
+      fill="currentColor"
       className={className}
     >
-      <g clipPath="url(#clip0_about_nokturo)">
-        <path
-          d="M4.8002 3.86182C4.8002 7.83919 8.02282 11.0618 12.0002 11.0618C15.9761 11.0618 19.2002 7.83908 19.2002 3.86182H20.8002V19.8618H19.2002C19.2002 15.886 15.976 12.6618 12.0002 12.6618C8.02293 12.6618 4.8002 15.8859 4.8002 19.8618H3.2002V3.86182H4.8002Z"
-          fill="currentColor"
-        />
-      </g>
-      <defs>
-        <clipPath id="clip0_about_nokturo">
-          <rect width="16" height="16" fill="white" transform="translate(4 4)" />
-        </clipPath>
-      </defs>
+      <path d="M240-80v-172q-57-52-88.5-121.5T120-520q0-150 105-255t255-105q125 0 221.5 73.5T827-615l52 205q5 19-7 34.5T840-360h-80v120q0 33-23.5 56.5T680-160h-80v80H240Zm240-240q17 0 28.5-11.5T520-360q0-17-11.5-28.5T480-400q-17 0-28.5 11.5T440-360q0 17 11.5 28.5T480-320Zm-30-128h61q0-25 6.5-40.5T544-526q18-20 35-40.5t17-53.5q0-42-32.5-71T483-720q-40 0-72.5 23T365-637l55 23q7-22 24.5-35.5T483-663q22 0 36.5 12t14.5 31q0 21-12.5 37.5T492-549q-20 21-31 42t-11 59Z" />
     </svg>
   );
 }

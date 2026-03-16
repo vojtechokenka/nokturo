@@ -61,7 +61,7 @@ export function SimpleDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-0.5 z-50 py-1 rounded-[4px] bg-black overflow-hidden min-w-0">
+        <div className="absolute left-0 right-0 top-full mt-0.5 z-50 py-1 rounded-[4px] bg-elevated overflow-hidden min-w-0">
           <ul role="listbox" className="max-h-60 overflow-y-auto space-y-px px-1">
             {options.map((opt) => (
               <li key={opt.value}>
@@ -73,10 +73,10 @@ export function SimpleDropdown({
                     onChange(opt.value);
                     setOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-sm transition-colors rounded-[4px] text-white ${
+                  className={`w-full text-left px-3 py-2 text-sm transition-colors rounded-[4px] text-nokturo-900 dark:text-white ${
                     value === opt.value
-                      ? 'bg-white/10 font-medium'
-                      : 'hover:bg-white/10'
+                      ? 'bg-nokturo-200 dark:bg-white/10 font-medium'
+                      : 'hover:bg-nokturo-200 dark:hover:bg-white/10'
                   }`}
                 >
                   {opt.label}

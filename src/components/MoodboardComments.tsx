@@ -233,8 +233,8 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
       tagged_user_ids: taggedUsersSnapshot,
       created_at: new Date().toISOString(),
       profile: {
-        first_name: user.firstName ?? null,
-        last_name: user.lastName ?? null,
+        first_name: user.firstName ?? undefined,
+        last_name: user.lastName ?? undefined,
         full_name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name,
         avatar_url: user.avatarUrl ?? null,
       },
@@ -400,7 +400,7 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
               <p className="text-sm font-light break-words pr-0 text-inherit opacity-80">
                 {renderContentWithMentions(
                   comment.content,
-                  isOwn,
+                  !!isOwn,
                   [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || ''
                 )}
               </p>

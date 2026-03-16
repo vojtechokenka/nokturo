@@ -30,7 +30,9 @@ export function LanguageToggle({ variant }: LanguageToggleProps) {
     // Persist to DB profile
     const userId = getUserIdForDb();
     if (userId) {
-      supabase.from('profiles').update({ language: lang }).eq('id', userId).then();
+      supabase.from('profiles').update({ language: lang }).eq('id', userId).then(({ error }) => {
+        if (error) console.error('[LanguageToggle] Profile update failed:', error.message);
+      });
       const u = useAuthStore.getState().user;
       if (u) useAuthStore.getState().setUser({ ...u, language: lang });
     }

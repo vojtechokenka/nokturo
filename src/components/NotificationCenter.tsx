@@ -102,21 +102,21 @@ export function useNotifications() {
 
   const markRead = async (id: string) => {
     const readAt = new Date().toISOString();
-    await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('id', id);
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    const { error } = await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('id', id);
+    if (!error) setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
   };
 
   const markAllRead = async () => {
     if (!userId) return;
     const readAt = new Date().toISOString();
-    await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('recipient_id', userId);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    const { error } = await supabase.from('notifications').update({ read: true, read_at: readAt }).eq('recipient_id', userId);
+    if (!error) setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   };
 
   const clearAll = async () => {
     if (!userId) return;
-    setNotifications([]);
-    await supabase.from('notifications').delete().eq('recipient_id', userId);
+    const { error } = await supabase.from('notifications').delete().eq('recipient_id', userId);
+    if (!error) setNotifications([]);
   };
 
   const handleNotificationClick = (n: Notification, onClose?: () => void) => {
@@ -189,7 +189,7 @@ export function NotificationPanel({
         <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 flex items-center gap-2">
           {t('notifications.title')}
           {unreadCount > 0 && (
-            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 bg-[#FF1A1A] text-[10px] font-semibold text-white leading-none" style={{ borderRadius: 9999 }}>
+            <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 bg-red text-[10px] font-semibold text-white leading-none" style={{ borderRadius: 9999 }}>
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -226,7 +226,7 @@ export function NotificationPanel({
                 }`}
               >
                 <span
-                  className={`mt-1.5 shrink-0 w-2 h-2 rounded-[50%] ${!n.read ? 'bg-[#FF1A1A]' : 'bg-nokturo-400 dark:bg-nokturo-500'}`}
+                  className={`mt-1.5 shrink-0 w-2 h-2 rounded-[50%] ${!n.read ? 'bg-red' : 'bg-nokturo-400 dark:bg-nokturo-500'}`}
                 />
                 <div className={`flex-1 min-w-0 ${n.read ? 'opacity-50' : ''}`}>
                   <p className={`text-sm leading-snug whitespace-nowrap ${!n.read ? 'font-medium text-nokturo-900 dark:text-nokturo-100' : 'text-nokturo-600 dark:text-nokturo-500'}`}>

@@ -57,7 +57,7 @@ export default function IdentityPage() {
     if (!error && data?.content) {
       const parsed = parseContent(data.content);
       setBlocks(parsed.blocks);
-      setHeaderImage(parsed.headerImage);
+      setHeaderImage(parsed.headerImage ?? null);
     } else {
       setBlocks([]);
       setHeaderImage(null);

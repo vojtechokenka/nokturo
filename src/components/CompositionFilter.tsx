@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SECONDARY_BUTTON_CLASS } from '../lib/inputStyles';
 import { FilterChevronIcon } from './FilterSelect';
 import type { TargetProductOption } from '../lib/compositionUtils';
 
@@ -92,7 +93,7 @@ export function CompositionFilter({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 h-9 px-3 text-sm font-medium rounded-[6px] transition-colors inline-flex items-center gap-2 w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900"
+        className={`${SECONDARY_BUTTON_CLASS} w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900`}
         aria-haspopup="listbox"
         aria-expanded={open}
       >

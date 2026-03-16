@@ -7,7 +7,6 @@ import { useAuthStore } from '../../stores/authStore';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { LoginLogo } from '../../components/LoginLogo';
 import { AppUpdateSection } from '../../components/AppUpdateSection';
-import { isElectron } from '../../utils/platform';
 
 export default function LoginPage() {
   const { t } = useTranslation();
@@ -21,7 +20,7 @@ export default function LoginPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-nokturo-50 dark:bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-page flex items-center justify-center">
         <div className="text-nokturo-500 dark:text-nokturo-400">{t('common.loading')}</div>
       </div>
     );
@@ -38,9 +37,6 @@ export default function LoginPage() {
     const { data, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password,
-      options: {
-        data: { persistent: rememberMe },
-      },
     });
 
     console.warn('🔐 signIn result:', data?.user?.id ?? 'null', authError?.message ?? 'no error');
@@ -54,7 +50,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-nokturo-50 dark:bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-page flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Branding */}
         <div className="flex justify-center mb-10">
@@ -141,8 +137,8 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* App version & update (Electron only) — dostupné bez přihlášení */}
-          {isElectron() && <AppUpdateSection compact />}
+          {/* App version & update (Electron: full flow; Web: "always up to date") */}
+          <AppUpdateSection compact />
         </div>
       </div>
     </div>

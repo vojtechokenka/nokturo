@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { SECONDARY_BUTTON_CLASS } from '../lib/inputStyles';
 
 // Chevron-down icon (user-provided SVG) – exported for reuse
 export function FilterChevronIcon({ className = '' }: { className?: string }) {
@@ -69,7 +70,7 @@ export function FilterSelect({
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 h-9 px-3 text-sm font-medium rounded-[6px] transition-colors inline-flex items-center gap-2 w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900"
+        className={`${SECONDARY_BUTTON_CLASS} w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900`}
         aria-haspopup="listbox"
         aria-expanded={open}
       >
@@ -78,9 +79,9 @@ export function FilterSelect({
       </button>
 
       {open && (
-        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-black rounded-[8px] overflow-hidden">
-          <div className="px-3 py-2.5 bg-white/10">
-            <p className="text-sm font-medium text-white">{t(titleKey)}</p>
+        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-elevated rounded-[8px] overflow-hidden">
+          <div className="px-3 py-2.5 bg-nokturo-200/60 dark:bg-white/10">
+            <p className="text-sm font-medium text-nokturo-900 dark:text-white">{t(titleKey)}</p>
           </div>
           <div className="py-2 max-h-60 overflow-y-auto">
             <div className="space-y-px px-1">
@@ -89,7 +90,7 @@ export function FilterSelect({
                 return (
                   <label
                     key={opt.value}
-                    className="flex items-center gap-2 px-2 py-2 rounded-[4px] cursor-pointer hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-2 px-2 py-2 rounded-[4px] cursor-pointer hover:bg-nokturo-200 dark:hover:bg-white/10 transition-colors"
                   >
                     <input
                       type="checkbox"
@@ -97,7 +98,7 @@ export function FilterSelect({
                       onChange={() => toggle(opt.value)}
                       className="w-4 h-4 rounded outline-none focus:ring-2 focus:ring-nokturo-400"
                     />
-                    <span className="text-sm text-white flex-1">
+                    <span className="text-sm text-nokturo-900 dark:text-white flex-1">
                       {opt.label}
                     </span>
                   </label>

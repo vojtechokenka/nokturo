@@ -55,7 +55,7 @@ export function FilterGroup({
       </button>
 
       {open && (
-        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-nokturo-100 dark:bg-black rounded-[8px] overflow-hidden">
+        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-elevated rounded-[8px] overflow-hidden">
           <div className="px-3 py-2.5 bg-nokturo-200 dark:bg-white/10">
             <p className="text-sm font-medium text-nokturo-900 dark:text-white">{t(titleKey)}</p>
           </div>

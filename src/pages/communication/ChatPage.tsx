@@ -163,12 +163,16 @@ export default function ChatPage() {
     if (!newMessage.trim() || !activeRoomId || !user || !senderId) return;
     setSending(true);
 
-    await supabase.from('chat_messages').insert({
+    const { error } = await supabase.from('chat_messages').insert({
       room_id: activeRoomId,
       sender_id: senderId,
       content: newMessage.trim(),
     });
 
+    if (error) {
+      setSending(false);
+      return; // Consider adding toast for send failure
+    }
     setNewMessage('');
     setSending(false);
   };
@@ -314,7 +318,7 @@ export default function ChatPage() {
                           className="avatar-round w-8 h-8 object-cover shrink-0 mt-0.5"
                         />
                       ) : (
-                        <div className="avatar-round w-8 h-8 overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-black">
+                        <div className="avatar-round w-8 h-8 overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-surface">
                           <DefaultAvatar size={32} />
                         </div>
                       )}

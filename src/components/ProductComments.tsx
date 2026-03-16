@@ -12,6 +12,7 @@ import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications, parseMentionsFromText } from '../lib/sendMentionNotifications';
+import { useToastStore } from '../stores/toastStore';
 
 interface ProfileOption {
   id: string;
@@ -45,6 +46,7 @@ interface ProductCommentsProps {
 export function ProductComments({ productId }: ProductCommentsProps) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const addToast = useToastStore((s) => s.addToast);
   const canComment = user?.role ? (
     hasPermission(user.role, 'production.products', 'comment') ||
     hasPermission(user.role, 'production.sampling', 'comment')
@@ -228,7 +230,11 @@ export function ProductComments({ productId }: ProductCommentsProps) {
 
   // ── Delete comment ──────────────────────────────────────────
   const handleDelete = async (id: string) => {
-    await supabase.from('product_comments').delete().eq('id', id);
+    const { error } = await supabase.from('product_comments').delete().eq('id', id);
+    if (error) {
+      addToast(error.message || t('common.error'), 'error');
+      return;
+    }
     setComments((prev) => prev.filter((c) => c.id !== id && c.parent_id !== id));
     setDeleteTarget(null);
   };
@@ -260,7 +266,7 @@ export function ProductComments({ productId }: ProductCommentsProps) {
               className="avatar-round w-7 h-7 object-cover shrink-0 mt-0.5"
             />
           ) : (
-            <div className="avatar-round w-7 h-7 overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-black">
+            <div className="avatar-round w-7 h-7 overflow-hidden shrink-0 mt-0.5 flex items-center justify-center bg-surface">
               <DefaultAvatar size={28} />
             </div>
           )}

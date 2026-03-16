@@ -9,12 +9,14 @@ When the user says **"push live"**, **"deploy"**, **"release"**, or similar — 
 
 Do the following steps in order:
 
-1. **Bump the patch version** (e.g. 4.8.13 → 4.8.14) — read current `package.json` version and bump the patch. Do NOT ask for confirmation; proceed automatically. Only use minor/major if the user explicitly asks.
+1. **Bump the patch version** (e.g. 6.0.2 → 6.0.3) — read current `package.json` version and bump the patch. Do NOT ask for confirmation; proceed automatically. Only use minor/major if the user explicitly asks.
 
 2. **Update `"version"` in package.json** to the new version
 
-3. **Run `npm run electron:build:publish`** — GH_TOKEN is in `.env` and loaded automatically by the publish script
+3. **Commit and push to `main`** — so Vercel auto-deploys the web. Stage relevant files (including package.json), commit with message like `vX.Y.Z: <brief description>`, then `git push origin main`
 
-4. **Commit and push to `main`** — so Vercel auto-deploys the web. Stage relevant files, commit with message like `vX.Y.Z: <brief description>`, then `git push origin main`
+4. **Tag and push tag** — `git tag vX.Y.Z`, then `git push origin vX.Y.Z`. This triggers GitHub Actions (`.github/workflows/publish.yml`) to build and publish Electron installers to GitHub Releases.
 
-5. **Confirm** the release URL on GitHub (e.g. `https://github.com/vojtechokenka/nokturo/releases/tag/vX.Y.Z`) and that the web deploy will trigger via Vercel
+5. **Confirm** the release URL on GitHub (e.g. `https://github.com/vojtechokenka/nokturo/releases/tag/vX.Y.Z`) and that the web deploy triggered via Vercel.
+
+**Note:** For Electron publish to work, the repo must have `GH_TOKEN` (Personal Access Token with `repo` scope) in Settings → Secrets and variables → Actions.

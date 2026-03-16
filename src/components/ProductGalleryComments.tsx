@@ -12,6 +12,7 @@ import { DeleteConfirmModal } from './DeleteConfirmModal';
 import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications, getGalleryNotificationLink, parseMentionsFromText } from '../lib/sendMentionNotifications';
+import { useToastStore } from '../stores/toastStore';
 
 // ── Types ─────────────────────────────────────────────────────
 interface ProductGalleryComment {
@@ -53,6 +54,7 @@ export function ProductGalleryComments({
   hasCaptionAbove = false,
 }: ProductGalleryCommentsProps) {
   const { t } = useTranslation();
+  const addToast = useToastStore((s) => s.addToast);
   const user = useAuthStore((s) => s.user);
   const canComment =
     user?.role &&
@@ -243,8 +245,8 @@ export function ProductGalleryComments({
         tagged_user_ids: taggedUsersSnapshot,
         created_at: new Date().toISOString(),
         profile: {
-          first_name: user.firstName ?? null,
-          last_name: user.lastName ?? null,
+          first_name: user.firstName ?? undefined,
+          last_name: user.lastName ?? undefined,
           full_name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.name,
           avatar_url: user.avatarUrl ?? null,
         },
@@ -277,7 +279,11 @@ export function ProductGalleryComments({
   };
 
   const handleDelete = async (id: string) => {
-    await supabase.from('product_gallery_comments').delete().eq('id', id);
+    const { error } = await supabase.from('product_gallery_comments').delete().eq('id', id);
+    if (error) {
+      addToast(error.message || t('common.error'), 'error');
+      return;
+    }
     setComments((prev) => prev.filter((c) => c.id !== id));
     setDeleteTarget(null);
   };
@@ -376,7 +382,7 @@ export function ProductGalleryComments({
               <p className="text-sm break-words text-inherit">
                 {renderContentWithMentions(
                   comment.content,
-                  isOwn,
+                  !!isOwn,
                   [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.name || ''
                 )}
               </p>

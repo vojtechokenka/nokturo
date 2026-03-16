@@ -6,6 +6,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
@@ -92,7 +93,7 @@ export default function MagazinePage() {
       descriptionKey="pages.magazine.description"
       bare
       actionsSlot={
-        <div className="sticky top-0 z-10 w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-nokturo-200 dark:bg-[#0d0d0d] rounded-[6px]">
+        <div className="sticky top-0 z-10 w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-nokturo-200 dark:bg-surface rounded-[6px]">
           <div className="flex gap-1">
             {(['published', 'drafts'] as const).map((tab) => {
               const isActive = showHidden === (tab === 'drafts');
@@ -103,7 +104,7 @@ export default function MagazinePage() {
                   onClick={() => setShowHidden(tab === 'drafts')}
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-nokturo-800 text-white dark:bg-black dark:text-nokturo-100 rounded-t-[6px] rounded-b-none'
+                      ? 'bg-nokturo-800 text-white dark:bg-surface dark:text-nokturo-100 rounded-t-[6px] rounded-b-none'
                       : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
                   }`}
                 >
@@ -119,7 +120,7 @@ export default function MagazinePage() {
           </div>
           <button
             onClick={() => navigate('/prototyping/magazine/new')}
-            className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] bg-nokturo-700 text-white hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('magazine.addNew')}
@@ -193,7 +194,7 @@ export default function MagazinePage() {
                         e.stopPropagation();
                         setMenuOpen(menuOpen === article.id ? null : article.id);
                       }}
-                      className="p-2 text-white hover:text-white/90 rounded-[4px] hover:bg-black/20 transition-colors"
+                      className="p-2 text-white hover:text-white/90 rounded-[4px] hover:bg-white/20 transition-colors"
                     >
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>

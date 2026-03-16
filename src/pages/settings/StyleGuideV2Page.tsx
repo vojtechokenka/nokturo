@@ -57,17 +57,9 @@ export default function StyleGuideV2Page() {
               <MaterialIcon name="chevron_right" size={16} className="rotate-180 shrink-0" />
               Back to Settings
             </NavLink>
-            <div className="flex items-center gap-3 mt-2">
-              <h1 className="text-heading-2 font-extralight text-nokturo-900 dark:text-nokturo-100">
-                Style Guide v2
-              </h1>
-              <NavLink
-                to="/settings/style-guide"
-                className="text-sm text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300"
-              >
-                (v1)
-              </NavLink>
-            </div>
+            <h1 className="text-heading-2 font-extralight text-nokturo-900 dark:text-nokturo-100 mt-2">
+              Style Guide
+            </h1>
             <p className="text-nokturo-600 dark:text-nokturo-400 mt-1">
               Typografická škála – Rich Text Nokturo, Rich Text Standard, Label, Mono, Button.
             </p>

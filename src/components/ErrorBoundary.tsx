@@ -1,6 +1,7 @@
 import { Component, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { PRIMARY_BUTTON_CLASS } from '../lib/inputStyles';
 
 interface Props {
   children: ReactNode;
@@ -53,7 +54,7 @@ function ErrorFallback({ error }: { error?: Error }) {
       <button
         type="button"
         onClick={() => navigate('/')}
-        className="px-4 py-2 bg-nokturo-700 text-white rounded-lg hover:bg-nokturo-600 dark:bg-nokturo-600 dark:hover:bg-nokturo-500 transition-colors"
+        className={PRIMARY_BUTTON_CLASS}
       >
         {t('errors.backToHome', 'Back to home')}
       </button>

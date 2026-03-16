@@ -56,7 +56,7 @@ export function ProductTechPack({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -106,7 +106,7 @@ export function ProductTechPack({
                   )}
                 </div>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-[4px] font-medium shrink-0 ${
+                  className={`text-xs px-2.5 py-1 rounded-[6px] font-medium shrink-0 ${
                     STATUS_COLORS[product.status] ?? STATUS_COLORS.concept
                   }`}
                 >

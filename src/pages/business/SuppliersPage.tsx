@@ -15,6 +15,7 @@ import { SupplierDetailSlideOver } from '../../components/SupplierDetailSlideOve
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { FilterSelect } from '../../components/FilterSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
 const FETCH_TIMEOUT_MS = 5000;
@@ -94,12 +95,14 @@ export default function SuppliersPage() {
         // Non-blocking backfill: metadata never blocks page render. On 401/500, show URL only.
         for (const s of list) {
           if (s.website?.startsWith('http') && !s.website_title?.trim()) {
-            fetchLinkMetadata(s.website).then((meta) => {
+            fetchLinkMetadata(s.website).then(async (meta) => {
               if (meta?.title) {
-                supabase.from('suppliers').update({ website_title: meta.title }).eq('id', s.id);
-                setSuppliers((prev) =>
-                  prev.map((x) => (x.id === s.id ? { ...x, website_title: meta.title } : x)),
-                );
+                const { error } = await supabase.from('suppliers').update({ website_title: meta.title }).eq('id', s.id);
+                if (!error) {
+                  setSuppliers((prev) =>
+                    prev.map((x) => (x.id === s.id ? { ...x, website_title: meta.title } : x)),
+                  );
+                }
               }
             });
           }
@@ -263,7 +266,7 @@ export default function SuppliersPage() {
           />
           <button
             onClick={openAdd}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('suppliers.addSupplier')}
@@ -284,7 +287,7 @@ export default function SuppliersPage() {
           </p>
           <button
             onClick={() => fetchSuppliers()}
-            className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white dark:text-nokturo-900 text-white rounded-lg hover:bg-nokturo-900 dark:hover:bg-nokturo-100 transition-colors"
+            className={PRIMARY_BUTTON_CLASS}
           >
             <MaterialIcon name="refresh" size={16} className="shrink-0" />
             {t('suppliers.refresh')}
@@ -320,7 +323,7 @@ export default function SuppliersPage() {
               type="button"
               onClick={() => openDetail(supplier)}
               className={`col-span-4 grid grid-cols-subgrid gap-x-3 group py-2.5 pl-4 text-sm text-nokturo-900 dark:text-nokturo-100 text-left cursor-pointer hover:!bg-nokturo-100/60 dark:hover:!bg-nokturo-800/60 transition-colors rounded-none ${
-                idx % 2 === 1 ? 'bg-black/5 dark:bg-white/5' : ''
+                idx % 2 === 1 ? 'bg-nokturo-900/5 dark:bg-white/5' : ''
               }`}
             >
               <span className="flex items-center gap-2 min-w-0">
@@ -342,7 +345,7 @@ export default function SuppliersPage() {
                     href={supplier.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white opacity-60 hover:opacity-100 hover:text-nokturo-900 dark:hover:text-white bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white opacity-60 hover:opacity-100 hover:text-nokturo-900 dark:hover:text-white bg-nokturo-900/10 dark:bg-white/10 hover:bg-nokturo-900/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
                     style={{ borderRadius: '6px' }}
                   >
                     <MaterialIcon name="open_in_new" size={12} className="shrink-0" />

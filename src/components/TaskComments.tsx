@@ -286,7 +286,7 @@ export function TaskComments({ taskId, taskCreatorId, taskTitle }: TaskCommentsP
         )}
       </div>
 
-      <div className="px-4 py-3 bg-black/20 dark:bg-white/5 shrink-0 relative">
+      <div className="px-4 py-3 bg-page/20 dark:bg-white/5 shrink-0 relative">
         <div className="flex items-center gap-1.5">
           <div className="flex-1 relative">
             {mention.active && (

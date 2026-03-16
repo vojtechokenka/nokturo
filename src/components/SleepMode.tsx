@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MaterialIcon } from './icons/MaterialIcon';
+import { PRIMARY_BUTTON_CLASS } from '../lib/inputStyles';
 
 interface SleepModeProps {
   onWakeUp: () => Promise<void>;
@@ -33,7 +34,7 @@ export function SleepMode({ onWakeUp }: SleepModeProps) {
         <button
           onClick={handleWakeUp}
           disabled={isWakingUp}
-          className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-lg px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors disabled:opacity-50"
+          className={PRIMARY_BUTTON_CLASS}
         >
           {isWakingUp ? (
             <>

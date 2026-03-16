@@ -143,10 +143,11 @@ function CommentableBlockView({
   const isPendingBlock = pendingSelection?.blockId === block.id;
   const isHeadline = headingFont === 'headline';
   const hFont = isHeadline ? 'font-headline' : 'font-body';
+  const level = block.type === 'heading' ? block.level : 2;
   const hSizeClass =
-    block.level === 1
+    level === 1
       ? isHeadline ? 'text-rta-h1' : 'text-rta-std-h1'
-      : block.level === 2
+      : level === 2
         ? isHeadline ? 'text-rta-h2' : 'text-rta-std-h2'
         : isHeadline ? 'text-rta-h3' : 'text-rta-std-h3';
 
@@ -479,8 +480,8 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       setCurrentAuthorId(user.id);
       return;
     }
-    supabase.from('profiles').select('id').limit(1).single().then(({ data }) => {
-      setCurrentAuthorId(data?.id ?? null);
+    supabase.from('profiles').select('id').limit(1).single().then(({ data, error }) => {
+      if (!error) setCurrentAuthorId(data?.id ?? null);
     });
   }, [user?.id]);
 

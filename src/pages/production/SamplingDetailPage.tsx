@@ -67,7 +67,7 @@ export default function SamplingDetailPage() {
     gallery: { url: string; caption?: string }[];
     index: number;
     productId: string;
-    galleryType: 'design' | 'moodboard';
+    galleryType: 'design' | 'moodboard' | 'labels';
   } | null>(null);
   const lightboxImgRef = useRef<HTMLDivElement>(null);
   const lightboxImgElementRef = useRef<HTMLImageElement>(null);
@@ -242,12 +242,12 @@ export default function SamplingDetailPage() {
                 )}
                 <div className="flex flex-wrap gap-2 mt-3">
                   {product.priority && (
-                    <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-red text-red-fg">
+                    <span className="text-xs px-2.5 py-1 rounded-[6px] font-medium bg-red text-red-fg">
                       {t('products.priority')}
                     </span>
                   )}
                   {product.ready_for_sampling && (
-                    <span className="text-xs px-2 py-0.5 rounded-[4px] font-medium bg-green text-green-fg">
+                    <span className="text-xs px-2.5 py-1 rounded-[6px] font-medium bg-green text-green-fg">
                       {t('products.readyForSampling')}
                     </span>
                   )}
@@ -553,7 +553,7 @@ export default function SamplingDetailPage() {
         {lightbox &&
           createPortal(
             <div
-              className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-sm flex flex-col lg:flex-row"
+              className="fixed inset-0 z-[9999] bg-page/90 backdrop-blur-sm flex flex-col lg:flex-row"
               onClick={() => setLightbox(null)}
             >
             {/* 1. Photo area (left) */}

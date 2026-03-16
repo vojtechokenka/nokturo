@@ -19,7 +19,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
   const [appVersion, setAppVersion] = useState<string>(typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '?');
 
   useEffect(() => {
-    if (window.electronAPI?.getAppVersion) {
+    if (typeof window !== 'undefined' && window.electronAPI?.getAppVersion) {
       window.electronAPI.getAppVersion().then((v) => {
         if (v) setAppVersion(v);
       });
@@ -27,7 +27,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
   }, []);
 
   useEffect(() => {
-    if (!window.electronAPI?.onUpdateStatus) return;
+    if (typeof window === 'undefined' || !window.electronAPI?.onUpdateStatus) return;
     const cleanup = window.electronAPI.onUpdateStatus((s, info) => {
       switch (s) {
         case 'checking':
@@ -60,7 +60,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
   const handleCheck = useCallback(async () => {
     setStatus('checking');
     setErrorMsg(null);
-    if (!window.electronAPI?.checkForUpdate) {
+    if (typeof window === 'undefined' || !window.electronAPI?.checkForUpdate) {
       setStatus('dev');
       return;
     }
@@ -74,14 +74,14 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
   }, []);
 
   const handleDownload = useCallback(async () => {
-    if (!window.electronAPI?.downloadUpdate) return;
+    if (typeof window === 'undefined' || !window.electronAPI?.downloadUpdate) return;
     setStatus('downloading');
     setDownloadPercent(0);
     await window.electronAPI.downloadUpdate();
   }, []);
 
   const handleInstall = useCallback(() => {
-    if (!window.electronAPI?.installUpdate) return;
+    if (typeof window === 'undefined' || !window.electronAPI?.installUpdate) return;
     window.electronAPI.installUpdate();
   }, []);
 
@@ -95,7 +95,29 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
     ? 'pt-4 mt-4 border-t border-nokturo-200 dark:border-nokturo-700 space-y-2'
     : 'pt-6 border-t border-nokturo-200 dark:border-nokturo-700 space-y-3';
 
-  if (!isElectron()) return null;
+  // Web: show version + "always up to date" (no Electron APIs)
+  if (!isElectron()) {
+    return (
+      <div className={containerClass}>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm text-nokturo-500 dark:text-nokturo-400">
+            Nokturo <span className="font-medium text-nokturo-700 dark:text-nokturo-300">{appVersion}</span>
+          </p>
+          <span className="text-sm text-nokturo-500 dark:text-nokturo-400">
+            {t('settings.account.webAlwaysUpToDate', 'Web version is always up to date')}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // Map raw errors to friendly messages
+  const friendlyErrorMsg =
+    status === 'error' && errorMsg && !isUpdateNotAvailableError
+      ? errorMsg.length > 80 || /Error:|at |\.js:\d+|\.ts:\d+/.test(errorMsg)
+        ? t('settings.account.updateErrorGeneric', 'Could not check for updates. Check your connection or try again later.')
+        : errorMsg
+      : null;
 
   return (
     <div className={containerClass}>
@@ -118,7 +140,7 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         {status === 'checking' && (
           <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
             <MaterialIcon name="progress_activity" size={14} className="animate-spin shrink-0" />
-            {t('settings.account.checkingUpdate', 'Kontroluji...')}
+            {t('settings.account.checkingUpdate', 'Checking for updates...')}
           </span>
         )}
 
@@ -134,10 +156,18 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         )}
 
         {status === 'downloading' && (
-          <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
-            <MaterialIcon name="progress_activity" size={14} className="animate-spin shrink-0" />
-            {t('settings.account.downloadingUpdate', 'Stahuji...')} {downloadPercent}%
-          </span>
+          <div className="flex flex-col items-end gap-1.5 min-w-[140px]">
+            <span className="inline-flex items-center gap-1.5 text-sm text-nokturo-500 dark:text-nokturo-400">
+              <MaterialIcon name="progress_activity" size={14} className="animate-spin shrink-0" />
+              {t('settings.account.downloadingUpdate', 'Downloading...')} {downloadPercent}%
+            </span>
+            <div className="w-full h-1.5 bg-nokturo-200 dark:bg-nokturo-700 overflow-hidden">
+              <div
+                className="h-full bg-nokturo-600 dark:bg-nokturo-500 transition-[width] duration-200"
+                style={{ width: `${downloadPercent}%` }}
+              />
+            </div>
+          </div>
         )}
 
         {status === 'downloaded' && (
@@ -188,11 +218,11 @@ export function AppUpdateSection({ compact = false }: AppUpdateSectionProps) {
         )}
       </div>
 
-      {status === 'error' && (isUpdateNotAvailableError || errorMsg) && (
+      {status === 'error' && (isUpdateNotAvailableError || friendlyErrorMsg) && (
         <p className="text-xs text-nokturo-500 dark:text-nokturo-400">
           {isUpdateNotAvailableError
-            ? t('settings.account.updateNotAvailable', 'Aktualizace momentálně není k dispozici.')
-            : errorMsg}
+            ? t('settings.account.updateNotAvailable', 'Update check failed (missing metadata on server). Download manually from GitHub Releases.')
+            : friendlyErrorMsg}
         </p>
       )}
     </div>

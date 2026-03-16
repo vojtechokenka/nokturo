@@ -365,7 +365,7 @@ export function NotionSelect({
               type="button"
               onClick={() => handleSelect(opt.name)}
               style={{ fontSize: '12px' }}
-              className={`inline-flex items-center px-2 py-0.5 rounded-[4px] font-medium font-body transition-opacity cursor-pointer shrink-0 ${
+              className={`inline-flex items-center px-2.5 py-1 rounded-[6px] font-medium font-body transition-opacity cursor-pointer shrink-0 ${
                 getTagClass(opt.color)
               } ${isSelected ? 'opacity-100' : 'opacity-50 hover:opacity-75'}`}
             >
@@ -402,7 +402,7 @@ export function NotionSelect({
             selectedOptions.map((opt) => (
               <span
                 key={opt.id}
-                className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[12px] font-medium font-body shrink-0 ${getTagClass(opt.color)}`}
+                className={`inline-flex items-center px-2.5 py-1 rounded-[6px] text-[12px] font-medium font-body shrink-0 ${getTagClass(opt.color)}`}
               >
                 {getDisplayName(opt.name)}
               </span>
@@ -547,7 +547,7 @@ export function NotionSelect({
                         className="flex-1 flex items-center gap-2 min-w-0 text-left"
                       >
                         <span
-                          className={`inline-flex items-center px-2 py-0.5 rounded-[4px] text-[12px] font-medium font-body shrink-0 ${getTagClass(opt.color)}`}
+                          className={`inline-flex items-center px-2.5 py-1 rounded-[6px] text-[12px] font-medium font-body shrink-0 ${getTagClass(opt.color)}`}
                         >
                           {getDisplayName(opt.name)}
                         </span>

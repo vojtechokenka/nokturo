@@ -187,7 +187,11 @@ export function TaskSlideOver({
       }
 
       if (taskId) {
-        await supabase.from('task_assignees').delete().eq('task_id', taskId);
+        const { error: delErr } = await supabase.from('task_assignees').delete().eq('task_id', taskId);
+        if (delErr) {
+          setError(delErr.message);
+          return;
+        }
 
         const assigneeIds =
           isFounder && form.assignee_ids.length > 0
@@ -195,9 +199,13 @@ export function TaskSlideOver({
             : [getUserIdForDb()].filter(Boolean) as string[];
 
         if (assigneeIds.length > 0) {
-          await supabase.from('task_assignees').insert(
+          const { error: insErr } = await supabase.from('task_assignees').insert(
             assigneeIds.map((uid) => ({ task_id: taskId!, user_id: uid }))
           );
+          if (insErr) {
+            setError(insErr.message);
+            return;
+          }
         }
 
         // Notify newly assigned users (skip self)
@@ -224,7 +232,7 @@ export function TaskSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
           <h3 className={MODAL_HEADING_CLASS}>
@@ -364,7 +372,7 @@ export function TaskSlideOver({
             </div>
           </div>
 
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-elevated">
             {error && (
               <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">
                 {error}

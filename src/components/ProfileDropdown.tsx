@@ -71,7 +71,7 @@ export function ProfileDropdown() {
   return (
     <>
       {isLoggingOut && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-page/40 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3 rounded-xl bg-white dark:bg-nokturo-800 px-6 py-5 shadow-xl">
             <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
             <span className="text-sm text-nokturo-700 dark:text-nokturo-300">{t('common.loggingOut')}</span>
@@ -94,7 +94,7 @@ export function ProfileDropdown() {
           </span>
           {unreadCount > 0 && (
             <span
-              className="avatar-round absolute left-auto -top-0.5 -right-0.5 w-3 h-3 bg-[#FF1A1A] border-2 border-white dark:border-black"
+              className="avatar-round absolute left-auto -top-0.5 -right-0.5 w-3 h-3 bg-red border-2 border-white dark:border-borderDefault"
               aria-hidden
             />
           )}
@@ -102,10 +102,10 @@ export function ProfileDropdown() {
 
         {open && (
           <>
-            <div className="fixed inset-0 z-10 bg-black/80 pointer-events-none" aria-hidden />
+            <div className="fixed inset-0 z-10 bg-overlay pointer-events-none" aria-hidden />
             <div
               ref={dropdownRef}
-              className="profile-dropdown absolute right-0 bg-white dark:bg-black shadow-xl z-20"
+              className="profile-dropdown absolute right-0 bg-elevated shadow-xl z-20"
               style={{
                 top: 'calc(100% + 8px)',
                 width: dropdownWidth ? `${dropdownWidth}px` : 420,

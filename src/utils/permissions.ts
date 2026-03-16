@@ -26,7 +26,6 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/settings/account': ['founder', 'engineer', 'viewer', 'client', 'host'],
   '/settings/security': ['founder', 'engineer', 'viewer', 'client', 'host'],
   '/settings/style-guide': ['founder'],
-  '/settings/style-guide-v2': ['founder'],
 };
 
 // Feature permissions – which roles can use which features

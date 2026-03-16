@@ -717,7 +717,7 @@ function BlockActionsDropdown({
       )}
       {showDeleteConfirm && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-overlay backdrop-blur-sm"
           onClick={() => setShowDeleteConfirm(false)}
         >
           <div
@@ -1025,7 +1025,7 @@ function BlockRenderer({
                     alt={block.alt || ''}
                     className={(block.fit ?? 'fill') === 'fill' ? 'w-full object-cover' : 'w-auto max-w-full h-auto block'}
                   />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-page/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <label className="px-3 py-1.5 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 text-sm cursor-pointer hover:bg-nokturo-50 dark:hover:bg-nokturo-600">
                     {t('richText.changeImage')}
                     <input
@@ -1143,7 +1143,7 @@ function BlockRenderer({
                       const next = block.images.filter((_, j) => j !== i);
                       onUpdate(block.id, { images: next });
                     }}
-                    className="absolute top-1 right-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover/gal:opacity-100"
+                    className="absolute top-1 right-1 p-1 bg-page/50 rounded text-white opacity-0 group-hover/gal:opacity-100"
                   >
                     <DeleteIcon size={12} />
                   </button>
@@ -1298,7 +1298,7 @@ function BlockRenderer({
                       const next = block.images.filter((_, j) => j !== i);
                       onUpdate(block.id, { images: next });
                     }}
-                    className="absolute top-1 right-1 p-1 bg-black/50 rounded text-white opacity-0 group-hover/imgrid:opacity-100"
+                    className="absolute top-1 right-1 p-1 bg-page/50 rounded text-white opacity-0 group-hover/imgrid:opacity-100"
                   >
                     <DeleteIcon size={12} />
                   </button>
@@ -1527,7 +1527,7 @@ function BlockRenderer({
                               {cell.content ? (
                                 <div className="relative group/img">
                                   <img src={cell.content} alt="" className="w-full h-8 object-cover" />
-                                  <label className="absolute inset-0 bg-black/30 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer text-white text-xs">
+                                  <label className="absolute inset-0 bg-page/30 opacity-0 group-hover/img:opacity-100 flex items-center justify-center cursor-pointer text-white text-xs">
                                     {t('richText.changeImage')}
                                     <input
                                       type="file"

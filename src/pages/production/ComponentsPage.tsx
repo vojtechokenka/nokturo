@@ -12,6 +12,7 @@ import type { NotionSelectOption } from '../../components/NotionSelect';
 import { useExchangeRates, convertToCzk, CURRENCIES } from '../../lib/currency';
 import { FilterSelect } from '../../components/FilterSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 
@@ -198,7 +199,7 @@ export default function ComponentsPage() {
           />
           <button
             onClick={openAdd}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('components.addComponent')}
@@ -266,7 +267,7 @@ export default function ComponentsPage() {
                   const catOpt = categories.find((o) => o.name === comp.type);
                   const colorCls = catOpt ? TAG_BADGE_CLASSES[catOpt.color] ?? TAG_BADGE_CLASSES.gray : TAG_BADGE_CLASSES.gray;
                   return (
-                    <span className={`absolute top-2 left-2 text-xs px-2 py-0.5 rounded-[4px] font-medium ${colorCls}`}>
+                    <span className={`absolute top-2 left-2 text-xs px-2.5 py-1 rounded-[6px] font-medium ${colorCls}`}>
                       {t(`components.types.${comp.type}`) !== `components.types.${comp.type}` ? t(`components.types.${comp.type}`) : comp.type}
                     </span>
                   );

@@ -21,6 +21,7 @@ import { FilterGroup } from '../../components/FilterGroup';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { SimpleDropdown } from '../../components/SimpleDropdown';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 
 type PageTab = 'orders' | 'subscriptions';
 
@@ -392,7 +393,7 @@ export default function AccountingPage() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={openAdd}
-                className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+                className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
               >
                 <MaterialIcon name="add" size={16} className="shrink-0" />
                 {t('accounting.addOrder')}
@@ -450,7 +451,7 @@ export default function AccountingPage() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
-                className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+                className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
               >
                 <MaterialIcon name="add" size={16} className="shrink-0" />
                 {t('subscriptions.add')}
@@ -511,13 +512,13 @@ export default function AccountingPage() {
         <div className="relative">
           {!ordersOverviewCollapsed && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('accounting.overview.ordersComing')}
                   </p>
                   <p className="text-xl font-medium text-nokturo-900 dark:text-white">{ordersComing}</p>
                 </div>
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('accounting.overview.spent')}
                   </p>
@@ -525,7 +526,7 @@ export default function AccountingPage() {
                     {spentCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('accounting.overview.spentThisMonth')}
                   </p>
@@ -561,12 +562,12 @@ export default function AccountingPage() {
                 <col style={{ width: '100px' }} />
               </colgroup>
               <thead>
-                <tr className="bg-nokturo-200 dark:bg-[#0D0D0D]">
+                <tr className="bg-nokturo-200 dark:bg-surface">
                   <th className="py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.colStatus')}</th>
                   <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.supplier')}</th>
                   <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.eshopLink')}</th>
                   <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.note')}</th>
-                  <th className="sticky top-0 z-10 py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right bg-nokturo-200 dark:bg-[#0d0d0d]">{t('accounting.colValue')}</th>
+                  <th className="sticky top-0 z-10 py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right bg-nokturo-200 dark:bg-surface">{t('accounting.colValue')}</th>
                 </tr>
               </thead>
             </table>
@@ -646,7 +647,7 @@ export default function AccountingPage() {
         <div className="relative">
           {!subsOverviewCollapsed && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.monthlyPay')}
                   </p>
@@ -654,7 +655,7 @@ export default function AccountingPage() {
                     {subMonthlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.yearlyPay')}
                   </p>
@@ -662,7 +663,7 @@ export default function AccountingPage() {
                     {subYearlyPayCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.totalYearly')}
                   </p>
@@ -673,7 +674,7 @@ export default function AccountingPage() {
                     {t('subscriptions.overview.avgYearly')}: {subAvgYearlyCzk.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
                   </p>
                 </div>
-                <div className="bg-nokturo-200 dark:bg-black rounded-[6px] p-4">
+                <div className="bg-nokturo-200 dark:bg-surface rounded-[6px] p-4">
                   <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
                     {t('subscriptions.overview.nextPayment')}
                   </p>
@@ -718,7 +719,7 @@ export default function AccountingPage() {
                   <col style={{ width: '18%' }} />
                 </colgroup>
                 <thead>
-                  <tr className="bg-nokturo-200 dark:bg-[#0D0D0D]">
+                  <tr className="bg-nokturo-200 dark:bg-surface">
                     <th className="py-2 pl-6 pr-4 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.status')}</th>
                     <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.name')}</th>
                     <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.billingCycle')}</th>
@@ -747,7 +748,7 @@ export default function AccountingPage() {
                     }`}
                   >
                     <td className="py-3 pl-6 pr-4 align-middle">
-                      <span className={`inline-block text-xs px-2 py-0.5 rounded-[4px] font-medium whitespace-nowrap ${statusColor(sub.status)}`}>
+                      <span className={`inline-block text-xs px-2.5 py-1 rounded-[6px] font-medium whitespace-nowrap ${statusColor(sub.status)}`}>
                         {t(`subscriptions.statuses.${sub.status}`)}
                       </span>
                     </td>

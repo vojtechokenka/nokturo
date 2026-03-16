@@ -224,7 +224,7 @@ export function ComponentSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -271,7 +271,7 @@ export function ComponentSlideOver({
                 </div>
               )}
               {uploading && (
-                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                <div className="absolute inset-0 bg-page/60 flex items-center justify-center">
                   <MaterialIcon name="progress_activity" size={24} className="text-white animate-spin shrink-0" />
                 </div>
               )}
@@ -315,7 +315,7 @@ export function ComponentSlideOver({
             </label>
             <NotionSelect
               value={form.type}
-              onChange={(v) => handleChange('type', v)}
+              onChange={(v) => handleChange('type', Array.isArray(v) ? v[0] ?? '' : v)}
               options={categories}
               onOptionsChange={onCategoriesChange}
               placeholder={t('components.selectType')}

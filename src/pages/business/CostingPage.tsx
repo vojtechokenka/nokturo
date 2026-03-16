@@ -203,10 +203,10 @@ export default function CostingPage() {
     row.currency !== 'CZK' && CURRENCIES.includes(row.currency as (typeof CURRENCIES)[number]);
 
   const SortIcon = ({ field }: { field: SortField }) => (
-    <ArrowUpDown
-      className={`w-3 h-3 inline-block ml-1 ${
-        sortField === field ? 'text-nokturo-900' : 'text-nokturo-400'
-      }`}
+    <MaterialIcon
+      name="swap_vert"
+      size={12}
+      className={`inline-block ml-1 ${sortField === field ? 'text-nokturo-900' : 'text-nokturo-400'}`}
     />
   );
 
@@ -222,8 +222,10 @@ export default function CostingPage() {
             disabled={loading}
             className="flex items-center gap-2 text-sm text-nokturo-600 hover:text-nokturo-800 transition-colors disabled:opacity-50"
           >
-            <RefreshCw
-              className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+            <MaterialIcon
+              name="refresh"
+              size={16}
+              className={loading ? 'animate-spin' : ''}
             />
             {t('costing.refresh')}
           </button>

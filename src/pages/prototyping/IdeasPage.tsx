@@ -68,13 +68,14 @@ function renderNoteContent(content: string): React.ReactNode {
   const lines = content.split('\n');
   const result: React.ReactNode[] = [];
   let listItems: string[] = [];
-  let key = 0;
+  let listIndex = 0;
 
   const flushList = () => {
     if (!listItems.length) return;
+    const idx = listIndex++;
     result.push(
-      <ul key={key++} className="list-disc pl-5 space-y-0.5">
-        {listItems.map((text, i) => <li key={i}>{text}</li>)}
+      <ul key={`list-${idx}`} className="list-disc pl-5 space-y-0.5">
+        {listItems.map((text, i) => <li key={`${idx}-${i}`}>{text}</li>)}
       </ul>
     );
     listItems = [];
@@ -87,7 +88,7 @@ function renderNoteContent(content: string): React.ReactNode {
     } else {
       flushList();
       result.push(
-        <span key={key++}>
+        <span key={`line-${i}`}>
           {line}
           {i < lines.length - 1 && <br />}
         </span>
@@ -427,13 +428,22 @@ export default function IdeasPage() {
       position: idx,
     }));
     for (const u of updates) {
-      await supabase.from('ideas').update({ position: u.position }).eq('id', u.id);
+      const { error } = await supabase.from('ideas').update({ position: u.position }).eq('id', u.id);
+      if (error) {
+        setError(error.message);
+        fetchIdeas();
+        return;
+      }
     }
   };
 
   // ── Delete ──────────────────────────────────────────────────
   const handleDelete = async (id: string) => {
-    await supabase.from('ideas').delete().eq('id', id);
+    const { error } = await supabase.from('ideas').delete().eq('id', id);
+    if (error) {
+      setError(error.message);
+      return;
+    }
     setIdeas((prev) => prev.filter((i) => i.id !== id));
     setDeleteTarget(null);
   };
@@ -655,7 +665,7 @@ export default function IdeasPage() {
                   if (fromIndex !== toIndex) handleReorder(fromIndex, toIndex);
                 }}
                 title={t('ideas.dragToReorder')}
-                className={`group bg-nokturo-100 text-nokturo-900 dark:bg-[#171717] dark:text-[#e6e6e6] transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
+                className={`group bg-nokturo-100 text-nokturo-900 dark:bg-surface dark:text-[#e6e6e6] transition-all duration-200 touch-none cursor-grab active:cursor-grabbing min-w-[200px] overflow-hidden rounded-none ${
                   isDragging ? 'opacity-50 scale-95' : ''
                 } hover:-translate-y-0.25`}
               >
@@ -682,7 +692,7 @@ export default function IdeasPage() {
                 )}
 
                 {/* Body */}
-                <div className="p-6 rounded-none bg-nokturo-100 text-nokturo-900 dark:bg-[#171717] dark:text-[#e6e6e6]">
+                <div className="p-6 rounded-none bg-nokturo-100 text-nokturo-900 dark:bg-surface dark:text-[#e6e6e6]">
                   {(() => {
                     const validNames = new Set(categories.map(c => c.name));
                     const cats = (idea.categories ?? (idea.category ? [idea.category] : [])).filter(c => validNames.has(c));
@@ -694,7 +704,7 @@ export default function IdeasPage() {
                           return (
                             <span
                               key={c}
-                              className={`text-xs px-2 py-0.5 rounded-[4px] font-medium shrink-0 ${colorCls}`}
+                              className={`text-xs px-2.5 py-1 rounded-[6px] font-medium shrink-0 ${colorCls}`}
                             >
                               {c}
                             </span>
@@ -803,7 +813,7 @@ export default function IdeasPage() {
       {/* ── Lightbox: fotka ve fullscreen při kliku ───────────── */}
       {lightboxIndex !== null && ideasWithImages[lightboxIndex] && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center"
+          className="fixed inset-0 z-50 bg-overlay backdrop-blur-sm flex items-center justify-center"
           onClick={() => setLightboxIndex(null)}
         >
           <div className="relative z-0" onClick={(e) => e.stopPropagation()}>
@@ -839,7 +849,7 @@ export default function IdeasPage() {
 
       {/* ── Quick Capture Modal ─────────────────────────────── */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay backdrop-blur-sm">
           <div className="bg-nokturo-900 rounded-xl p-6 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-heading-5 font-normal text-nokturo-900 dark:text-nokturo-100">
@@ -920,7 +930,7 @@ export default function IdeasPage() {
                         setFormImage(null);
                         setFormImagePreview('');
                       }}
-                      className="absolute top-2 right-2 p-1 bg-black/60 rounded-full text-white hover:bg-black/70 transition-colors"
+                      className="absolute top-2 right-2 p-1 bg-page/60 rounded-full text-white hover:bg-page/70 transition-colors"
                     >
                       <MaterialIcon name="close" size={16} className="shrink-0" />
                     </button>

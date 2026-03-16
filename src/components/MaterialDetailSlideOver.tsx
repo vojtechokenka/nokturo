@@ -89,7 +89,7 @@ export function MaterialDetailSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -296,7 +296,7 @@ export function MaterialDetailSlideOver({
                   {targetedProducts.map((p) => (
                     <span
                       key={p.id}
-                      className="inline-flex px-2 py-0.5 rounded-[4px] bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200 text-xs font-medium"
+                      className="inline-flex px-2.5 py-1 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-800 dark:text-nokturo-200 text-xs font-medium"
                     >
                       {p.name}
                     </span>

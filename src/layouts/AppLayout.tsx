@@ -26,7 +26,7 @@ export function AppLayout() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 items-center justify-center">
+      <div className="flex h-screen bg-page items-center justify-center">
         <MaterialIcon name="progress_activity" size={32} className="text-nokturo-500 dark:text-nokturo-400 animate-spin shrink-0" />
       </div>
     );
@@ -37,7 +37,7 @@ export function AppLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-nokturo-50 dark:bg-nokturo-900 text-nokturo-900 dark:text-nokturo-100">
+    <div className="flex h-screen bg-page text-nokturo-900 dark:text-nokturo-100">
       {/* Desktop sidebar */}
       <div className="hidden md:flex shrink-0">
         <Sidebar />
@@ -47,7 +47,7 @@ export function AppLayout() {
       {mobileOpen && (
         <div className="fixed inset-0 z-40 md:hidden">
           <div
-            className="absolute inset-0 bg-black/50 animate-sidebar-overlay"
+            className="absolute inset-0 bg-page/50 animate-sidebar-overlay"
             onClick={closeSidebar}
           />
           <div className="relative z-10 h-full w-60 animate-sidebar-in">
@@ -69,15 +69,15 @@ export function AppLayout() {
             <MaterialIcon name="menu" size={20} className="shrink-0" />
           </button>
           <svg className="h-[28px] w-[28px] ml-3" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="32" height="32" rx="4" fill="black"/>
+            <rect width="32" height="32" rx="4" className="fill-nokturo-900 dark:fill-surface"/>
             <path d="M21.9925 9.57141C21.9925 12.8413 19.3136 15.4966 16.0034 15.5057C14.3506 15.5057 12.8517 14.839 11.7659 13.7664C10.6801 12.6939 10.0075 11.2109 10.0075 9.57141C10.0075 11.2109 9.33257 12.8163 8.24677 14.0159C7.16098 15.2131 5.65968 16 4 16C7.31707 16 10.0075 19.1496 10.0075 22.4286C10.0075 19.1564 12.6864 16.5034 15.9966 16.4943C17.6494 16.4943 19.1484 17.161 20.2341 18.2313C21.3199 19.3038 21.9925 20.7868 21.9925 22.4286C21.9925 20.7868 22.6651 19.1837 23.7509 17.9841C24.839 16.7868 26.3403 16 28 16C24.6806 16 21.9925 12.8481 21.9925 9.57141Z" fill="white"/>
           </svg>
         </div>
 
         {/* Page content */}
-        <main className="flex-1 flex flex-col overflow-hidden bg-nokturo-50 dark:bg-black">
+        <main className="flex-1 flex flex-col overflow-hidden bg-page">
           {/* Sticky top bar */}
-          <div className="shrink-0 z-30 bg-nokturo-200 dark:bg-black">
+          <div className="shrink-0 z-30 bg-surface">
             <div className="flex items-center gap-4 px-4 sm:px-6 h-[60px]">
               <Link
                 to="/tasks"

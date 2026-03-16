@@ -474,7 +474,7 @@ export function MaterialSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -518,7 +518,7 @@ export function MaterialSlideOver({
                   className="w-full aspect-[16/9] object-cover rounded-lg"
                 />
                 {uploading && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
+                  <div className="absolute inset-0 bg-page/60 flex items-center justify-center rounded-lg">
                     <MaterialIcon name="progress_activity" size={24} className="text-white animate-spin shrink-0" />
                   </div>
                 )}
@@ -593,7 +593,7 @@ export function MaterialSlideOver({
                 return opt ? (
                   <span
                     key={id}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[4px] bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200 text-xs font-medium"
+                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-[6px] bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200 text-xs font-medium"
                   >
                     {opt.name}
                     <button
@@ -659,7 +659,7 @@ export function MaterialSlideOver({
                               onClick={() => addTargeted(opt.id)}
                               className="w-full flex items-center gap-2 rounded-md px-1.5 py-1 text-left hover:bg-nokturo-50 dark:hover:bg-nokturo-700"
                             >
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-[4px] text-xs font-medium bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200">
+                              <span className="inline-flex items-center px-2.5 py-1 rounded-[6px] text-xs font-medium bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-200">
                                 {opt.name}
                               </span>
                             </button>
@@ -703,7 +703,7 @@ export function MaterialSlideOver({
                   <div className="flex-1 min-w-0">
                     <NotionSelect
                       value={row.fiber}
-                      onChange={(v) => updateCompositionRow(idx, 'fiber', v)}
+                      onChange={(v) => updateCompositionRow(idx, 'fiber', Array.isArray(v) ? v[0] ?? '' : v)}
                       options={fiberOptions}
                       onOptionsChange={setFiberOptions}
                       placeholder={t('materials.fiberPlaceholder')}

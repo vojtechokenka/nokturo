@@ -2,9 +2,9 @@ import { useRef, useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './icons/MaterialIcon';
 
-function AddCoverIcon({ size = 24 }: { size?: number }) {
+function AddCoverIcon({ size = 24, className = '' }: { size?: number; className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className="shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={`shrink-0 ${className}`}>
       <path d="M6 17h12l-3.75-5l-3 4L9 13zm-3 4V3h18v18zM9.563 9.563Q10 9.125 10 8.5t-.437-1.062T8.5 7t-1.062.438T7 8.5t.438 1.063T8.5 10t1.063-.437" />
     </svg>
   );
@@ -62,14 +62,14 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
 
         {/* Hover overlay — only in edit mode */}
         {editMode && (
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors pointer-events-none" />
+          <div className="absolute inset-0 bg-page/0 group-hover:bg-page/30 transition-colors pointer-events-none" />
         )}
 
         {/* Controls — bottom right, Notion-style — only in edit mode */}
         {editMode && (
         <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
           {uploading ? (
-            <div className="px-3 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md">
+            <div className="px-3 py-1.5 text-xs font-medium bg-page/60 text-white rounded-md">
               <MaterialIcon name="progress_activity" size={14} className="animate-spin inline mr-1.5 shrink-0" />
               {t('common.loading')}
             </div>
@@ -78,7 +78,7 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md hover:bg-black/80 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-page/60 text-white rounded-md hover:bg-page/80 transition-colors"
               >
                 <MaterialIcon name="upload" size={13} className="shrink-0" />
                 {t('headerImage.change')}
@@ -86,7 +86,7 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
               <button
                 type="button"
                 onClick={() => onChange(null)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-black/60 text-white rounded-md hover:bg-red/90 transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium bg-page/60 text-white rounded-md hover:bg-red/90 transition-colors"
               >
                 <MaterialIcon name="close" size={13} className="shrink-0" />
                 {t('headerImage.remove')}
@@ -98,7 +98,7 @@ export function PageHeaderImage({ imageUrl, onUpload, onChange, editMode = true 
 
         {/* Drag overlay */}
         {editMode && dragOver && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-page/50 flex items-center justify-center">
             <span className="text-white text-sm font-medium">{t('headerImage.dropHere')}</span>
           </div>
         )}

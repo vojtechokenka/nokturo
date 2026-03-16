@@ -409,9 +409,21 @@ export default function TasksPage() {
   };
 
   const permanentDeleteTask = async (taskId: string) => {
-    await supabase.from('task_comments').delete().eq('task_id', taskId);
-    await supabase.from('task_assignees').delete().eq('task_id', taskId);
-    await supabase.from('tasks').delete().eq('id', taskId);
+    const { error: commentsErr } = await supabase.from('task_comments').delete().eq('task_id', taskId);
+    if (commentsErr) {
+      addToast(commentsErr.message, 'error');
+      return;
+    }
+    const { error: assigneesErr } = await supabase.from('task_assignees').delete().eq('task_id', taskId);
+    if (assigneesErr) {
+      addToast(assigneesErr.message, 'error');
+      return;
+    }
+    const { error: taskErr } = await supabase.from('tasks').delete().eq('id', taskId);
+    if (taskErr) {
+      addToast(taskErr.message, 'error');
+      return;
+    }
     addToast(t('tasks.deleteForever'));
     fetchTasks();
   };
@@ -581,9 +593,24 @@ export default function TasksPage() {
               onClick={async () => {
                 if (!window.confirm(t('tasks.deleteAllConfirm'))) return;
                 for (const task of deletedTasks) {
-                  await supabase.from('task_comments').delete().eq('task_id', task.id);
-                  await supabase.from('task_assignees').delete().eq('task_id', task.id);
-                  await supabase.from('tasks').delete().eq('id', task.id);
+                  const { error: cErr } = await supabase.from('task_comments').delete().eq('task_id', task.id);
+                  if (cErr) {
+                    addToast(cErr.message, 'error');
+                    fetchTasks();
+                    return;
+                  }
+                  const { error: aErr } = await supabase.from('task_assignees').delete().eq('task_id', task.id);
+                  if (aErr) {
+                    addToast(aErr.message, 'error');
+                    fetchTasks();
+                    return;
+                  }
+                  const { error: tErr } = await supabase.from('tasks').delete().eq('id', task.id);
+                  if (tErr) {
+                    addToast(tErr.message, 'error');
+                    fetchTasks();
+                    return;
+                  }
                 }
                 addToast(t('tasks.deleteForever'));
                 fetchTasks();

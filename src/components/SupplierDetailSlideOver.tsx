@@ -47,7 +47,7 @@ export function SupplierDetailSlideOver({
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm" onClick={onClose} />
       <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 shrink-0">
@@ -106,7 +106,7 @@ export function SupplierDetailSlideOver({
             )}
             {supplier.category && (
               <span
-                className={`inline-block text-xs px-2 py-0.5 rounded-[4px] font-medium ${
+                className={`inline-block text-xs px-2.5 py-1 rounded-[6px] font-medium ${
                   TAG_BADGE_CLASSES[categoryColor] ?? TAG_BADGE_CLASSES.gray
                 }`}
               >

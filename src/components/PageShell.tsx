@@ -49,7 +49,7 @@ export function PageShell({ children, headerSlot, actionsSlot, bare = false, com
           {actionsSlot}
         </div>
       )}
-      <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${contentRounded ? 'rounded-[12px]' : 'rounded-none'} ${contentBg === 'black' ? 'bg-black' : 'bg-white/5'}`}>
+      <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${contentRounded ? 'rounded-[12px]' : 'rounded-none'} ${contentBg === 'black' ? 'bg-surface' : 'bg-white/5'}`}>
         <div
           className={`flex-1 min-h-0 flex flex-col ${
             contentOverflow === 'hidden' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden scrollbar-hide'

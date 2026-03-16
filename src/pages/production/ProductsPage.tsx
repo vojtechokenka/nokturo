@@ -15,6 +15,7 @@ import type { NotionSelectOption } from '../../components/NotionSelect';
 import { ProductCard } from '../../components/ProductCard';
 import { FilterGroup } from '../../components/FilterGroup';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 
 // ── Page component ────────────────────────────────────────────
 export default function ProductsPage() {
@@ -235,7 +236,7 @@ export default function ProductsPage() {
           />
           <button
             onClick={openAdd}
-            className="flex items-center justify-center gap-2 h-9 bg-nokturo-700 text-white font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-600 dark:bg-white dark:text-nokturo-900 dark:border dark:border-nokturo-700 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('products.addProduct')}

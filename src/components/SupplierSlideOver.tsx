@@ -197,7 +197,7 @@ export function SupplierSlideOver({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-40 bg-overlay backdrop-blur-sm"
         onClick={onClose}
       />
 
@@ -220,7 +220,7 @@ export function SupplierSlideOver({
         <form
           id="supplier-form"
           onSubmit={handleSubmit}
-          formNoValidate
+          noValidate
           className="flex flex-1 flex-col min-h-0 overflow-hidden"
         >
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4 text-white">
@@ -266,7 +266,7 @@ export function SupplierSlideOver({
             </label>
             <NotionSelect
               value={form.category}
-              onChange={(v) => handleChange('category', v)}
+              onChange={(v) => handleChange('category', Array.isArray(v) ? v[0] ?? '' : v)}
               options={categories}
               onOptionsChange={onCategoriesChange}
               placeholder={t('suppliers.selectCategory')}
@@ -342,7 +342,7 @@ export function SupplierSlideOver({
           </div>
 
           {/* Footer */}
-          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-black">
+          <div className="relative z-10 flex flex-col gap-3 px-6 py-4 shrink-0 mt-auto bg-elevated">
             {error && (
               <div className="text-red dark:text-red-fg text-sm bg-red/10 dark:bg-red/20 rounded-lg px-3 py-2 shrink-0">
                 {error}
