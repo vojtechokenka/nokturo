@@ -1,8 +1,7 @@
 # Publish Electron app to GitHub Releases on version tag push.
 # Trigger: git tag v* && git push origin v*
 #
-# Required: Add GH_TOKEN (Personal Access Token with repo scope) to repo Secrets.
-# Create at https://github.com/settings/tokens — needed for electron-builder publish.
+# Uses GH_TOKEN from repo Secrets when present, otherwise falls back to GITHUB_TOKEN.
 
 name: Publish Electron
 
@@ -11,26 +10,21 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-
-      - name: Require GH_TOKEN
-        run: |
-          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
-            echo "::error::GH_TOKEN is not set. Add it in repo Settings → Secrets and variables → Actions (PAT with repo scope)."
-            exit 1
-          fi
-          echo "GH_TOKEN is set."
 
       - name: Install dependencies
         run: npm ci
@@ -43,6 +37,6 @@ jobs:
 
       - name: Build and publish Electron (Windows)
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
         run: npx electron-builder --win --publish always
