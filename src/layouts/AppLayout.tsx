@@ -77,7 +77,7 @@ export function AppLayout() {
         {/* Page content */}
         <main className="flex-1 flex flex-col overflow-hidden bg-page">
           {/* Sticky top bar */}
-          <div className="shrink-0 z-30 bg-surface">
+          <div className="shrink-0 z-30 bg-header">
             <div className="flex items-center gap-4 px-4 sm:px-6 h-[60px]">
               <Link
                 to="/tasks"
@@ -99,7 +99,7 @@ export function AppLayout() {
             </div>
           </div>
           {/* Frame – padding + window stay fixed, content scrolls inside window (no padding for Moodboard) */}
-          <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pl-6 pr-6 pb-6'}`}>
+          <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pt-6 pl-6 pr-6 pb-6'}`}>
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>

@@ -55,6 +55,7 @@ export default {
       colors: {
         /* Semantic theme tokens – use these for bg/border, not hardcoded hex */
         page: 'var(--bg-page)',
+        header: 'var(--bg-header)',
         surface: 'var(--bg-surface)',
         elevated: 'var(--bg-elevated)',
         borderDefault: 'var(--border-default)',

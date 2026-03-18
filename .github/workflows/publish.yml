@@ -24,19 +24,25 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Require GH_TOKEN
+        run: |
+          if [ -z "${{ secrets.GH_TOKEN }}" ]; then
+            echo "::error::GH_TOKEN is not set. Add it in repo Settings → Secrets and variables → Actions (PAT with repo scope)."
+            exit 1
+          fi
+          echo "GH_TOKEN is set."
+
       - name: Install dependencies
         run: npm ci
 
       - name: Generate icon
         run: node scripts/generate-icon.js
-        continue-on-error: true
 
       - name: Build Vite
         run: npm run build
 
-      - name: Build and publish Electron
+      - name: Build and publish Electron (Windows)
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npx electron-builder --publish always
-        # electron-builder reads publish config from package.json build.publish
+        run: npx electron-builder --win --publish always

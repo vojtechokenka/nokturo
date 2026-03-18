@@ -292,12 +292,13 @@ img.avatar-round,
 /* Base reset for Electron / light app */
 
 /* Theme tokens – light/dark mirror scale (no hardcoded #000 in components)
- * Light: page #FAFAFA, surface #FFFFFF, elevated #FFFFFF + shadow, border #E5E5E5
- * Dark:  page #111111, surface #1A1A1A, elevated #222222, border #2A2A2A
+ * Light: page #FAFAFA, header #F2F2F2 (darker than page), surface #FFFFFF, elevated #FFFFFF + shadow, border #E5E5E5
+ * Dark:  page #111111, header #0D0D0D (darker than page), surface #1A1A1A, elevated #222222, border #2A2A2A
  */
 :root {
   color-scheme: light;
   --bg-page: #FAFAFA;
+  --bg-header: #F2F2F2;
   --bg-surface: #FFFFFF;
   --bg-elevated: #FFFFFF;
   --border-default: #E5E5E5;
@@ -307,6 +308,7 @@ img.avatar-round,
 .dark {
   color-scheme: dark;
   --bg-page: #111111;
+  --bg-header: #0D0D0D;
   --bg-surface: #1A1A1A;
   --bg-elevated: #222222;
   --border-default: #2A2A2A;

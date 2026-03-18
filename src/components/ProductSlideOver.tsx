@@ -7,7 +7,7 @@ import { MaterialIcon } from './icons/MaterialIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
 import { NotionSelect } from './NotionSelect';
 import { SelectField } from './SelectField';
-import { RichTextBlockEditor } from './RichTextBlockEditor';
+import { RichTextBlockEditor, isBlockEmpty } from './RichTextBlockEditor';
 import type { Material } from './MaterialSlideOver';
 import type { Label } from './LabelSlideOver';
 import type { NotionSelectOption } from './NotionSelect';
@@ -22,6 +22,18 @@ import { MoodboardIcon } from './icons/MoodboardIcon';
 import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
 
 // ── Constants ─────────────────────────────────────────────────
+// Notion-style tag colors (same as MoodboardPage)
+const TAG_COLORS: Record<string, string> = {
+  gray: 'bg-nokturo-500 text-white',
+  orange: 'bg-orange text-orange-fg',
+  blue: 'bg-blue-600 text-white',
+  green: 'bg-green text-green-fg',
+  purple: 'bg-violet-600 text-white',
+  pink: 'bg-pink-600 text-white',
+  red: 'bg-red text-red-fg',
+  yellow: 'bg-orange text-nokturo-900',
+};
+
 export const PRODUCT_CATEGORIES = ['coats', 'jackets', 'trousers'] as const;
 
 /** Fallback when product_categories fetch fails (migration not run) */
@@ -122,6 +134,12 @@ interface GalleryImage {
   url: string;
   caption?: string;
   notes?: string;
+}
+
+interface MoodboardUploadImage {
+  id: string;
+  file: File;
+  preview: string;
 }
 
 // ── Form data ─────────────────────────────────────────────────
@@ -337,7 +355,7 @@ function MaterialSection({
                 onChange={(e) =>
                   onUpdateConsumption(lm.material_id, parseFloat(e.target.value) || 0, version, role)
                 }
-                className="w-16 h-11 bg-nokturo-200/60 rounded-[6px] px-2 py-0.5 text-sm text-right focus:outline-none focus:ring-2 focus:ring-nokturo-500"
+                className="w-14 h-7 bg-transparent rounded-[6px] px-1.5 py-0.5 text-sm text-right text-nokturo-900 dark:text-nokturo-100 focus:outline-none focus:ring-2 focus:ring-nokturo-500"
               />
               <span className="text-xs text-nokturo-500 w-6">{lm.material.unit}</span>
             </div>
@@ -471,9 +489,14 @@ export function ProductSlideOver({
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [showMoodboardPicker, setShowMoodboardPicker] = useState(false);
   const [moodboardPickerItems, setMoodboardPickerItems] = useState<
-    { id: string; title: string | null; image_url: string; sub_images: { image_url: string }[] }[]
+    { id: string; title: string | null; image_url: string; categories: string[]; sub_images: { image_url: string }[] }[]
   >([]);
   const [moodboardPickerLoading, setMoodboardPickerLoading] = useState(false);
+  const [moodboardCategories, setMoodboardCategories] = useState<NotionSelectOption[]>([]);
+  const [moodboardCategoryFilter, setMoodboardCategoryFilter] = useState<string[]>([]);
+  const [showMoodboardUpload, setShowMoodboardUpload] = useState(false);
+  const [moodboardUploadImages, setMoodboardUploadImages] = useState<MoodboardUploadImage[]>([]);
+  const [moodboardUploading, setMoodboardUploading] = useState(false);
 
   const addToast = useCallback((toast: ToastData) => {
     setToasts((prev) => [...prev, { ...toast, id: toast.id || crypto.randomUUID() }]);
@@ -637,33 +660,62 @@ export function ProductSlideOver({
   }, [open]);
 
   useEffect(() => {
-    if (!open) setShowMoodboardPicker(false);
+    if (!open) {
+      setShowMoodboardPicker(false);
+      setMoodboardCategoryFilter([]);
+    }
   }, [open]);
 
-  // ── Fetch moodboard items when picker opens ───────────────────
+  useEffect(() => {
+    if (!showMoodboardPicker) setMoodboardCategoryFilter([]);
+  }, [showMoodboardPicker]);
+
+  // ── Fetch moodboard items and categories when picker opens ─────
   useEffect(() => {
     if (!showMoodboardPicker || !open) return;
     setMoodboardPickerLoading(true);
     const fetchMoodboard = async () => {
-      let { data, error } = await supabase
-        .from('moodboard_items')
-        .select('id, title, image_url, moodboard_item_images(image_url, sort_order)')
-        .order('created_at', { ascending: false });
-      let rawData: { id: string; title: string | null; image_url: string; moodboard_item_images?: { image_url: string; sort_order: number }[] }[] | null = data;
-      if (error) {
-        const fallback = await supabase.from('moodboard_items').select('id, title, image_url').order('created_at', { ascending: false });
+      const [itemsRes, categoriesRes] = await Promise.all([
+        supabase
+          .from('moodboard_items')
+          .select('id, title, image_url, categories, moodboard_item_images(image_url, sort_order)')
+          .order('created_at', { ascending: false }),
+        supabase.from('moodboard_categories').select('*').order('sort_order'),
+      ]);
+      let rawData: {
+        id: string;
+        title: string | null;
+        image_url: string;
+        categories?: string[] | null;
+        moodboard_item_images?: { image_url: string; sort_order: number }[];
+      }[] | null = itemsRes.data;
+      if (itemsRes.error) {
+        const fallback = await supabase
+          .from('moodboard_items')
+          .select('id, title, image_url, categories')
+          .order('created_at', { ascending: false });
         rawData = fallback.data;
-        error = fallback.error;
       }
       setMoodboardPickerLoading(false);
-      if (error) {
-        addToast({ id: crypto.randomUUID(), type: 'error', message: error.message });
+      if (itemsRes.error && rawData === null) {
+        addToast({ id: crypto.randomUUID(), type: 'error', message: itemsRes.error.message });
         return;
+      }
+      if (!categoriesRes.error && categoriesRes.data) {
+        setMoodboardCategories(
+          categoriesRes.data.map((r: { id: string; name: string; color: string; sort_order: number }) => ({
+            id: r.id,
+            name: r.name,
+            color: r.color || 'gray',
+            sort_order: r.sort_order,
+          }))
+        );
       }
       const items = (rawData || []).map((row) => ({
         id: row.id,
         title: row.title,
         image_url: row.image_url,
+        categories: Array.isArray(row.categories) ? row.categories : [],
         sub_images: Array.isArray(row.moodboard_item_images)
           ? [...row.moodboard_item_images].sort((a, b) => a.sort_order - b.sort_order).map((si) => ({ image_url: si.image_url }))
           : [],
@@ -675,6 +727,13 @@ export function ProductSlideOver({
 
   const handleChange = (field: keyof FormData, value: string | boolean) =>
     setForm((prev) => ({ ...prev, [field]: value }));
+
+  const filteredMoodboardPickerItems =
+    moodboardCategoryFilter.length === 0
+      ? moodboardPickerItems
+      : moodboardPickerItems.filter((item) =>
+          item.categories.some((c) => moodboardCategoryFilter.includes(c))
+        );
 
   const derivedVersions = (() => {
     const vs = new Set(linkedMaterials.map((lm) => lm.variant ?? '1').filter(Boolean));
@@ -781,15 +840,106 @@ export function ProductSlideOver({
       if (gallery === 'design') {
         setDesignGallery((prev) => [...prev, { url, caption: '' }]);
       } else {
-        setMoodboardGallery((prev) => [...prev, { url, caption: '' }]);
+        setMoodboardGallery((prev) => [...prev, { url, caption: '', notes: '' }]);
       }
     } catch (err) {
       addToast({ id: crypto.randomUUID(), type: 'error', message: (err as Error).message });
     }
   };
 
+  const addMoodboardFiles = useCallback((files: File[]) => {
+    const validFiles = files.filter((f) => f.type.startsWith('image/') && f.size <= 10 * 1024 * 1024);
+    if (validFiles.length === 0) return;
+    setMoodboardUploadImages((prev) => [
+      ...prev,
+      ...validFiles.map((file) => ({
+        id: Math.random().toString(36).slice(2) + Date.now().toString(36),
+        file,
+        preview: URL.createObjectURL(file),
+      })),
+    ]);
+  }, []);
+
+  const removeMoodboardUploadImage = useCallback((id: string) => {
+    setMoodboardUploadImages((prev) => {
+      const img = prev.find((item) => item.id === id);
+      if (img && img.preview.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+      return prev.filter((item) => item.id !== id);
+    });
+  }, []);
+
+  const resetMoodboardUpload = useCallback(() => {
+    setMoodboardUploadImages((prev) => {
+      prev.forEach((img) => {
+        if (img.preview.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+      });
+      return [];
+    });
+    setMoodboardUploading(false);
+    setShowMoodboardUpload(false);
+    if (fileInputMoodboardRef.current) fileInputMoodboardRef.current.value = '';
+  }, []);
+
+  const handleMoodboardUploadSubmit = useCallback(async () => {
+    if (moodboardUploadImages.length === 0 || moodboardUploading) return;
+    setMoodboardUploading(true);
+    try {
+      const urls = await Promise.all(moodboardUploadImages.map((img) => handleUploadImage(img.file)));
+      setMoodboardGallery((prev) => [
+        ...prev,
+        ...urls.map((url) => ({ url, caption: '', notes: '' })),
+      ]);
+      resetMoodboardUpload();
+    } catch (err) {
+      addToast({ id: crypto.randomUUID(), type: 'error', message: (err as Error).message });
+      setMoodboardUploading(false);
+    }
+  }, [moodboardUploadImages, moodboardUploading, handleUploadImage, resetMoodboardUpload, addToast]);
+
+  const handleMoodboardUploadDrop = useCallback(
+    (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      const files = Array.from(e.dataTransfer.files);
+      if (files.length > 0) addMoodboardFiles(files);
+    },
+    [addMoodboardFiles]
+  );
+
+  useEffect(() => {
+    if (open) return;
+    setMoodboardUploadImages((prev) => {
+      prev.forEach((img) => {
+        if (img.preview.startsWith('blob:')) URL.revokeObjectURL(img.preview);
+      });
+      return [];
+    });
+    setShowMoodboardUpload(false);
+    setMoodboardUploading(false);
+  }, [open]);
+
+  useEffect(() => {
+    if (!showMoodboardUpload || !open) return;
+    const handleMoodboardPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      for (const item of Array.from(items)) {
+        if (item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (!blob) return;
+          e.preventDefault();
+          const ext = blob.type.split('/')[1]?.replace('jpeg', 'jpg') || 'png';
+          const file = new File([blob], `image-${Date.now()}.${ext}`, { type: blob.type });
+          addMoodboardFiles([file]);
+          break;
+        }
+      }
+    };
+    document.addEventListener('paste', handleMoodboardPaste);
+    return () => document.removeEventListener('paste', handleMoodboardPaste);
+  }, [showMoodboardUpload, open, addMoodboardFiles]);
+
   const addMoodboardImageFromUrl = (url: string, caption?: string) => {
-    setMoodboardGallery((prev) => [...prev, { url, caption: caption ?? '' }]);
+    setMoodboardGallery((prev) => [...prev, { url, caption: caption ?? '', notes: '' }]);
   };
 
   const setPreviewPhoto = useCallback(async (file: File) => {
@@ -803,7 +953,7 @@ export function ProductSlideOver({
 
   // Document-level paste for preview photo when slideover is open (Ctrl+V / printscreen)
   useEffect(() => {
-    if (!open) return;
+    if (!open || showMoodboardUpload) return;
     const handlePaste = (e: ClipboardEvent) => {
       const el = document.activeElement as HTMLElement | null;
       if (el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA' || el?.isContentEditable) return;
@@ -822,7 +972,7 @@ export function ProductSlideOver({
     };
     document.addEventListener('paste', handlePaste);
     return () => document.removeEventListener('paste', handlePaste);
-  }, [open, setPreviewPhoto]);
+  }, [open, showMoodboardUpload, setPreviewPhoto]);
 
   const updateGalleryCaption = (
     gallery: 'design' | 'moodboard',
@@ -919,8 +1069,10 @@ export function ProductSlideOver({
       waistband: form.category === 'trousers' ? (form.waistband || undefined) : undefined,
       seam_allowance: form.category === 'trousers' ? (form.seam_allowance || undefined) : undefined,
     };
+    const blocksToSave =
+      options?.autoSave ? descriptionBlocks : descriptionBlocks.filter((b) => !isBlockEmpty(b));
     const descriptionValue =
-      descriptionBlocks.length > 0 ? JSON.stringify(descriptionBlocks) : null;
+      blocksToSave.length > 0 ? JSON.stringify(blocksToSave) : null;
 
     const record = {
       name: form.name,
@@ -994,6 +1146,8 @@ export function ProductSlideOver({
     clearDraftFromStorage();
     if (options?.autoSave) {
       setLastSavedAt(new Date());
+    } else {
+      setDescriptionBlocks(blocksToSave);
     }
     onSaved(productId, options);
   };
@@ -1188,7 +1342,7 @@ export function ProductSlideOver({
 
           {/* Ready for sampling */}
           <div className="flex items-center justify-between">
-            <label className="block text-sm text-nokturo-700 dark:text-nokturo-400">{t('products.readyForSampling')}</label>
+            <label className="block text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">{t('products.readyForSampling')}</label>
             <button
               type="button"
               role="switch"
@@ -1212,7 +1366,7 @@ export function ProductSlideOver({
           {/* Priority (only when ready for sampling) */}
           {form.ready_for_sampling && (
             <div className="flex items-center justify-between">
-              <label className="block text-sm text-nokturo-700 dark:text-nokturo-400">{t('products.priority')}</label>
+              <label className="block text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">{t('products.priority')}</label>
               <button
                 type="button"
                 role="switch"
@@ -1266,7 +1420,7 @@ export function ProductSlideOver({
                   <button
                     type="button"
                     onClick={() => fileInputPreviewPhotoRef.current?.click()}
-                    className="flex items-center gap-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
+                    className="flex items-center gap-1.5 text-xs text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
                   >
                     <MaterialIcon name="refresh" size={14} className="shrink-0" />
                     {t('products.replaceImage')}
@@ -1274,7 +1428,7 @@ export function ProductSlideOver({
                   <button
                     type="button"
                     onClick={() => setPreviewPhotoUrl(null)}
-                    className="dropdown-menu-item-destructive flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg px-3 py-2 rounded-lg transition-colors"
+                    className="flex items-center gap-1.5 text-xs text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
                   >
                     <DeleteIcon className="w-3.5 h-3.5" />
                     {t('common.delete')}
@@ -1765,7 +1919,7 @@ export function ProductSlideOver({
                           setReplaceTarget({ gallery: 'design', index: i });
                           replaceFileInputRef.current?.click();
                         }}
-                        className="p-1 bg-white/90 dark:bg-nokturo-800/90 text-nokturo-600 dark:text-nokturo-400 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+                        className="w-6 h-6 flex items-center justify-center bg-white/90 dark:bg-nokturo-800/90 text-nokturo-600 dark:text-nokturo-400 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
                         title={t('products.replaceImage')}
                       >
                         <MaterialIcon name="refresh" size={12} className="shrink-0" />
@@ -1773,7 +1927,7 @@ export function ProductSlideOver({
                       <button
                         type="button"
                         onClick={() => removeGalleryImage('design', i)}
-                        className="p-1 bg-red/80 text-red-fg rounded hover:bg-red"
+                        className="w-6 h-6 flex items-center justify-center bg-red/80 text-red-fg rounded hover:bg-red"
                       >
                         <DeleteIcon className="w-3 h-3" />
                       </button>
@@ -1793,17 +1947,18 @@ export function ProductSlideOver({
               ref={fileInputMoodboardRef}
               type="file"
               accept="image/*"
+              multiple
               className="hidden"
               onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) addGalleryImage('moodboard', f);
+                const files = Array.from(e.target.files || []);
+                if (files.length > 0) addMoodboardFiles(files);
                 e.target.value = '';
               }}
             />
             <div className="flex gap-3 mb-3">
               <button
                 type="button"
-                onClick={() => fileInputMoodboardRef.current?.click()}
+                onClick={() => setShowMoodboardUpload(true)}
                 className="flex-1 h-[60px] rounded-[6px] flex items-center justify-center gap-2 text-nokturo-500 dark:text-nokturo-400 border-2 border-dashed border-nokturo-300 dark:border-nokturo-600 bg-transparent hover:border-nokturo-400 dark:hover:border-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
               >
                 <UploadImageIcon className="w-4 h-4" size={16} />
@@ -1885,7 +2040,7 @@ export function ProductSlideOver({
                           setReplaceTarget({ gallery: 'moodboard', index: i });
                           replaceFileInputRef.current?.click();
                         }}
-                        className="p-1 bg-white/90 dark:bg-nokturo-800/90 text-nokturo-600 dark:text-nokturo-400 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+                        className="w-6 h-6 flex items-center justify-center bg-white/90 dark:bg-nokturo-800/90 text-nokturo-600 dark:text-nokturo-400 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
                         title={t('products.replaceImage')}
                       >
                         <MaterialIcon name="refresh" size={12} className="shrink-0" />
@@ -1893,7 +2048,7 @@ export function ProductSlideOver({
                       <button
                         type="button"
                         onClick={() => removeGalleryImage('moodboard', i)}
-                        className="p-1 bg-red/80 text-red-fg rounded hover:bg-red"
+                        className="w-6 h-6 flex items-center justify-center bg-red/80 text-red-fg rounded hover:bg-red"
                       >
                         <DeleteIcon className="w-3 h-3" />
                       </button>
@@ -1979,6 +2134,104 @@ export function ProductSlideOver({
         </div>
       </div>
 
+      {showMoodboardUpload && (
+        <div
+          className="fixed inset-0 z-[10010] flex items-center justify-center bg-page/60 backdrop-blur-sm p-4"
+          onClick={resetMoodboardUpload}
+        >
+          <div
+            className="bg-white dark:bg-nokturo-800 rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-4 py-3 shrink-0">
+              <h4 className="text-heading-5 font-medium text-nokturo-900 dark:text-nokturo-100">
+                {t('products.uploadImages')}
+              </h4>
+              <button
+                type="button"
+                onClick={resetMoodboardUpload}
+                className="p-2 text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
+              >
+                <MaterialIcon name="close" size={20} className="shrink-0" />
+              </button>
+            </div>
+
+            <div
+              className="flex-1 overflow-y-auto p-4 space-y-3"
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleMoodboardUploadDrop}
+            >
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => fileInputMoodboardRef.current?.click()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    fileInputMoodboardRef.current?.click();
+                  }
+                }}
+                className="h-24 rounded-lg bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-300 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 transition-colors flex flex-col items-center justify-center gap-1 cursor-pointer"
+              >
+                <UploadImageIcon className="w-5 h-5" size={20} />
+                <p className="text-sm font-medium">{t('products.uploadImages')}</p>
+                <p className="text-xs text-nokturo-500 dark:text-nokturo-400">
+                  Paste screenshot or drop files here
+                </p>
+              </div>
+
+              {moodboardUploadImages.length > 0 && (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-2">
+                    {moodboardUploadImages.map((img) => (
+                      <div key={img.id} className="relative rounded-lg overflow-hidden bg-nokturo-100 dark:bg-nokturo-700">
+                        <img src={img.preview} alt="" className="w-full aspect-square object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeMoodboardUploadImage(img.id)}
+                          className="absolute top-1 right-1 w-6 h-6 rounded-md bg-red/80 hover:bg-red text-red-fg flex items-center justify-center"
+                        >
+                          <MaterialIcon name="close" size={12} className="shrink-0" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => fileInputMoodboardRef.current?.click()}
+                    className="px-3 py-1.5 text-xs rounded-lg bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-600 dark:text-nokturo-300 hover:bg-nokturo-200 dark:hover:bg-nokturo-600 transition-colors"
+                  >
+                    {t('moodboard.addMoreImages')}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 px-4 py-3 bg-nokturo-50 dark:bg-nokturo-900/50 shrink-0">
+              <button
+                type="button"
+                onClick={resetMoodboardUpload}
+                disabled={moodboardUploading}
+                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 disabled:opacity-50"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                type="button"
+                onClick={handleMoodboardUploadSubmit}
+                disabled={moodboardUploadImages.length === 0 || moodboardUploading}
+                className="px-5 py-2 text-sm bg-nokturo-900 dark:bg-white dark:text-nokturo-900 text-white font-medium rounded-lg hover:bg-nokturo-900/90 dark:hover:bg-nokturo-100 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {moodboardUploading && <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" />}
+                {moodboardUploading
+                  ? `${t('common.loading')}...`
+                  : `${t('products.uploadImages')} (${moodboardUploadImages.length})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Moodboard picker modal */}
       {showMoodboardPicker && (
         <div
@@ -2001,6 +2254,43 @@ export function ProductSlideOver({
                 <MaterialIcon name="close" size={20} className="shrink-0" />
               </button>
             </div>
+            {!moodboardPickerLoading && moodboardCategories.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2 px-4 py-3 shrink-0 bg-nokturo-50 dark:bg-nokturo-900/50">
+                <button
+                  type="button"
+                  onClick={() => setMoodboardCategoryFilter([])}
+                  className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
+                    moodboardCategoryFilter.length === 0
+                      ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                      : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+                  }`}
+                >
+                  {t('moodboard.filterAll')}
+                </button>
+                {moodboardCategories.map((cat) => {
+                  const active = moodboardCategoryFilter.includes(cat.name);
+                  const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() =>
+                        setMoodboardCategoryFilter((prev) =>
+                          active ? prev.filter((c) => c !== cat.name) : [...prev, cat.name]
+                        )
+                      }
+                      className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
+                        active ? '' : 'opacity-40 hover:opacity-70'
+                      }`}
+                    >
+                      {t(`moodboard.categories.${cat.name}`) !== `moodboard.categories.${cat.name}`
+                        ? t(`moodboard.categories.${cat.name}`)
+                        : cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto p-4">
               {moodboardPickerLoading ? (
                 <div className="flex items-center justify-center py-16">
@@ -2010,9 +2300,13 @@ export function ProductSlideOver({
                 <p className="text-center text-nokturo-500 dark:text-nokturo-400 py-8">
                   {t('products.noMoodboardItems')}
                 </p>
+              ) : filteredMoodboardPickerItems.length === 0 ? (
+                <p className="text-center text-nokturo-500 dark:text-nokturo-400 py-8">
+                  {t('moodboard.noFilterResults')}
+                </p>
               ) : (
                 <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
-                  {moodboardPickerItems.flatMap((item) => {
+                  {filteredMoodboardPickerItems.flatMap((item) => {
                     const images = [item.image_url, ...item.sub_images.map((si) => si.image_url)];
                     return images.map((url, idx) => (
                       <button

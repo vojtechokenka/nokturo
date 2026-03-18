@@ -102,7 +102,7 @@ function duplicateBlockData(block: RichTextBlock): RichTextBlock {
   }
 }
 
-function isBlockEmpty(block: RichTextBlock): boolean {
+export function isBlockEmpty(block: RichTextBlock): boolean {
   switch (block.type) {
     case 'heading':
       return !block.text?.trim();
@@ -1420,33 +1420,35 @@ function BlockRenderer({
               <button
                 type="button"
                 onClick={headerRowCount === 0 ? addHeaderRow : removeHeaderRow}
-                className={`h-6 px-2 rounded-[16px] text-xs flex items-center ${
+                className={`h-6 px-2 rounded-[16px] text-xs flex items-center gap-1 ${
                   headerRowCount > 0
                     ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                     : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                 }`}
               >
+                <MaterialIcon name="table_rows" size={12} className="shrink-0" />
                 {t('richText.addHeaderRow')}
               </button>
               <button
                 type="button"
                 onClick={headerColumnCount === 0 ? addHeaderColumn : removeHeaderColumn}
-                className={`h-6 px-2 rounded-[16px] text-xs flex items-center ${
+                className={`h-6 px-2 rounded-[16px] text-xs flex items-center gap-1 ${
                   headerColumnCount > 0
                     ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
                     : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
                 }`}
               >
+                <MaterialIcon name="view_column" size={12} className="shrink-0" />
                 {t('richText.addHeaderColumn')}
               </button>
               <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
             </div>
-            <div className="flex items-stretch">
+            <div className="flex items-start">
               {/* Add column left */}
               <button
                 type="button"
                 onClick={() => addColumnAt(0)}
-                className="group/addcol flex items-center justify-center w-6 shrink-0 border border-r-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-l-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
+                className="group/addcol self-center flex items-center justify-center w-6 h-6 shrink-0 border border-r-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-l-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
                 title={t('richText.addColumn')}
               >
                 <MaterialIcon name="add" size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300 shrink-0" />
@@ -1659,7 +1661,7 @@ function BlockRenderer({
               <button
                 type="button"
                 onClick={() => addColumnAt(cols)}
-                className="group/addcol flex items-center justify-center w-6 shrink-0 border border-l-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-r-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
+                className="group/addcol self-center flex items-center justify-center w-6 h-6 shrink-0 border border-l-0 border-dashed border-nokturo-300 dark:border-nokturo-600 rounded-r-md opacity-0 hover:opacity-100 focus:opacity-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 transition-all"
                 title={t('richText.addColumn')}
               >
                 <MaterialIcon name="add" size={12} className="text-nokturo-400 dark:text-nokturo-500 group-hover/addcol:text-nokturo-600 dark:group-hover/addcol:text-nokturo-300 shrink-0" />
