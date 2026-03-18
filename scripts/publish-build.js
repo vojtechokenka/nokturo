@@ -35,9 +35,10 @@ execSync('vite build', { cwd: root, stdio: 'inherit' });
 // 3. Electron builder with publish config (programmatic API for reliable env-based config)
 console.log('[3/3] Building and publishing to GitHub...');
 const ghToken = process.env.GH_TOKEN;
-if (!ghToken || !ghToken.startsWith('ghp_')) {
+if (!ghToken || !ghToken.trim()) {
   console.error('\n❌ GH_TOKEN není nastaven. Přidej do .env v kořeni projektu:');
-  console.error('   GH_TOKEN=ghp_tvůj_github_token');
+  console.error('   GH_TOKEN=tvuj_github_token');
+  console.error('   Akceptovány jsou např. prefixy ghp_ i github_pat_.');
   console.error('   Token vytvoříš na: https://github.com/settings/tokens (scope: repo)');
   process.exit(1);
 }
