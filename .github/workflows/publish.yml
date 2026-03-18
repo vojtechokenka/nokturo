@@ -37,6 +37,16 @@ jobs:
 
       - name: Build and publish Electron (Windows)
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN || github.token }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-        run: npx electron-builder --win --publish always
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            GH_TOKEN="$GITHUB_TOKEN"
+          fi
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::No token available for publish (both GH_TOKEN and GITHUB_TOKEN are empty)."
+            exit 1
+          fi
+          export GH_TOKEN
+          npx electron-builder --win --publish always
