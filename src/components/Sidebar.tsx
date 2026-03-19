@@ -88,8 +88,10 @@ export function Sidebar() {
   const user = useAuthStore((s) => s.user);
   const role = user?.role ?? 'host';
   const closeMobileSidebar = useSidebarStore((s) => s.close);
+  const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const collapsed = useSidebarStore((s) => s.collapsed);
   const toggleCollapsed = useSidebarStore((s) => s.toggleCollapsed);
+  const toggleMobileSidebar = useSidebarStore((s) => s.toggle);
 
   useEffect(() => {
     closeMobileSidebar();
@@ -98,16 +100,22 @@ export function Sidebar() {
   return (
     <aside
       className={`h-screen bg-surface flex flex-col transition-all duration-300 ease-in-out ${
-        collapsed ? 'w-[60px]' : 'w-60'
+        collapsed ? 'w-60 md:w-[60px]' : 'w-60'
       }`}
     >
       {/* Header – hamburger + logo */}
       <div className={`shrink-0 flex items-center h-[60px] ${collapsed ? 'justify-center px-1.5' : 'px-3 gap-3'}`}>
         <button
           type="button"
-          onClick={toggleCollapsed}
+          onClick={() => {
+            if (window.innerWidth < 768) {
+              toggleMobileSidebar();
+              return;
+            }
+            toggleCollapsed();
+          }}
           className="shrink-0 flex items-center justify-center w-9 h-9 rounded-lg text-nokturo-700 dark:text-white/60 hover:text-nokturo-900 dark:hover:text-white/80 transition-colors"
-          title={t('common.toggleSidebar')}
+          title={window.innerWidth < 768 && mobileOpen ? t('common.close') : t('common.toggleSidebar')}
         >
           <MenuIcon size={20} className="shrink-0" />
         </button>

@@ -45,7 +45,7 @@ export function PageShell({ children, headerSlot, actionsSlot, bare = false, com
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {headerSlot}
       {actionsSlot && (
-        <div className="shrink-0 px-6 pt-6 pb-6">
+        <div className="shrink-0 px-4 pt-4 pb-4 sm:px-6 sm:pt-6 sm:pb-6">
           {actionsSlot}
         </div>
       )}
@@ -54,7 +54,7 @@ export function PageShell({ children, headerSlot, actionsSlot, bare = false, com
           className={`flex-1 min-h-0 flex flex-col ${
             contentOverflow === 'hidden' ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden scrollbar-hide'
           } ${
-            noContentPadding && contentBg === 'black' ? 'p-3' : noHorizontalPadding || noContentPadding ? '' : 'px-9'
+            noContentPadding && contentBg === 'black' ? 'p-3' : noHorizontalPadding || noContentPadding ? '' : 'px-4 sm:px-6 md:px-9'
           } ${!noContentPadding ? (compactContent ? 'py-2' : 'py-6') : ''}`}
           {...(contentOverflow !== 'hidden' && { 'data-scroll-container': '' })}
         >

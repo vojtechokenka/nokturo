@@ -233,10 +233,10 @@ export default function ChatPage() {
       titleKey="pages.internalChat.title"
       descriptionKey="pages.internalChat.description"
     >
-      <div className="flex flex-col sm:flex-row bg-white dark:bg-nokturo-800 border border-nokturo-200 dark:border-nokturo-700 rounded-lg overflow-hidden" style={{ height: 'calc(100vh - 220px)' }}>
+      <div className="flex-1 min-h-0 flex flex-col sm:flex-row bg-white dark:bg-nokturo-800 rounded-lg overflow-hidden">
         {/* ── Room tabs (horizontal on mobile, vertical sidebar on sm+) ── */}
-        <div className="sm:w-56 shrink-0 sm:border-r border-b sm:border-b-0 border-nokturo-200 dark:border-nokturo-700 bg-nokturo-50 dark:bg-nokturo-800 flex sm:flex-col">
-          <div className="hidden sm:block px-4 py-3 border-b border-nokturo-200 dark:border-nokturo-700">
+        <div className="sm:w-56 shrink-0 bg-nokturo-50 dark:bg-nokturo-800 flex sm:flex-col">
+          <div className="hidden sm:block px-4 py-3">
             <h4 className="text-heading-5 font-extralight text-nokturo-500 uppercase tracking-wider">
               {t('nav.communication')}
             </h4>
@@ -262,7 +262,7 @@ export default function ChatPage() {
         {/* ── Main chat area ────────────────────────────────── */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Room header */}
-          <div className="px-4 py-3 border-b border-nokturo-200 shrink-0">
+          <div className="px-4 py-3 shrink-0">
             <div className="flex items-center gap-2">
               <MaterialIcon name="tag" size={16} className="text-nokturo-500 shrink-0" />
               <h3 className="text-heading-5 font-extralight text-nokturo-900">
@@ -350,7 +350,7 @@ export default function ChatPage() {
           </div>
 
           {/* Message input */}
-          <div className="px-4 py-3 border-t border-nokturo-200 shrink-0">
+          <div className="px-4 py-3 shrink-0">
             <div className="flex items-end gap-2">
               <textarea
                 value={newMessage}

@@ -174,6 +174,7 @@ export default function TasksPage() {
 
   const [detailOpen, setDetailOpen] = useState(false);
   const [viewingTask, setViewingTask] = useState<Task | null>(null);
+  const [detailMobileTab, setDetailMobileTab] = useState<'detail' | 'comments'>('detail');
 
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [profileMap, setProfileMap] = useState<Record<string, TaskProfile>>({});
@@ -273,6 +274,7 @@ export default function TasksPage() {
 
   const openDetail = useCallback((task: Task) => {
     setViewingTask(task);
+    setDetailMobileTab('detail');
     setDetailOpen(true);
   }, []);
 
@@ -523,8 +525,24 @@ export default function TasksPage() {
     >
       {viewingTask ? (
         /* Task detail + comments grid */
-        <div className="flex-1 min-h-0 overflow-hidden grid grid-cols-[1fr_0.75fr] gap-3">
-          <div className="min-h-0 overflow-hidden flex flex-col rounded-[12px] bg-nokturo-900">
+        <div className="flex-1 min-h-0 overflow-hidden flex flex-col md:grid md:grid-cols-[1fr_0.75fr] gap-3">
+          <div className="md:hidden shrink-0 flex items-center gap-1 bg-white/5 p-1">
+            <button
+              type="button"
+              onClick={() => setDetailMobileTab('detail')}
+              className={`px-3 py-2 text-sm transition-colors ${detailMobileTab === 'detail' ? 'bg-white/10 text-nokturo-100' : 'text-nokturo-500 dark:text-nokturo-400'}`}
+            >
+              Detail
+            </button>
+            <button
+              type="button"
+              onClick={() => setDetailMobileTab('comments')}
+              className={`px-3 py-2 text-sm transition-colors ${detailMobileTab === 'comments' ? 'bg-white/10 text-nokturo-100' : 'text-nokturo-500 dark:text-nokturo-400'}`}
+            >
+              Comments
+            </button>
+          </div>
+          <div className={`min-h-0 overflow-hidden flex flex-col rounded-[12px] bg-nokturo-900 ${detailMobileTab === 'comments' ? 'hidden md:flex' : ''}`}>
             <TaskDetailSlideOver
               open
               task={viewingTask}
@@ -538,7 +556,7 @@ export default function TasksPage() {
               inline
             />
           </div>
-          <div className="min-h-0 overflow-hidden flex flex-col rounded-[12px] bg-nokturo-900">
+          <div className={`min-h-0 overflow-hidden flex flex-col rounded-[12px] bg-nokturo-900 ${detailMobileTab === 'detail' ? 'hidden md:flex' : ''}`}>
             <TaskComments
               taskId={viewingTask.id}
               taskCreatorId={viewingTask.created_by}

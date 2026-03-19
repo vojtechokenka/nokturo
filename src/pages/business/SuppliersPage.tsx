@@ -304,48 +304,46 @@ export default function SuppliersPage() {
           </p>
         </div>
       ) : (
-        <div className="w-full min-w-0 overflow-x-auto">
-        <div className="min-w-[600px] grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3">
-          {/* Header row – single border-b for continuous divider */}
-          <div className="col-span-4">
-            <div className="grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3 py-2 pl-4 text-[11px] font-medium text-nokturo-500 uppercase tracking-widest">
-              <span>{t('suppliers.company')}</span>
-              <span>{t('suppliers.website')}</span>
-              <span>{t('suppliers.category')}</span>
-              <span />
-            </div>
-          </div>
-
-          {/* Data rows – subgrid for alignment + row hover */}
-          {suppliers.map((supplier, idx) => (
-            <button
-              key={supplier.id}
-              type="button"
-              onClick={() => openDetail(supplier)}
-              className={`col-span-4 grid grid-cols-subgrid gap-x-3 group py-2.5 pl-4 text-sm text-nokturo-900 dark:text-nokturo-100 text-left cursor-pointer hover:!bg-nokturo-100/60 dark:hover:!bg-nokturo-800/60 transition-colors rounded-none ${
-                idx % 2 === 1 ? 'bg-nokturo-900/5 dark:bg-white/5' : ''
-              }`}
-            >
-              <span className="flex items-center gap-2 min-w-0">
-                {supplier.nationality && (
-                  <span
-                    className="shrink-0 text-base leading-none"
-                    title={supplier.nationality}
-                  >
-                    {countryCodeToFlag(supplier.nationality) ?? supplier.nationality}
+        <>
+          <div className="sm:hidden space-y-2">
+            {suppliers.map((supplier) => (
+              <button
+                key={supplier.id}
+                type="button"
+                onClick={() => openDetail(supplier)}
+                className="w-full text-left bg-white/5 hover:bg-white/10 transition-colors p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className="flex items-center gap-2 min-w-0">
+                    {supplier.nationality && (
+                      <span className="shrink-0 text-base leading-none" title={supplier.nationality}>
+                        {countryCodeToFlag(supplier.nationality) ?? supplier.nationality}
+                      </span>
+                    )}
+                    <span className="font-medium text-sm text-nokturo-900 dark:text-nokturo-100 truncate">
+                      {supplier.name}
+                    </span>
                   </span>
-                )}
-                <span className="font-medium truncate min-w-0" title={supplier.name}>
-                  {supplier.name}
-                </span>
-              </span>
-              <span className="truncate min-w-0" onClick={(e) => e.stopPropagation()}>
+                  {supplier.category && (
+                    <span
+                      className={`inline-block text-xs px-2 py-0.5 font-medium whitespace-nowrap ${
+                        TAG_BADGE_CLASSES[
+                          categories.find((c) => c.name === supplier.category)?.color ?? 'gray'
+                        ] ?? TAG_BADGE_CLASSES.gray
+                      }`}
+                      style={{ borderRadius: '4px' }}
+                    >
+                      {t(`suppliers.categories.${supplier.category}`) !== `suppliers.categories.${supplier.category}` ? t(`suppliers.categories.${supplier.category}`) : supplier.category}
+                    </span>
+                  )}
+                </div>
                 {supplier.website ? (
                   <a
                     href={supplier.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white opacity-60 hover:opacity-100 hover:text-nokturo-900 dark:hover:text-white bg-nokturo-900/10 dark:bg-white/10 hover:bg-nokturo-900/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+                    onClick={(e) => e.stopPropagation()}
+                    className="mt-2 inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white opacity-80 hover:opacity-100 hover:text-nokturo-900 dark:hover:text-white bg-nokturo-900/10 dark:bg-white/10 hover:bg-nokturo-900/20 dark:hover:bg-white/20 transition-colors max-w-full"
                     style={{ borderRadius: '6px' }}
                   >
                     <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
@@ -354,28 +352,84 @@ export default function SuppliersPage() {
                     </span>
                   </a>
                 ) : (
-                  '—'
+                  <p className="mt-2 text-xs text-nokturo-500 dark:text-nokturo-400">—</p>
                 )}
-              </span>
-              <span className="shrink-0 flex justify-start items-center">
-                {supplier.category && (
-                  <span
-                    className={`inline-block text-xs px-2 py-0.5 font-medium whitespace-nowrap ${
-                      TAG_BADGE_CLASSES[
-                        categories.find((c) => c.name === supplier.category)?.color ?? 'gray'
-                      ] ?? TAG_BADGE_CLASSES.gray
-                    }`}
-                    style={{ borderRadius: '4px' }}
-                  >
-                    {t(`suppliers.categories.${supplier.category}`) !== `suppliers.categories.${supplier.category}` ? t(`suppliers.categories.${supplier.category}`) : supplier.category}
+              </button>
+            ))}
+          </div>
+          <div className="hidden sm:block w-full min-w-0 overflow-x-auto">
+            <div className="min-w-[600px] grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3">
+              {/* Header row – single border-b for continuous divider */}
+              <div className="col-span-4">
+                <div className="grid grid-cols-[0.7fr_1fr_auto_60px] gap-x-3 py-2 pl-4 text-[11px] font-medium text-nokturo-500 uppercase tracking-widest">
+                  <span>{t('suppliers.company')}</span>
+                  <span>{t('suppliers.website')}</span>
+                  <span>{t('suppliers.category')}</span>
+                  <span />
+                </div>
+              </div>
+
+              {/* Data rows – subgrid for alignment + row hover */}
+              {suppliers.map((supplier, idx) => (
+                <button
+                  key={supplier.id}
+                  type="button"
+                  onClick={() => openDetail(supplier)}
+                  className={`col-span-4 grid grid-cols-subgrid gap-x-3 group py-2.5 pl-4 text-sm text-nokturo-900 dark:text-nokturo-100 text-left cursor-pointer hover:!bg-nokturo-100/60 dark:hover:!bg-nokturo-800/60 transition-colors rounded-none ${
+                    idx % 2 === 1 ? 'bg-nokturo-900/5 dark:bg-white/5' : ''
+                  }`}
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    {supplier.nationality && (
+                      <span
+                        className="shrink-0 text-base leading-none"
+                        title={supplier.nationality}
+                      >
+                        {countryCodeToFlag(supplier.nationality) ?? supplier.nationality}
+                      </span>
+                    )}
+                    <span className="font-medium truncate min-w-0" title={supplier.name}>
+                      {supplier.name}
+                    </span>
                   </span>
-                )}
-              </span>
-              <span />
-            </button>
-          ))}
-        </div>
-        </div>
+                  <span className="truncate min-w-0" onClick={(e) => e.stopPropagation()}>
+                    {supplier.website ? (
+                      <a
+                        href={supplier.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white opacity-60 hover:opacity-100 hover:text-nokturo-900 dark:hover:text-white bg-nokturo-900/10 dark:bg-white/10 hover:bg-nokturo-900/20 dark:hover:bg-white/20 transition-colors truncate max-w-full"
+                        style={{ borderRadius: '6px' }}
+                      >
+                        <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
+                        <span className="truncate">
+                          {supplier.website_title || supplier.website.replace(/^https?:\/\//, '')}
+                        </span>
+                      </a>
+                    ) : (
+                      '—'
+                    )}
+                  </span>
+                  <span className="shrink-0 flex justify-start items-center">
+                    {supplier.category && (
+                      <span
+                        className={`inline-block text-xs px-2 py-0.5 font-medium whitespace-nowrap ${
+                          TAG_BADGE_CLASSES[
+                            categories.find((c) => c.name === supplier.category)?.color ?? 'gray'
+                          ] ?? TAG_BADGE_CLASSES.gray
+                        }`}
+                        style={{ borderRadius: '4px' }}
+                      >
+                        {t(`suppliers.categories.${supplier.category}`) !== `suppliers.categories.${supplier.category}` ? t(`suppliers.categories.${supplier.category}`) : supplier.category}
+                      </span>
+                    )}
+                  </span>
+                  <span />
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── Detail slide-over ────────────────────────────────────── */}

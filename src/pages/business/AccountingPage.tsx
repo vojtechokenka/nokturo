@@ -286,6 +286,14 @@ export default function AccountingPage() {
       default: return 'bg-nokturo-500 text-white';
     }
   };
+  const orderStatusColor = (status: string) => {
+    switch (status) {
+      case 'delivered': return 'bg-green text-green-fg';
+      case 'returned': return 'bg-red text-red-fg';
+      case 'canceled': return 'bg-orange text-orange-fg';
+      default: return 'bg-nokturo-500 text-white';
+    }
+  };
 
   // Overview stats (from filtered orders)
   const ordersComing = orders.filter((o) => o.order_status === 'ordered').length;
@@ -552,46 +560,83 @@ export default function AccountingPage() {
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="shrink-0 overflow-x-auto">
-            <table className="w-full border-collapse min-w-[640px] table-fixed">
-              <colgroup>
-                <col style={{ width: '90px' }} />
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '36%' }} />
-                <col style={{ width: '100px' }} />
-              </colgroup>
-              <thead>
-                <tr className="bg-nokturo-200 dark:bg-surface">
-                  <th className="py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.colStatus')}</th>
-                  <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.supplier')}</th>
-                  <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.eshopLink')}</th>
-                  <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.note')}</th>
-                  <th className="sticky top-0 z-10 py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right bg-nokturo-200 dark:bg-surface">{t('accounting.colValue')}</th>
-                </tr>
-              </thead>
-            </table>
+          <div className="sm:hidden flex-1 min-h-0 overflow-y-auto px-4 pb-4 space-y-2">
+            {orders.map((order) => (
+              <button
+                key={order.id}
+                type="button"
+                onClick={() => openDetail(order)}
+                className="w-full text-left bg-white/5 hover:bg-white/10 transition-colors p-3"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <span className={`inline-block text-xs px-2.5 py-1 font-medium whitespace-nowrap ${orderStatusColor(order.order_status)}`}>
+                    {t(`accounting.orderStatuses.${order.order_status}`)}
+                  </span>
+                  <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 whitespace-nowrap">
+                    {convertToCzk(order.order_value ?? 0, order.order_currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                  </span>
+                </div>
+                <p className="mt-2 text-sm font-medium text-nokturo-900 dark:text-nokturo-100">
+                  {order.supplier?.name ?? '—'}
+                </p>
+                {order.note?.trim() && (
+                  <p className="mt-1 text-xs text-nokturo-600 dark:text-nokturo-400 line-clamp-2">
+                    {order.note}
+                  </p>
+                )}
+                {order.eshop_link && (
+                  <span className="mt-2 inline-flex items-center gap-1 text-[11px] px-2.5 py-1 font-medium text-nokturo-600 dark:text-white bg-nokturo-200/60 dark:bg-white/10">
+                    <MaterialIcon name="open_in_new" size={12} className="shrink-0" />
+                    <span className="truncate max-w-[180px]">
+                      {order.eshop_link.replace(/^https?:\/\//, '')}
+                    </span>
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-            <table className="w-full border-collapse min-w-[640px] table-fixed">
-              <colgroup>
-                <col style={{ width: '90px' }} />
-                <col style={{ width: '22%' }} />
-                <col style={{ width: '14%' }} />
-                <col style={{ width: '36%' }} />
-                <col style={{ width: '100px' }} />
-              </colgroup>
-              <tbody>
-                {orders.map((order, idx) => (
-                  <AccountingOrderRow
-                    key={order.id}
-                    order={order}
-                    index={idx}
-                    onClick={() => openDetail(order)}
-                  />
-                ))}
-              </tbody>
-            </table>
+          <div className="hidden sm:flex flex-1 min-h-0 flex-col overflow-hidden">
+            <div className="shrink-0 overflow-x-auto">
+              <table className="w-full border-collapse min-w-[640px] table-fixed">
+                <colgroup>
+                  <col style={{ width: '90px' }} />
+                  <col style={{ width: '22%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '36%' }} />
+                  <col style={{ width: '100px' }} />
+                </colgroup>
+                <thead>
+                  <tr className="bg-nokturo-200 dark:bg-surface">
+                    <th className="py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.colStatus')}</th>
+                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.supplier')}</th>
+                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.eshopLink')}</th>
+                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('accounting.note')}</th>
+                    <th className="sticky top-0 z-10 py-2 pl-6 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right bg-nokturo-200 dark:bg-surface">{t('accounting.colValue')}</th>
+                  </tr>
+                </thead>
+              </table>
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+              <table className="w-full border-collapse min-w-[640px] table-fixed">
+                <colgroup>
+                  <col style={{ width: '90px' }} />
+                  <col style={{ width: '22%' }} />
+                  <col style={{ width: '14%' }} />
+                  <col style={{ width: '36%' }} />
+                  <col style={{ width: '100px' }} />
+                </colgroup>
+                <tbody>
+                  {orders.map((order, idx) => (
+                    <AccountingOrderRow
+                      key={order.id}
+                      order={order}
+                      index={idx}
+                      onClick={() => openDetail(order)}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -709,68 +754,100 @@ export default function AccountingPage() {
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="shrink-0 overflow-x-auto">
-              <table className="w-full border-collapse min-w-[640px] table-fixed">
-                <colgroup>
-                  <col style={{ width: '90px' }} />
-                  <col style={{ width: '28%' }} />
-                  <col style={{ width: '14%' }} />
-                  <col style={{ width: '14%' }} />
-                  <col style={{ width: '18%' }} />
-                </colgroup>
-                <thead>
-                  <tr className="bg-nokturo-200 dark:bg-surface">
-                    <th className="py-2 pl-6 pr-4 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.status')}</th>
-                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.name')}</th>
-                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.billingCycle')}</th>
-                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right">{t('subscriptions.amount')}</th>
-                    <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.nextBillingDate')}</th>
-                  </tr>
-                </thead>
-              </table>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
-              <table className="w-full border-collapse min-w-[640px] table-fixed">
-                <colgroup>
-                  <col style={{ width: '90px' }} />
-                  <col style={{ width: '28%' }} />
-                  <col style={{ width: '14%' }} />
-                  <col style={{ width: '14%' }} />
-                  <col style={{ width: '18%' }} />
-                </colgroup>
-                <tbody>
-                {subscriptions.map((sub, idx) => (
-                  <tr
-                    key={sub.id}
-                    onClick={() => { setEditingSub(sub); setSubEditOpen(true); }}
-                    className={`cursor-pointer transition-colors hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 ${
-                      idx % 2 === 0 ? 'bg-white/5' : ''
-                    }`}
-                  >
-                    <td className="py-3 pl-6 pr-4 align-middle">
-                      <span className={`inline-block text-xs px-2.5 py-1 rounded-[6px] font-medium whitespace-nowrap ${statusColor(sub.status)}`}>
-                        {t(`subscriptions.statuses.${sub.status}`)}
-                      </span>
-                    </td>
-                    <td className="py-3 pr-6 align-middle">
-                      <div className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 truncate max-w-[200px]">{sub.name}</div>
-                      {sub.supplier?.name && (
-                        <div className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate">{sub.supplier.name}</div>
-                      )}
-                    </td>
-                    <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300 align-middle">
-                      {t(`subscriptions.${sub.billing_cycle}`)}
-                    </td>
-                    <td className="py-3 pr-6 text-sm font-medium text-nokturo-900 dark:text-nokturo-100 text-right whitespace-nowrap align-middle">
+            <div className="sm:hidden flex-1 min-h-0 overflow-y-auto px-4 pb-4 space-y-2">
+              {subscriptions.map((sub) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  onClick={() => { setEditingSub(sub); setSubEditOpen(true); }}
+                  className="w-full text-left bg-white/5 hover:bg-white/10 transition-colors p-3"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span className={`inline-block text-xs px-2.5 py-1 font-medium whitespace-nowrap ${statusColor(sub.status)}`}>
+                      {t(`subscriptions.statuses.${sub.status}`)}
+                    </span>
+                    <span className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 whitespace-nowrap">
                       {convertToCzk(sub.amount ?? 0, sub.currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
-                    </td>
-                    <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300 whitespace-nowrap align-middle">
-                      {formatNextBilling(sub.next_billing_date)}
-                    </td>
-                  </tr>
-                ))}
-                </tbody>
-              </table>
+                    </span>
+                  </div>
+                  <p className="mt-2 text-sm font-medium text-nokturo-900 dark:text-nokturo-100 truncate">
+                    {sub.name}
+                  </p>
+                  {sub.supplier?.name && (
+                    <p className="mt-1 text-xs text-nokturo-500 dark:text-nokturo-400 truncate">
+                      {sub.supplier.name}
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs text-nokturo-600 dark:text-nokturo-400">
+                    {t(`subscriptions.${sub.billing_cycle}`)} · {formatNextBilling(sub.next_billing_date)}
+                  </p>
+                </button>
+              ))}
+            </div>
+            <div className="hidden sm:flex flex-1 min-h-0 flex-col overflow-hidden">
+              <div className="shrink-0 overflow-x-auto">
+                <table className="w-full border-collapse min-w-[640px] table-fixed">
+                  <colgroup>
+                    <col style={{ width: '90px' }} />
+                    <col style={{ width: '28%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '18%' }} />
+                  </colgroup>
+                  <thead>
+                    <tr className="bg-nokturo-200 dark:bg-surface">
+                      <th className="py-2 pl-6 pr-4 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.status')}</th>
+                      <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.name')}</th>
+                      <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.billingCycle')}</th>
+                      <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-right">{t('subscriptions.amount')}</th>
+                      <th className="py-2 pr-6 text-[11px] font-medium text-nokturo-500 dark:text-nokturo-400 uppercase tracking-widest text-left">{t('subscriptions.nextBillingDate')}</th>
+                    </tr>
+                  </thead>
+                </table>
+              </div>
+              <div className="flex-1 min-h-0 overflow-y-auto overflow-x-auto">
+                <table className="w-full border-collapse min-w-[640px] table-fixed">
+                  <colgroup>
+                    <col style={{ width: '90px' }} />
+                    <col style={{ width: '28%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '14%' }} />
+                    <col style={{ width: '18%' }} />
+                  </colgroup>
+                  <tbody>
+                  {subscriptions.map((sub, idx) => (
+                    <tr
+                      key={sub.id}
+                      onClick={() => { setEditingSub(sub); setSubEditOpen(true); }}
+                      className={`cursor-pointer transition-colors hover:bg-nokturo-50 dark:hover:bg-nokturo-700/50 ${
+                        idx % 2 === 0 ? 'bg-white/5' : ''
+                      }`}
+                    >
+                      <td className="py-3 pl-6 pr-4 align-middle">
+                        <span className={`inline-block text-xs px-2.5 py-1 rounded-[6px] font-medium whitespace-nowrap ${statusColor(sub.status)}`}>
+                          {t(`subscriptions.statuses.${sub.status}`)}
+                        </span>
+                      </td>
+                      <td className="py-3 pr-6 align-middle">
+                        <div className="text-sm font-medium text-nokturo-900 dark:text-nokturo-100 truncate max-w-[200px]">{sub.name}</div>
+                        {sub.supplier?.name && (
+                          <div className="text-xs text-nokturo-500 dark:text-nokturo-400 truncate">{sub.supplier.name}</div>
+                        )}
+                      </td>
+                      <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300 align-middle">
+                        {t(`subscriptions.${sub.billing_cycle}`)}
+                      </td>
+                      <td className="py-3 pr-6 text-sm font-medium text-nokturo-900 dark:text-nokturo-100 text-right whitespace-nowrap align-middle">
+                        {convertToCzk(sub.amount ?? 0, sub.currency || 'EUR').toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} CZK
+                      </td>
+                      <td className="py-3 pr-6 text-sm text-nokturo-700 dark:text-nokturo-300 whitespace-nowrap align-middle">
+                        {formatNextBilling(sub.next_billing_date)}
+                      </td>
+                    </tr>
+                  ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
