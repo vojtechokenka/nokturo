@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
@@ -14,6 +14,7 @@ import {
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { ProductCard } from '../../components/ProductCard';
 import { FilterGroup } from '../../components/FilterGroup';
+import { SimpleDropdown } from '../../components/SimpleDropdown';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 
@@ -32,6 +33,7 @@ export default function ProductsPage() {
   // Filters (multi-select: empty = show all)
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [sortBy, setSortBy] = useState<'default' | 'readyForSampling' | 'category'>('default');
 
   // Slide-over (add product only – edit is on detail page)
   const [slideOverOpen, setSlideOverOpen] = useState(false);
@@ -180,6 +182,33 @@ export default function ProductsPage() {
     if (productId) navigate(`/production/products/${productId}`);
   };
 
+  const sortedProducts = useMemo(() => {
+    if (products.length <= 1 || sortBy === 'default') {
+      return products;
+    }
+
+    const dateSort = (a: ProductWithMaterials, b: ProductWithMaterials) =>
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    const prioritySort = (a: ProductWithMaterials, b: ProductWithMaterials) =>
+      Number(b.priority ?? false) - Number(a.priority ?? false);
+
+    return [...products].sort((a, b) => {
+      if (sortBy === 'readyForSampling') {
+        const readyDiff = Number(b.ready_for_sampling ?? false) - Number(a.ready_for_sampling ?? false);
+        if (readyDiff !== 0) return readyDiff;
+      } else if (sortBy === 'category') {
+        const aCategory = a.category?.trim() ?? '';
+        const bCategory = b.category?.trim() ?? '';
+        const categoryDiff = aCategory.localeCompare(bCategory, undefined, { sensitivity: 'base' });
+        if (categoryDiff !== 0) return categoryDiff;
+      }
+
+      const priorityDiff = prioritySort(a, b);
+      if (priorityDiff !== 0) return priorityDiff;
+      return dateSort(a, b);
+    });
+  }, [products, sortBy]);
+
   // ── Render ──────────────────────────────────────────────────
   return (
     <PageShell
@@ -234,6 +263,17 @@ export default function ProductsPage() {
               },
             ]}
           />
+          <SimpleDropdown
+            value={sortBy}
+            onChange={(value) => setSortBy(value as 'default' | 'readyForSampling' | 'category')}
+            options={[
+              { value: 'default', label: t('products.sortDefault') },
+              { value: 'readyForSampling', label: t('products.sortByReadyForSampling') },
+              { value: 'category', label: t('products.sortByCategory') },
+            ]}
+            compact
+            className="min-w-[170px]"
+          />
           <button
             onClick={openAdd}
             className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
@@ -249,7 +289,7 @@ export default function ProductsPage() {
         <div className="flex items-center justify-center py-20">
           <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
         </div>
-      ) : products.length === 0 ? (
+      ) : sortedProducts.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-nokturo-600 font-medium">
             {hasActiveFilters ? t('products.noMatch') : t('products.noProducts')}
@@ -271,7 +311,7 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {products.map((product) => (
+          {sortedProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
