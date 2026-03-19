@@ -33,7 +33,9 @@ export default function ProductsPage() {
   // Filters (multi-select: empty = show all)
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
-  const [sortBy, setSortBy] = useState<'default' | 'readyForSampling' | 'category'>('default');
+  const [showDrafts, setShowDrafts] = useState(false);
+  const [sortBy, setSortBy] = useState<'category' | 'dateAdded' | 'priority'>('category');
+  const [sortAsc, setSortAsc] = useState(false);
 
   // Slide-over (add product only – edit is on detail page)
   const [slideOverOpen, setSlideOverOpen] = useState(false);
@@ -182,32 +184,53 @@ export default function ProductsPage() {
     if (productId) navigate(`/production/products/${productId}`);
   };
 
+  const visibleProducts = useMemo(
+    () =>
+      products.filter((p) =>
+        showDrafts ? (p.hidden ?? false) : !(p.hidden ?? false),
+      ),
+    [products, showDrafts]
+  );
+
   const sortedProducts = useMemo(() => {
-    if (products.length <= 1 || sortBy === 'default') {
-      return products;
+    if (visibleProducts.length <= 1) {
+      return visibleProducts;
     }
 
-    const dateSort = (a: ProductWithMaterials, b: ProductWithMaterials) =>
+    const dateDescSort = (a: ProductWithMaterials, b: ProductWithMaterials) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    const dateSort = (a: ProductWithMaterials, b: ProductWithMaterials) =>
+      sortAsc
+        ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     const prioritySort = (a: ProductWithMaterials, b: ProductWithMaterials) =>
       Number(b.priority ?? false) - Number(a.priority ?? false);
+    const categorySort = (a: ProductWithMaterials, b: ProductWithMaterials) => {
+      const aCategory = a.category?.trim() ?? '';
+      const bCategory = b.category?.trim() ?? '';
+      const categoryDiff = aCategory.localeCompare(bCategory, undefined, { sensitivity: 'base' });
+      return sortAsc ? categoryDiff : -categoryDiff;
+    };
 
-    return [...products].sort((a, b) => {
-      if (sortBy === 'readyForSampling') {
-        const readyDiff = Number(b.ready_for_sampling ?? false) - Number(a.ready_for_sampling ?? false);
-        if (readyDiff !== 0) return readyDiff;
-      } else if (sortBy === 'category') {
-        const aCategory = a.category?.trim() ?? '';
-        const bCategory = b.category?.trim() ?? '';
-        const categoryDiff = aCategory.localeCompare(bCategory, undefined, { sensitivity: 'base' });
+    return [...visibleProducts].sort((a, b) => {
+      if (sortBy === 'category') {
+        const categoryDiff = categorySort(a, b);
         if (categoryDiff !== 0) return categoryDiff;
+
+        const priorityDiff = prioritySort(a, b);
+        if (priorityDiff !== 0) return priorityDiff;
+        return dateDescSort(a, b);
+      }
+
+      if (sortBy === 'dateAdded') {
+        return dateSort(a, b);
       }
 
       const priorityDiff = prioritySort(a, b);
-      if (priorityDiff !== 0) return priorityDiff;
-      return dateSort(a, b);
+      if (priorityDiff !== 0) return sortAsc ? -priorityDiff : priorityDiff;
+      return dateDescSort(a, b);
     });
-  }, [products, sortBy]);
+  }, [visibleProducts, sortBy, sortAsc]);
 
   // ── Render ──────────────────────────────────────────────────
   return (
@@ -219,68 +242,103 @@ export default function ProductsPage() {
       noContentPadding
       contentBg="black"
       actionsSlot={
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
-          {hasActiveFilters && (
+        <div className="w-full flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
+          <div className="flex gap-1">
+            {(['published', 'drafts'] as const).map((tab) => {
+              const isActive = showDrafts === (tab === 'drafts');
+              return (
+                <button
+                  key={tab}
+                  type="button"
+                  onClick={() => setShowDrafts(tab === 'drafts')}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors rounded-[6px] ${
+                    isActive
+                      ? 'bg-nokturo-800 text-white dark:bg-surface dark:text-nokturo-100'
+                      : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+                  }`}
+                >
+                  {tab === 'published' ? (
+                    <MaterialIcon name="inventory_2" size={20} className="shrink-0 opacity-60" />
+                  ) : (
+                    <MaterialIcon name="edit_note" size={20} className="shrink-0 opacity-60" />
+                  )}
+                  {t(`products.${tab}`)}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+              >
+                {t('common.clearFilters')}
+              </button>
+            )}
+            <FilterGroup
+              titleKey="products.filterTitle"
+              sections={[
+                {
+                  labelKey: 'products.filterByCategory',
+                  value: categoryFilter,
+                  onChange: setCategoryFilter,
+                  options: [
+                    { value: 'all', label: t('products.allCategories') },
+                    ...(categories.length > 0
+                      ? categories.map((cat) => ({
+                          value: cat.name,
+                          label: t(`products.categories.${cat.name}`) !== `products.categories.${cat.name}` ? t(`products.categories.${cat.name}`) : cat.name,
+                        }))
+                      : PRODUCT_CATEGORIES.map((cat) => ({
+                          value: cat,
+                          label: t(`products.categories.${cat}`),
+                        }))),
+                  ],
+                },
+                {
+                  labelKey: 'products.filterByStatus',
+                  value: statusFilter,
+                  onChange: setStatusFilter,
+                  options: [
+                    { value: 'all', label: t('products.allStatuses') },
+                    ...PRODUCT_STATUSES.map((s) => ({
+                      value: s,
+                      label: t(`products.statuses.${s}`),
+                    })),
+                  ],
+                },
+              ]}
+            />
+            <SimpleDropdown
+              value={sortBy}
+              onChange={(value) => setSortBy(value as 'category' | 'dateAdded' | 'priority')}
+              options={[
+                { value: 'category', label: t('products.sortByCategory') },
+                { value: 'dateAdded', label: t('products.sortByDateAdded') },
+                { value: 'priority', label: t('products.sortByPriority') },
+              ]}
+              compact
+              className="min-w-[170px]"
+            />
             <button
               type="button"
-              onClick={clearFilters}
-              className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+              onClick={() => setSortAsc((a) => !a)}
+              title={sortAsc ? t('products.sortDesc') : t('products.sortAsc')}
+              className="flex items-center justify-center size-9 shrink-0 rounded-[6px] bg-nokturo-200/80 dark:bg-white/10 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-300 dark:hover:bg-nokturo-700 transition-colors"
             >
-              {t('common.clearFilters')}
+              <MaterialIcon name="swap_vert" size={16} className={`transition-transform shrink-0 ${sortAsc ? 'rotate-180' : ''}`} />
             </button>
-          )}
-          <FilterGroup
-            titleKey="products.filterTitle"
-            sections={[
-              {
-                labelKey: 'products.filterByCategory',
-                value: categoryFilter,
-                onChange: setCategoryFilter,
-                options: [
-                  { value: 'all', label: t('products.allCategories') },
-                  ...(categories.length > 0
-                    ? categories.map((cat) => ({
-                        value: cat.name,
-                        label: t(`products.categories.${cat.name}`) !== `products.categories.${cat.name}` ? t(`products.categories.${cat.name}`) : cat.name,
-                      }))
-                    : PRODUCT_CATEGORIES.map((cat) => ({
-                        value: cat,
-                        label: t(`products.categories.${cat}`),
-                      }))),
-                ],
-              },
-              {
-                labelKey: 'products.filterByStatus',
-                value: statusFilter,
-                onChange: setStatusFilter,
-                options: [
-                  { value: 'all', label: t('products.allStatuses') },
-                  ...PRODUCT_STATUSES.map((s) => ({
-                    value: s,
-                    label: t(`products.statuses.${s}`),
-                  })),
-                ],
-              },
-            ]}
-          />
-          <SimpleDropdown
-            value={sortBy}
-            onChange={(value) => setSortBy(value as 'default' | 'readyForSampling' | 'category')}
-            options={[
-              { value: 'default', label: t('products.sortDefault') },
-              { value: 'readyForSampling', label: t('products.sortByReadyForSampling') },
-              { value: 'category', label: t('products.sortByCategory') },
-            ]}
-            compact
-            className="min-w-[170px]"
-          />
-          <button
-            onClick={openAdd}
-            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
-          >
-            <MaterialIcon name="add" size={16} className="shrink-0" />
-            {t('products.addProduct')}
-          </button>
+            <button
+              onClick={openAdd}
+              className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+            >
+              <MaterialIcon name="add" size={16} className="shrink-0" />
+              {t('products.addProduct')}
+            </button>
+          </div>
         </div>
       }
     >

@@ -373,6 +373,11 @@ export default function ProductDetailPage() {
                 <p className="text-nokturo-500 dark:text-nokturo-400 text-sm mt-1">SKU: {product.sku}</p>
               )}
               <div className="flex flex-wrap gap-2 mt-3">
+                {product.hidden && (
+                  <span className="text-xs px-2.5 py-1 rounded-[6px] font-medium bg-nokturo-400 text-white">
+                    {t('products.draft')}
+                  </span>
+                )}
                 {product.priority && (
                   <span className="text-xs px-2.5 py-1 rounded-[6px] font-medium bg-red text-red-fg">
                     {t('products.priority')}

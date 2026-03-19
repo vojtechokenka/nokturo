@@ -72,6 +72,7 @@ export interface Product {
   markup_multiplier: number;
   tech_pack: ProductTechPack;
   images: string[];
+  hidden?: boolean;
   ready_for_sampling?: boolean;
   priority?: boolean;
   created_by: string | null;
@@ -148,6 +149,7 @@ interface FormData {
   sku: string;
   category: string;
   status: string;
+  hidden: boolean;
   ready_for_sampling: boolean;
   priority: boolean;
   short_description: string;
@@ -165,6 +167,7 @@ const emptyForm: FormData = {
   sku: '',
   category: 'coats',
   status: 'concept',
+  hidden: false,
   ready_for_sampling: false,
   priority: false,
   short_description: '',
@@ -543,6 +546,7 @@ export function ProductSlideOver({
         sku: product.sku || '',
         category: product.category || 'coats',
         status: product.status,
+        hidden: product.hidden ?? false,
         ready_for_sampling: product.ready_for_sampling ?? false,
         priority: product.priority ?? false,
         short_description: (product as Product).short_description ?? '',
@@ -1079,6 +1083,7 @@ export function ProductSlideOver({
       sku: form.sku || null,
       category: form.category,
       status: form.status,
+      hidden: form.hidden,
       ready_for_sampling: form.ready_for_sampling,
       priority: form.priority,
       short_description: form.short_description.trim() || null,
@@ -1340,6 +1345,34 @@ export function ProductSlideOver({
             </SelectField>
           </div>
 
+          {/* Draft */}
+          <div className="flex items-center justify-between">
+            <label className="block text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">{t('products.draft')}</label>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={form.hidden}
+              onClick={() => {
+                const next = !form.hidden;
+                setForm((prev) => ({
+                  ...prev,
+                  hidden: next,
+                  ready_for_sampling: next ? false : prev.ready_for_sampling,
+                  priority: next ? false : prev.priority,
+                }));
+              }}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-900 ${
+                form.hidden ? 'bg-green' : 'bg-nokturo-400 dark:bg-nokturo-600'
+              }`}
+            >
+              <span
+                className={`pointer-events-none absolute left-0.5 top-1/2 -translate-y-1/2 block h-5 w-5 shrink-0 rounded-full bg-white shadow transition-all duration-200 ease-out ${
+                  form.hidden ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+
           {/* Ready for sampling */}
           <div className="flex items-center justify-between">
             <label className="block text-heading-5 font-extralight text-nokturo-900 dark:text-nokturo-100">{t('products.readyForSampling')}</label>
@@ -1349,7 +1382,12 @@ export function ProductSlideOver({
               aria-checked={form.ready_for_sampling}
               onClick={() => {
                 const next = !form.ready_for_sampling;
-                setForm((prev) => ({ ...prev, ready_for_sampling: next, priority: next ? prev.priority : false }));
+                setForm((prev) => ({
+                  ...prev,
+                  ready_for_sampling: next,
+                  hidden: next ? false : prev.hidden,
+                  priority: next ? prev.priority : false,
+                }));
               }}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full p-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 dark:focus:ring-offset-nokturo-900 ${
                 form.ready_for_sampling ? 'bg-green' : 'bg-nokturo-400 dark:bg-nokturo-600'

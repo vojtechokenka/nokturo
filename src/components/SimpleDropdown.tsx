@@ -61,7 +61,7 @@ export function SimpleDropdown({
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-0.5 z-50 py-1 rounded-[4px] bg-elevated overflow-hidden min-w-0">
+        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 py-2 rounded-[8px] bg-elevated overflow-hidden min-w-0">
           <ul role="listbox" className="max-h-60 overflow-y-auto space-y-px px-1">
             {options.map((opt) => (
               <li key={opt.value}>
