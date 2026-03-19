@@ -1247,7 +1247,7 @@ export function ProductSlideOver({
     <>
       <div className="fixed inset-0 z-[9998] bg-overlay backdrop-blur-sm" onClick={handleClose} />
       <div
-        className="fixed inset-y-0 right-0 z-[9999] w-full max-w-2xl bg-nokturo-900 shadow-2xl flex flex-col"
+        className="fixed inset-y-0 right-0 z-[9999] w-full sm:max-w-2xl bg-nokturo-900 shadow-2xl flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">

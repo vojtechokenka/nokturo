@@ -233,7 +233,7 @@ export default function CostingPage() {
       }
     >
       {/* ── Summary cards (sticky at top) ───────────────────── */}
-      <div className="sticky top-0 z-10 -mx-9 -mt-6 pt-6 px-9 pb-6 bg-white/5">
+      <div className="sticky top-0 z-10 -mx-4 sm:-mx-6 md:-mx-9 -mt-6 pt-6 px-4 sm:px-6 md:px-9 pb-6 bg-white/5">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-lg p-4">
           <p className="text-nokturo-500 text-xs uppercase tracking-wider mb-1">
@@ -284,167 +284,199 @@ export default function CostingPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-nokturo-200 bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-nokturo-50 border-b border-nokturo-200">
-                <th
-                  className="text-left px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
-                  onClick={() => handleSort('name')}
-                >
-                  {t('costing.product')}
-                  <SortIcon field="name" />
-                </th>
-                <th
-                  className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
-                  onClick={() => handleSort('materialCost')}
-                >
-                  {t('costing.materialCost')}
-                  <SortIcon field="materialCost" />
-                </th>
-                <th className="text-right px-4 py-3 text-nokturo-600 font-medium">
-                  {t('costing.laborOverhead')}
-                </th>
-                <th
-                  className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
-                  onClick={() => handleSort('totalCOGS')}
-                >
-                  {t('costing.totalCOGS')}
-                  <SortIcon field="totalCOGS" />
-                </th>
-                <th className="text-right px-4 py-3 text-nokturo-600 font-medium">
-                  {t('costing.breakEven')}
-                </th>
-                <th
-                  className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
-                  onClick={() => handleSort('retailPrice')}
-                >
-                  {t('costing.retailPrice')}
-                  <SortIcon field="retailPrice" />
-                </th>
-                <th
-                  className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
-                  onClick={() => handleSort('profitPerUnit')}
-                >
-                  {t('costing.profitPerUnit')}
-                  <SortIcon field="profitPerUnit" />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedRows.map((row) => {
-                const margin =
-                  row.retailPrice > 0
-                    ? (row.profitPerUnit / row.retailPrice) * 100
-                    : 0;
-
-                return (
-                  <tr
-                    key={row.id}
-                    className="border-b border-nokturo-100 hover:bg-nokturo-50 transition-colors"
-                  >
-                    {/* Product name */}
-                    <td className="px-4 py-3">
-                      <div>
-                        <p className="text-nokturo-900 font-medium">{row.name}</p>
-                        <p className="text-nokturo-500 text-xs">
-                          {row.sku || '—'}
-                          {row.category && (
-                            <span className="ml-2 text-nokturo-500">
-                              {t(`products.categories.${row.category}`) !== `products.categories.${row.category}` ? t(`products.categories.${row.category}`) : row.category}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                    </td>
-
-                    {/* Material cost */}
-                    <td className="text-right px-4 py-3 text-nokturo-700">
-                      {fmtCurrency(row.materialCost, row.currency)}
-                      {showCzk(row) && (
-                        <span className="block text-xs text-nokturo-500">
-                          ≈ {row.materialCostCzk.toFixed(2)} CZK
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Labor + Overhead */}
-                    <td className="text-right px-4 py-3 text-nokturo-700">
-                      <span className="block">
-                        {fmtCurrency(row.laborCost, 'CZK')}
-                      </span>
-                      <span className="block text-xs text-nokturo-500">
-                        + {fmtCurrency(row.overheadCost, 'CZK')}
-                      </span>
-                    </td>
-
-                    {/* Total COGS */}
-                    <td className="text-right px-4 py-3 text-nokturo-900 font-medium">
-                      {fmtCurrency(row.totalCOGS, row.currency)}
-                      {showCzk(row) && (
-                        <span className="block text-xs text-nokturo-500">
-                          ≈ {row.totalCOGSCzk.toFixed(2)} CZK
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Break-even */}
-                    <td className="text-right px-4 py-3 text-nokturo-700">
-                      {fmtCurrency(row.breakEvenPrice, row.currency)}
-                      {showCzk(row) && (
-                        <span className="block text-xs text-nokturo-500">
-                          ≈ {row.totalCOGSCzk.toFixed(2)} CZK
-                        </span>
-                      )}
-                    </td>
-
-                    {/* Retail price */}
-                    <td className="text-right px-4 py-3">
-                      <span className="text-nokturo-900 font-medium">
-                        {fmtCurrency(row.retailPrice, row.currency)}
-                      </span>
-                      {showCzk(row) && (
-                        <span className="block text-xs text-nokturo-500">
-                          ≈ {row.retailPriceCzk.toFixed(2)} CZK
-                        </span>
-                      )}
-                      <span className="block text-xs text-nokturo-500">
-                        x{row.markupMultiplier}
-                      </span>
-                    </td>
-
-                    {/* Profit per unit */}
-                    <td className="text-right px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        {row.profitPerUnit >= 0 ? (
-                          <MaterialIcon name="trending_up" size={14} className="text-green-fg shrink-0" />
-                        ) : (
-                          <MaterialIcon name="trending_down" size={14} className="text-red-fg shrink-0" />
+        <div>
+          <div className="sm:hidden space-y-2">
+            {sortedRows.map((row) => {
+              const margin = row.retailPrice > 0 ? (row.profitPerUnit / row.retailPrice) * 100 : 0;
+              return (
+                <div key={row.id} className="bg-white p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-nokturo-900 font-medium truncate">{row.name}</p>
+                      <p className="text-nokturo-500 text-xs truncate">
+                        {row.sku || '—'}
+                        {row.category && (
+                          <span className="ml-2">
+                            {t(`products.categories.${row.category}`) !== `products.categories.${row.category}` ? t(`products.categories.${row.category}`) : row.category}
+                          </span>
                         )}
-                        <span
-                          className={`font-medium ${
-                            row.profitPerUnit >= 0
-                              ? 'text-green-fg'
-                              : 'text-red-fg'
-                          }`}
-                        >
-                          {fmtCurrency(row.profitPerUnit, row.currency)}
+                      </p>
+                    </div>
+                    <span className={`text-sm font-medium ${row.profitPerUnit >= 0 ? 'text-green-fg' : 'text-red-fg'}`}>
+                      {fmtCurrency(row.profitPerUnit, row.currency)}
+                    </span>
+                  </div>
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-xs">
+                    <div className="bg-nokturo-100/70 p-2">
+                      <p className="text-nokturo-500">{t('costing.totalCOGS')}</p>
+                      <p className="text-nokturo-900 font-medium">{fmtCurrency(row.totalCOGS, row.currency)}</p>
+                    </div>
+                    <div className="bg-nokturo-100/70 p-2">
+                      <p className="text-nokturo-500">{t('costing.retailPrice')}</p>
+                      <p className="text-nokturo-900 font-medium">{fmtCurrency(row.retailPrice, row.currency)}</p>
+                    </div>
+                    <div className="bg-nokturo-100/70 p-2">
+                      <p className="text-nokturo-500">{t('costing.materialCost')}</p>
+                      <p className="text-nokturo-900 font-medium">{fmtCurrency(row.materialCost, row.currency)}</p>
+                    </div>
+                    <div className="bg-nokturo-100/70 p-2">
+                      <p className="text-nokturo-500">{t('costing.avgMargin')}</p>
+                      <p className="text-nokturo-900 font-medium">{margin.toFixed(1)}%</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="hidden sm:block overflow-x-auto rounded-lg bg-white">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-nokturo-50">
+                  <th
+                    className="text-left px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
+                    onClick={() => handleSort('name')}
+                  >
+                    {t('costing.product')}
+                    <SortIcon field="name" />
+                  </th>
+                  <th
+                    className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
+                    onClick={() => handleSort('materialCost')}
+                  >
+                    {t('costing.materialCost')}
+                    <SortIcon field="materialCost" />
+                  </th>
+                  <th className="text-right px-4 py-3 text-nokturo-600 font-medium">
+                    {t('costing.laborOverhead')}
+                  </th>
+                  <th
+                    className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
+                    onClick={() => handleSort('totalCOGS')}
+                  >
+                    {t('costing.totalCOGS')}
+                    <SortIcon field="totalCOGS" />
+                  </th>
+                  <th className="text-right px-4 py-3 text-nokturo-600 font-medium">
+                    {t('costing.breakEven')}
+                  </th>
+                  <th
+                    className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
+                    onClick={() => handleSort('retailPrice')}
+                  >
+                    {t('costing.retailPrice')}
+                    <SortIcon field="retailPrice" />
+                  </th>
+                  <th
+                    className="text-right px-4 py-3 text-nokturo-600 font-medium cursor-pointer hover:text-nokturo-900 transition-colors"
+                    onClick={() => handleSort('profitPerUnit')}
+                  >
+                    {t('costing.profitPerUnit')}
+                    <SortIcon field="profitPerUnit" />
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedRows.map((row) => {
+                  const margin =
+                    row.retailPrice > 0
+                      ? (row.profitPerUnit / row.retailPrice) * 100
+                      : 0;
+
+                  return (
+                    <tr
+                      key={row.id}
+                      className="hover:bg-nokturo-50 transition-colors"
+                    >
+                      <td className="px-4 py-3">
+                        <div>
+                          <p className="text-nokturo-900 font-medium">{row.name}</p>
+                          <p className="text-nokturo-500 text-xs">
+                            {row.sku || '—'}
+                            {row.category && (
+                              <span className="ml-2 text-nokturo-500">
+                                {t(`products.categories.${row.category}`) !== `products.categories.${row.category}` ? t(`products.categories.${row.category}`) : row.category}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </td>
+                      <td className="text-right px-4 py-3 text-nokturo-700">
+                        {fmtCurrency(row.materialCost, row.currency)}
+                        {showCzk(row) && (
+                          <span className="block text-xs text-nokturo-500">
+                            ≈ {row.materialCostCzk.toFixed(2)} CZK
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3 text-nokturo-700">
+                        <span className="block">
+                          {fmtCurrency(row.laborCost, 'CZK')}
                         </span>
-                      </div>
-                      {showCzk(row) && (
                         <span className="block text-xs text-nokturo-500">
-                          ≈ {row.profitPerUnitCzk.toFixed(2)} CZK
+                          + {fmtCurrency(row.overheadCost, 'CZK')}
                         </span>
-                      )}
-                      <span className="block text-xs text-nokturo-500">
-                        {margin.toFixed(1)}%
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td className="text-right px-4 py-3 text-nokturo-900 font-medium">
+                        {fmtCurrency(row.totalCOGS, row.currency)}
+                        {showCzk(row) && (
+                          <span className="block text-xs text-nokturo-500">
+                            ≈ {row.totalCOGSCzk.toFixed(2)} CZK
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3 text-nokturo-700">
+                        {fmtCurrency(row.breakEvenPrice, row.currency)}
+                        {showCzk(row) && (
+                          <span className="block text-xs text-nokturo-500">
+                            ≈ {row.totalCOGSCzk.toFixed(2)} CZK
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-right px-4 py-3">
+                        <span className="text-nokturo-900 font-medium">
+                          {fmtCurrency(row.retailPrice, row.currency)}
+                        </span>
+                        {showCzk(row) && (
+                          <span className="block text-xs text-nokturo-500">
+                            ≈ {row.retailPriceCzk.toFixed(2)} CZK
+                          </span>
+                        )}
+                        <span className="block text-xs text-nokturo-500">
+                          x{row.markupMultiplier}
+                        </span>
+                      </td>
+                      <td className="text-right px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {row.profitPerUnit >= 0 ? (
+                            <MaterialIcon name="trending_up" size={14} className="text-green-fg shrink-0" />
+                          ) : (
+                            <MaterialIcon name="trending_down" size={14} className="text-red-fg shrink-0" />
+                          )}
+                          <span
+                            className={`font-medium ${
+                              row.profitPerUnit >= 0
+                                ? 'text-green-fg'
+                                : 'text-red-fg'
+                            }`}
+                          >
+                            {fmtCurrency(row.profitPerUnit, row.currency)}
+                          </span>
+                        </div>
+                        {showCzk(row) && (
+                          <span className="block text-xs text-nokturo-500">
+                            ≈ {row.profitPerUnitCzk.toFixed(2)} CZK
+                          </span>
+                        )}
+                        <span className="block text-xs text-nokturo-500">
+                          {margin.toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </PageShell>

@@ -94,7 +94,7 @@ export function MaterialDetailSlideOver({
       />
 
       {/* Panel */}
-      <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:max-w-lg bg-nokturo-900 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-nokturo-200 dark:border-nokturo-600 shrink-0">
           <h3 className={MODAL_HEADING_CLASS}>
