@@ -1,6 +1,6 @@
 {
   "name": "nokturo",
-  "version": "6.0.11",
+  "version": "6.0.12",
   "description": "Nokturo PLM/ERP – Product Lifecycle Management for high-end fashion",
   "main": "electron/main.js",
   "repository": {
@@ -72,7 +72,8 @@
     "publish": {
       "provider": "github",
       "owner": "vojtechokenka",
-      "repo": "nokturo"
+      "repo": "nokturo",
+      "releaseType": "release"
     }
   }
 }
