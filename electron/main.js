@@ -116,6 +116,11 @@ function setupAutoUpdater() {
   }
 }
 
+function getIconPath(theme) {
+  const name = theme === 'dark' ? 'icon-dark.png' : 'icon-light.png';
+  return path.join(__dirname, 'icons', name);
+}
+
 function createWindow(loadUrl) {
   const win = new BrowserWindow({
     width: 1440,
@@ -124,6 +129,7 @@ function createWindow(loadUrl) {
     minHeight: 700,
     title: 'Nokturo',
     backgroundColor: '#fafafa',
+    icon: getIconPath('dark'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -148,6 +154,14 @@ function createWindow(loadUrl) {
 }
 
 setupAutoUpdater();
+
+ipcMain.handle('set-theme-icon', (_event, theme) => {
+  const iconPath = getIconPath(theme);
+  if (!fs.existsSync(iconPath)) return;
+  for (const win of BrowserWindow.getAllWindows()) {
+    win.setIcon(iconPath);
+  }
+});
 
 let staticServer = null;
 

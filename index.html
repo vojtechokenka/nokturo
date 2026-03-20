@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <script>
-      (function(){var s=localStorage.getItem('nokturo-theme');if(s==='dark')document.documentElement.classList.add('dark');else if(s)try{var j=JSON.parse(s);if(j&&j.state&&j.state.theme==='dark')document.documentElement.classList.add('dark');}catch(e){}})();
+      (function(){var s=localStorage.getItem('nokturo-theme');var d=false;if(s==='dark')d=true;else if(s)try{var j=JSON.parse(s);if(j&&j.state&&j.state.theme==='dark')d=true;}catch(e){}if(d)document.documentElement.classList.add('dark');var l=document.querySelector('link[rel="icon"]');if(l)l.href=d?'/icon_32_dark.png':'/icon_32_light.png';})();
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Nokturo</title>

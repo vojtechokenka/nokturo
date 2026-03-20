@@ -2,86 +2,70 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 
-const svgPath = path.join(__dirname, '..', 'public', 'icon.svg');
-const pngPath = path.join(__dirname, '..', 'public', 'icon.png');
+const publicDir = path.join(__dirname, '..', 'public');
 const buildDir = path.join(__dirname, '..', 'build');
-const icoPath = path.join(buildDir, 'icon.ico');
-const iconsDir = path.join(__dirname, '..', 'public', 'icons');
+const iconsDir = path.join(publicDir, 'icons');
+const electronIconsDir = path.join(__dirname, '..', 'electron', 'icons');
 
-// Velikosti pro Windows .ico
+const darkSvg = path.join(publicDir, 'icon-dark.svg');
+const lightSvg = path.join(publicDir, 'icon-light.svg');
+
 const icoSizes = [16, 32, 48, 64, 128, 256];
 
 async function generateIcons() {
-  let sourceBuffer;
-  let usePngFallback = false;
-
-  if (fs.existsSync(svgPath)) {
-    sourceBuffer = fs.readFileSync(svgPath);
-  } else if (fs.existsSync(pngPath)) {
-    sourceBuffer = fs.readFileSync(pngPath);
-    usePngFallback = true;
-    console.log('Using public/icon.png (icon.svg not found)');
-  } else {
-    throw new Error('Neither public/icon.svg nor public/icon.png found. Add one of them.');
+  if (!fs.existsSync(darkSvg) || !fs.existsSync(lightSvg)) {
+    throw new Error('Both public/icon-dark.svg and public/icon-light.svg are required.');
   }
 
-  // 1. Hlavní PNG 1024x1024 (pro macOS, web, atd.) – jen pokud máme SVG (jinak icon.png už existuje)
-  if (!usePngFallback) {
-    await sharp(sourceBuffer)
-      .resize(1024, 1024)
-      .png({ compressionLevel: 0 })
-      .toFile(pngPath);
-    console.log('Icon generated: public/icon.png (1024x1024)');
+  const darkBuf = fs.readFileSync(darkSvg);
+  const lightBuf = fs.readFileSync(lightSvg);
+
+  for (const dir of [buildDir, iconsDir, electronIconsDir]) {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
   }
 
-  // 2. Generovat .ico pro Windows
-  if (!fs.existsSync(buildDir)) {
-    fs.mkdirSync(buildDir, { recursive: true });
-  }
+  // Main app icon (dark variant — used by electron-builder for exe/installer)
+  await sharp(darkBuf).resize(1024, 1024).png({ compressionLevel: 0 }).toFile(path.join(publicDir, 'icon.png'));
+  console.log('Generated: public/icon.png (1024x1024, dark)');
 
-  const pngPaths = [];
+  // Windows .ico (dark variant — baked into installer)
+  const tmpPngs = [];
   for (const size of icoSizes) {
-    const tempPath = path.join(buildDir, `icon-${size}x${size}.png`);
-    await sharp(sourceBuffer)
-      .resize(size, size)
-      .png({ compressionLevel: 0 })
-      .toFile(tempPath);
-    pngPaths.push(tempPath);
+    const tmp = path.join(buildDir, `icon-${size}x${size}.png`);
+    await sharp(darkBuf).resize(size, size).png({ compressionLevel: 0 }).toFile(tmp);
+    tmpPngs.push(tmp);
   }
-
   const { default: pngToIco } = await import('png-to-ico');
-  const icoBuffer = await pngToIco(pngPaths);
-  fs.writeFileSync(icoPath, icoBuffer);
+  fs.writeFileSync(path.join(buildDir, 'icon.ico'), await pngToIco(tmpPngs));
+  for (const p of tmpPngs) fs.unlinkSync(p);
+  console.log(`Generated: build/icon.ico (${icoSizes.join(', ')}px)`);
 
-  for (const p of pngPaths) fs.unlinkSync(p);
-  console.log(`Icon generated: build/icon.ico (${icoSizes.join(', ')}px)`);
+  const variants = [
+    { name: 'dark', buf: darkBuf },
+    { name: 'light', buf: lightBuf },
+  ];
 
-  // 3. PWA ikony (192, 512) – jen pokud máme SVG (jinak použijeme existující nebo vygenerujeme z PNG)
-  if (!fs.existsSync(iconsDir)) fs.mkdirSync(iconsDir, { recursive: true });
-  if (!usePngFallback) {
-    const svg = sourceBuffer.toString('utf-8');
-    const svgDark = svg
-      .replace(/fill="white"/g, 'fill="#0a0a0a"')
-      .replace(/fill="black"/g, 'fill="white"')
-      .replace(/stroke="black"/g, 'stroke="white"');
+  for (const { name, buf } of variants) {
+    // Favicon 32px
+    await sharp(buf).resize(32, 32).png({ compressionLevel: 6 }).toFile(path.join(publicDir, `icon_32_${name}.png`));
+    console.log(`Generated: public/icon_32_${name}.png`);
+
+    // PWA icons 192 & 512
     for (const size of [192, 512]) {
-      const outPath = path.join(iconsDir, `icon-${size}.png`);
-      await sharp(Buffer.from(svgDark))
-        .resize(size, size)
-        .png({ compressionLevel: 6 })
-        .toFile(outPath);
-      console.log(`PWA icon generated: public/icons/icon-${size}.png`);
+      await sharp(buf).resize(size, size).png({ compressionLevel: 6 }).toFile(path.join(iconsDir, `icon-${size}-${name}.png`));
+      console.log(`Generated: public/icons/icon-${size}-${name}.png`);
     }
-  } else {
-    for (const size of [192, 512]) {
-      const outPath = path.join(iconsDir, `icon-${size}.png`);
-      await sharp(sourceBuffer)
-        .resize(size, size)
-        .png({ compressionLevel: 6 })
-        .toFile(outPath);
-      console.log(`PWA icon generated: public/icons/icon-${size}.png`);
-    }
+
+    // Electron taskbar icon 256px
+    await sharp(buf).resize(256, 256).png({ compressionLevel: 6 }).toFile(path.join(electronIconsDir, `icon-${name}.png`));
+    console.log(`Generated: electron/icons/icon-${name}.png`);
   }
+
+  // Backward-compat aliases (dark = default)
+  fs.copyFileSync(path.join(publicDir, 'icon_32_dark.png'), path.join(publicDir, 'icon_32.png'));
+  fs.copyFileSync(path.join(iconsDir, 'icon-192-dark.png'), path.join(iconsDir, 'icon-192.png'));
+  fs.copyFileSync(path.join(iconsDir, 'icon-512-dark.png'), path.join(iconsDir, 'icon-512.png'));
+  console.log('Copied dark variants as default aliases (icon_32.png, icon-192.png, icon-512.png)');
 }
 
 generateIcons().catch((err) => {

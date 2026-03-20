@@ -1,15 +1,23 @@
 import { useEffect } from 'react';
-import { useThemeStore } from '../stores/themeStore';
+import { useThemeStore, Theme } from '../stores/themeStore';
 
-/**
- * Applies theme (light/dark) to document.documentElement for Tailwind dark: variants.
- * Uses subscribe() to ensure DOM stays in sync even during Zustand persist rehydration.
- */
+function applyFavicon(theme: Theme) {
+  const link = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+  if (link) link.href = theme === 'dark' ? '/icon_32_dark.png' : '/icon_32_light.png';
+}
+
+function notifyElectron(theme: Theme) {
+  const api = (window as any).electronAPI;
+  if (api?.setThemeIcon) api.setThemeIcon(theme);
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const apply = () => {
       const theme = useThemeStore.getState().theme;
       document.documentElement.classList.toggle('dark', theme === 'dark');
+      applyFavicon(theme);
+      notifyElectron(theme);
     };
     apply();
     const unsub = useThemeStore.subscribe(apply);

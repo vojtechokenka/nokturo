@@ -15,7 +15,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onUpdateStatus: (callback) => {
     const handler = (_event, status, info) => callback(status, info);
     ipcRenderer.on('update-status', handler);
-    // Return cleanup function
     return () => ipcRenderer.removeListener('update-status', handler);
   },
+
+  // ── Theme icon ─────────────────────────────────────────────
+  setThemeIcon: (theme) => ipcRenderer.invoke('set-theme-icon', theme),
 });
