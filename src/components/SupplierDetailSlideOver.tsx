@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './icons/MaterialIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
@@ -6,6 +7,8 @@ import { countryCodeToFlag } from '../lib/countryUtils';
 import type { Supplier } from './SupplierSlideOver';
 import { MODAL_HEADING_CLASS } from '../lib/inputStyles';
 import type { NotionSelectOption } from './NotionSelect';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
@@ -36,7 +39,17 @@ export function SupplierDetailSlideOver({
   onDelete,
 }: SupplierDetailSlideOverProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuPosition = useDropdownPosition({
+    open: menuOpen,
+    triggerRef: menuTriggerRef,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 160,
+    offset: 4,
+  });
 
   if (!open || !supplier) return null;
 
@@ -55,37 +68,50 @@ export function SupplierDetailSlideOver({
             {supplier.name}
           </h3>
           <div className="flex items-center gap-1 shrink-0">
-            <div className="relative">
-              <button
-                onClick={() => setMenuOpen((p) => !p)}
-                className="p-2 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-              >
-                <MaterialIcon name="more_vert" size={20} className="shrink-0" />
-              </button>
-              {menuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20">
-                    <button
-                      onClick={() => { onEdit(supplier); setMenuOpen(false); }}
-                      className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
+            {!isMobile && (
+              <div className="relative">
+                <button
+                  ref={menuTriggerRef}
+                  onClick={() => setMenuOpen((p) => !p)}
+                  className="p-2 text-nokturo-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                >
+                  <MaterialIcon name="more_vert" size={20} className="shrink-0" />
+                </button>
+                {menuOpen && menuPosition && createPortal(
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
+                    <div
+                      className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20"
+                      style={{
+                        ...(menuPosition.top !== undefined && { top: menuPosition.top }),
+                        ...(menuPosition.bottom !== undefined && { bottom: menuPosition.bottom }),
+                        left: menuPosition.left,
+                        maxHeight: menuPosition.maxHeight,
+                        maxWidth: menuPosition.maxWidth,
+                      }}
                     >
-                      <MaterialIcon name="edit" size={14} className="shrink-0" />
-                      {t('common.edit')}
-                    </button>
-                    {onDelete && (
                       <button
-                        onClick={() => { onDelete(supplier.id); onClose(); setMenuOpen(false); }}
-                        className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                        onClick={() => { onEdit(supplier); setMenuOpen(false); }}
+                        className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
                       >
-                        <DeleteIcon className="w-3.5 h-3.5" />
-                        {t('common.delete')}
+                        <MaterialIcon name="edit" size={14} className="shrink-0" />
+                        {t('common.edit')}
                       </button>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
+                      {onDelete && (
+                        <button
+                          onClick={() => { onDelete(supplier.id); onClose(); setMenuOpen(false); }}
+                          className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
+                        >
+                          <DeleteIcon className="w-3.5 h-3.5" />
+                          {t('common.delete')}
+                        </button>
+                      )}
+                    </div>
+                  </>,
+                  document.body
+                )}
+              </div>
+            )}
             <button
               onClick={onClose}
               className="p-1.5 text-nokturo-400 hover:text-white transition-colors rounded-lg hover:bg-white/10 shrink-0"

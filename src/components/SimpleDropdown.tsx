@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FilterChevronIcon } from './FilterSelect';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 export interface SimpleDropdownOption {
   value: string;
@@ -28,11 +30,20 @@ export function SimpleDropdown({
   compact = false,
 }: SimpleDropdownProps) {
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    matchWidth: true,
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) {
         setOpen(false);
       }
     };
@@ -46,8 +57,9 @@ export function SimpleDropdown({
   const displayText = selected ? selected.label : placeholder;
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div className={className}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={`relative ${triggerBaseClass} ${compact ? 'h-9 text-sm font-medium pr-10' : 'h-11 py-2.5 text-sm pr-10'}`}
@@ -60,8 +72,19 @@ export function SimpleDropdown({
         />
       </button>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 z-50 py-2 rounded-[8px] bg-elevated overflow-hidden min-w-0">
+      {open && position && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed z-50 py-2 rounded-[8px] bg-elevated overflow-hidden min-w-0"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            width: position.width,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
+        >
           <ul role="listbox" className="max-h-60 overflow-y-auto space-y-px px-1">
             {options.map((opt) => (
               <li key={opt.value}>
@@ -84,7 +107,8 @@ export function SimpleDropdown({
               </li>
             ))}
           </ul>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

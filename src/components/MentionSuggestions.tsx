@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { DefaultAvatar } from './DefaultAvatar';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 // ── Types ─────────────────────────────────────────────────────
 export interface MentionProfile {
@@ -134,12 +136,24 @@ export function MentionDropdown({
   profiles,
   selectedIdx,
   onSelect,
+  anchorRef,
 }: {
   profiles: MentionProfile[];
   selectedIdx: number;
   onSelect: (profile: MentionProfile) => void;
+  anchorRef?: React.RefObject<HTMLElement | null>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const fallbackAnchorRef = useRef<HTMLSpanElement>(null);
+  const triggerRef = (anchorRef ?? fallbackAnchorRef) as React.RefObject<HTMLElement | null>;
+  const position = useDropdownPosition({
+    open: profiles.length > 0,
+    triggerRef,
+    preferAbove: true,
+    matchWidth: true,
+    desiredHeight: 144,
+    offset: 4,
+  });
 
   useEffect(() => {
     const el = containerRef.current?.children[selectedIdx] as HTMLElement | undefined;
@@ -149,35 +163,49 @@ export function MentionDropdown({
   if (profiles.length === 0) return null;
 
   return (
-    <div
-      ref={containerRef}
-      className="mention-dropdown absolute bottom-full left-0 right-0 mb-1 p-1 bg-white dark:bg-nokturo-700 shadow-lg max-h-36 overflow-y-auto z-50"
-    >
-      {profiles.map((p, i) => {
-        const name = profileDisplayName(p);
-        return (
-          <button
-            key={p.id}
-            type="button"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              onSelect(p);
-            }}
-            className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-              i === selectedIdx
-                ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-white'
-                : 'text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600/50'
-            }`}
-          >
-            {p.avatar_url ? (
-              <img src={p.avatar_url} alt="" className="avatar-round w-6 h-6 object-cover shrink-0" />
-            ) : (
-              <DefaultAvatar size={24} className="avatar-round overflow-hidden shrink-0 w-6 h-6" />
-            )}
-            <span>@{name}</span>
-          </button>
-        );
-      })}
-    </div>
+    <>
+      {!anchorRef && <span ref={fallbackAnchorRef} className="block h-0 w-full pointer-events-none" aria-hidden />}
+      {position && createPortal(
+        <div
+          ref={containerRef}
+          className="mention-dropdown fixed p-1 bg-white dark:bg-nokturo-700 shadow-lg max-h-36 overflow-y-auto z-50"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            width: position.width,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
+        >
+          {profiles.map((p, i) => {
+            const name = profileDisplayName(p);
+            return (
+              <button
+                key={p.id}
+                type="button"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  onSelect(p);
+                }}
+                className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  i === selectedIdx
+                    ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-white'
+                    : 'text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600/50'
+                }`}
+              >
+                {p.avatar_url ? (
+                  <img src={p.avatar_url} alt="" className="avatar-round w-6 h-6 object-cover shrink-0" />
+                ) : (
+                  <DefaultAvatar size={24} className="avatar-round overflow-hidden shrink-0 w-6 h-6" />
+                )}
+                <span>@{name}</span>
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )}
+    </>
   );
 }

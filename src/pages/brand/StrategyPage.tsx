@@ -12,6 +12,7 @@ import { ToastContainer, type ToastData } from '../../components/Toast';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { EditIcon } from '../../components/icons/EditIcon';
 import { SaveIcon } from '../../components/icons/SaveIcon';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const DEFAULT_TITLE = 'Strategie značky';
 
@@ -36,6 +37,7 @@ export default function StrategyPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canEditBrand = user?.role ? hasFeaturePermission('canEditBrand', user.role) : false;
+  const isMobile = useIsMobile();
   const [docId, setDocId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<RichTextBlock[]>([]);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
@@ -76,7 +78,8 @@ export default function StrategyPage() {
 
   useEffect(() => {
     if (!canEditBrand && mode === 'edit') setMode('view');
-  }, [canEditBrand, mode]);
+    if (isMobile && mode === 'edit') setMode('view');
+  }, [canEditBrand, isMobile, mode]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -174,14 +177,14 @@ export default function StrategyPage() {
       ) : (
         <>
           {(mode === 'edit' || headerImage) && (
-          <div className={`relative group ${mode === 'edit' || !headerImage ? 'min-w-0 w-full max-w-[860px] mx-auto mb-4 lg:pr-[288px]' : '-ml-9 -mt-6 w-[calc(100%+4.5rem)] box-border mb-6'}`}>
+          <div className={`relative group ${mode === 'edit' || !headerImage ? 'min-w-0 w-full max-w-[860px] mx-auto mb-4 lg:pr-[288px]' : '-ml-4 -mt-6 w-[calc(100%+2rem)] mb-6 sm:-ml-9 sm:w-[calc(100%+4.5rem)] sm:box-border'}`}>
             <PageHeaderImage
               imageUrl={headerImage}
               onUpload={handleUploadImage}
               onChange={handleHeaderImageChange}
               editMode={mode === 'edit'}
             />
-            {canEditBrand && mode === 'view' && headerImage && (
+            {canEditBrand && mode === 'view' && headerImage && !isMobile && (
               <button
                 type="button"
                 onClick={() => setMode('edit')}
@@ -201,7 +204,7 @@ export default function StrategyPage() {
                 defaultTocItems={getDefaultTocItems(t)}
                 headingFont="headline"
                 h3Large
-                tocFooterSlot={canEditBrand && !headerImage ? (
+                tocFooterSlot={canEditBrand && !headerImage && !isMobile ? (
                   <button
                     type="button"
                     onClick={() => setMode('edit')}

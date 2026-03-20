@@ -153,10 +153,11 @@ function CommentableBlockView({
 
   if (block.type === 'tag' && block.text?.trim()) {
     const tagMb = nextBlock?.type === 'heading' && block.visible !== false ? 'mb-3' : 'mb-1';
+    const tagMt = prevBlock ? 'mt-10 sm:mt-12' : 'mt-0';
     return (
       <span
         id={block.id}
-        className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-0 ${tagMb}` : 'sr-only mt-0'}`}
+        className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 ${tagMt} ${tagMb}` : 'sr-only mt-0'}`}
         aria-hidden={block.visible === false}
         data-block-id={block.id}
       >
@@ -945,8 +946,8 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
   );
 
   const mainContent = showTocSidebar && !renderTocExternally ? (
-    <div className={`flex gap-[80px] max-w-[1124px] mx-auto ${className}`}>
-      <div className="min-w-0 flex-1 max-w-[860px]">
+    <div className={`flex flex-col sm:flex-row gap-0 sm:gap-[80px] max-w-[1124px] mx-auto ${className}`}>
+      <div className="min-w-0 flex-1 max-w-none sm:max-w-[860px]">
         {content}
         {sections}
       </div>

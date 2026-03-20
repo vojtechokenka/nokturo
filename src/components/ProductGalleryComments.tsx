@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
@@ -13,6 +14,7 @@ import { useMentionSuggestions, MentionDropdown } from './MentionSuggestions';
 import type { MentionProfile } from './MentionSuggestions';
 import { sendMentionNotifications, getGalleryNotificationLink, parseMentionsFromText } from '../lib/sendMentionNotifications';
 import { useToastStore } from '../stores/toastStore';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 // ── Types ─────────────────────────────────────────────────────
 interface ProductGalleryComment {
@@ -76,6 +78,15 @@ export function ProductGalleryComments({
   const [currentAuthorId, setCurrentAuthorId] = useState<string | null>(null);
   const [commentMenuOpen, setCommentMenuOpen] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const activeMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuPosition = useDropdownPosition({
+    open: !!commentMenuOpen,
+    triggerRef: activeMenuTriggerRef as React.RefObject<HTMLElement | null>,
+    alignRight: true,
+    minWidth: 100,
+    desiredHeight: 120,
+    offset: 4,
+  });
 
   const mention = useMentionSuggestions(newComment, profiles as MentionProfile[]);
 
@@ -91,14 +102,6 @@ export function ProductGalleryComments({
     }
     mention.closeDropdown();
   }, [mention, taggedUsers]);
-
-  // Close comment menu on outside click
-  useEffect(() => {
-    if (!commentMenuOpen) return;
-    const handle = () => setCommentMenuOpen(null);
-    document.addEventListener('click', handle);
-    return () => document.removeEventListener('click', handle);
-  }, [commentMenuOpen]);
 
   const fetchProfiles = useCallback(async () => {
     const { data } = await supabase
@@ -413,16 +416,27 @@ export function ProductGalleryComments({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
+                        activeMenuTriggerRef.current = e.currentTarget;
                         setCommentMenuOpen(commentMenuOpen === comment.id ? null : comment.id);
                       }}
                       className={`p-1 rounded text-nokturo-400 hover:text-nokturo-600 dark:text-white/60 dark:hover:text-white/90 hover:bg-nokturo-100 dark:hover:bg-white/10 transition-all ${commentMenuOpen === comment.id ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
                     >
                       <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
                     </button>
-                    {commentMenuOpen === comment.id && (
+                    {commentMenuOpen === comment.id && menuPosition && createPortal(
                       <>
                         <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
-                        <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[100px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="dropdown-menu fixed shadow-lg py-1 min-w-[100px] z-20 overflow-hidden"
+                          style={{
+                            ...(menuPosition.top !== undefined && { top: menuPosition.top }),
+                            ...(menuPosition.bottom !== undefined && { bottom: menuPosition.bottom }),
+                            left: menuPosition.left,
+                            maxHeight: menuPosition.maxHeight,
+                            maxWidth: menuPosition.maxWidth,
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {isOwn && (
                             <button
                               type="button"
@@ -440,7 +454,8 @@ export function ProductGalleryComments({
                             {t('common.delete')}
                           </button>
                         </div>
-                      </>
+                      </>,
+                      document.body
                     )}
                   </div>
                 )}

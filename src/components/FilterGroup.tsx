@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { FilterChevronIcon } from './FilterSelect';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 export interface FilterSectionOption {
   value: string;
@@ -27,11 +29,20 @@ export function FilterGroup({
 }: FilterGroupProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    minWidth: 220,
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) {
         setOpen(false);
       }
     };
@@ -42,8 +53,9 @@ export function FilterGroup({
   }, [open]);
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div className={className}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-700 h-9 px-3 text-sm font-medium rounded-[6px] transition-colors inline-flex items-center gap-2 w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-500/30 focus:ring-offset-0"
@@ -54,12 +66,22 @@ export function FilterGroup({
         <span>{t('common.filter')}</span>
       </button>
 
-      {open && (
-        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-elevated rounded-[8px] overflow-hidden">
+      {open && position && createPortal(
+        <div
+          ref={dropdownRef}
+          className="filter-dropdown fixed z-50 min-w-[220px] bg-elevated rounded-[8px] overflow-hidden"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
+        >
           <div className="px-3 py-2.5 bg-nokturo-200 dark:bg-white/10">
             <p className="text-sm font-medium text-nokturo-900 dark:text-white">{t(titleKey)}</p>
           </div>
-          <div className="py-2 max-h-60 overflow-y-auto">
+          <div className="py-2 overflow-y-auto max-h-60" style={{ maxHeight: position.maxHeight }}>
             {sections.map((section) => (
               <div key={section.labelKey} className="mb-2 last:mb-0">
                 <p className="px-2 py-0.5 text-[10px] font-medium text-nokturo-500 dark:text-white/60 uppercase tracking-wider">
@@ -96,7 +118,8 @@ export function FilterGroup({
               </div>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -75,9 +75,18 @@ export function MoodboardComments({ moodboardItemId, hasHeaderAbove = true }: Mo
     }
     const rect = menuTriggerRef.current.getBoundingClientRect();
     const DROPDOWN_WIDTH = 100;
+    const DROPDOWN_HEIGHT = 92;
+    const PADDING = 12;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const left = Math.max(PADDING, Math.min(rect.right - DROPDOWN_WIDTH, vw - PADDING - DROPDOWN_WIDTH));
+    let top = rect.bottom + 4;
+    if (top + DROPDOWN_HEIGHT > vh - PADDING) {
+      top = Math.max(PADDING, rect.top - 4 - DROPDOWN_HEIGHT);
+    }
     setMenuPosition({
-      top: rect.bottom + 4,
-      left: rect.right - DROPDOWN_WIDTH,
+      top,
+      left,
     });
   }, [commentMenuOpen]);
 

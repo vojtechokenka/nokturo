@@ -76,7 +76,7 @@ export function TableOfContents({ items, title, className = '', footerSlot, alig
   const asideStyle = !sticky && topOffset != null ? { top: topOffset } : undefined;
 
   return (
-    <aside className={`group/toc ${asideClass}`} style={asideStyle}>
+    <aside className={`group/toc hidden sm:block ${asideClass}`} style={asideStyle}>
       <nav
         className="font-body flex flex-col rounded-[16px] overflow-hidden bg-nokturo-200/90 dark:bg-nokturo-800/60"
         aria-label={t('richText.tableOfContents')}

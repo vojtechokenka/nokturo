@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { SECONDARY_BUTTON_CLASS } from '../lib/inputStyles';
 import { FilterChevronIcon } from './FilterSelect';
 import type { TargetProductOption } from '../lib/compositionUtils';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 export interface CompositionFilterProps {
   fibers: string[];
@@ -37,14 +39,21 @@ export function CompositionFilter({
 }: CompositionFilterProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const [alignRight, setAlignRight] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    dropdownWidth: 420,
+    desiredHeight: 384,
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       const target = e.target as Node;
-      if (containerRef.current && !containerRef.current.contains(target)) {
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) {
         setOpen(false);
       }
     };
@@ -52,16 +61,6 @@ export function CompositionFilter({
       document.addEventListener('mousedown', handleClick);
       return () => document.removeEventListener('mousedown', handleClick);
     }
-  }, [open]);
-
-  // Position dropdown to avoid overflow off right edge of viewport
-  useEffect(() => {
-    if (!open || !containerRef.current) return;
-    const rect = containerRef.current.getBoundingClientRect();
-    const minDropdownWidth = 420;
-    const padding = 16;
-    const spaceOnRight = window.innerWidth - rect.left - padding;
-    setAlignRight(spaceOnRight < minDropdownWidth);
   }, [open]);
 
   const toggleFiber = (fiber: string) => {
@@ -89,8 +88,9 @@ export function CompositionFilter({
   };
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div className={className}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={`${SECONDARY_BUTTON_CLASS} w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900`}
@@ -106,13 +106,18 @@ export function CompositionFilter({
         )}
       </button>
 
-      {open && (
+      {open && position && createPortal(
         <div
           ref={dropdownRef}
           onMouseDown={(e) => e.stopPropagation()}
-          className={`absolute top-full mt-1.5 z-50 w-[420px] rounded-[6px] overflow-hidden p-6 bg-[#E6E6E6] dark:bg-[#1a1a1a] ${
-            alignRight ? 'right-0 left-auto' : 'left-0'
-          }`}
+          className="fixed z-50 w-[420px] rounded-[6px] overflow-hidden p-6 bg-[#E6E6E6] dark:bg-[#1a1a1a]"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
         >
           {/* Composition section: heading + checkbox+text items */}
           <div>
@@ -167,7 +172,8 @@ export function CompositionFilter({
               </div>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

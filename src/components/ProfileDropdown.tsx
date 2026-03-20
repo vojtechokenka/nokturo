@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -7,6 +8,7 @@ import { DefaultAvatar } from './DefaultAvatar';
 import { useNotifications, NotificationPanel } from './NotificationCenter';
 import { MaterialIcon } from './icons/MaterialIcon';
 import { LogOutIcon } from './icons/LogOutIcon';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 export function ProfileDropdown() {
   const { t } = useTranslation();
@@ -14,10 +16,19 @@ export function ProfileDropdown() {
   const user = useAuthStore((s) => s.user);
   const [open, setOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const measureRef = useRef<HTMLSpanElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [dropdownWidth, setDropdownWidth] = useState<number | null>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    alignRight: true,
+    dropdownWidth: dropdownWidth ?? undefined,
+    minWidth: 420,
+    offset: 8,
+    desiredHeight: 420,
+  });
 
   const {
     notifications,
@@ -44,7 +55,10 @@ export function ProfileDropdown() {
   useEffect(() => {
     if (!open) return;
     const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) setOpen(false);
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -78,8 +92,9 @@ export function ProfileDropdown() {
           </div>
         </div>
       )}
-      <div ref={ref} className="relative">
+      <div>
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setOpen((o) => !o)}
           className={`avatar-round relative shrink-0 w-8 h-8 bg-nokturo-300 dark:bg-nokturo-600 flex items-center justify-center transition-all focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 active:outline-none active:ring-0 active:ring-offset-0 active:shadow-none overflow-visible ${open ? 'z-[30]' : ''}`}
@@ -100,16 +115,20 @@ export function ProfileDropdown() {
           )}
         </button>
 
-        {open && (
+        {open && position && createPortal(
           <>
             <div className="fixed inset-0 z-10 bg-overlay pointer-events-none" aria-hidden />
             <div
               ref={dropdownRef}
-              className="profile-dropdown absolute right-0 bg-elevated shadow-xl z-20"
+              className="profile-dropdown fixed bg-elevated shadow-xl z-20"
               style={{
-                top: 'calc(100% + 8px)',
+                ...(position.top !== undefined && { top: position.top }),
+                ...(position.bottom !== undefined && { bottom: position.bottom }),
+                left: position.left,
                 width: dropdownWidth ? `${dropdownWidth}px` : 420,
                 minWidth: 420,
+                maxHeight: position.maxHeight,
+                maxWidth: position.maxWidth,
               }}
             >
               <span
@@ -162,7 +181,8 @@ export function ProfileDropdown() {
 
               </div>
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
     </>

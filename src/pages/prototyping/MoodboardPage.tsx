@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { sendMentionNotifications } from '../../lib/sendMentionNotifications';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
+import { useSidebarStore } from '../../stores/sidebarStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import { MoodboardComments } from '../../components/MoodboardComments';
@@ -22,6 +24,7 @@ import type { MentionProfile } from '../../components/MentionSuggestions';
 import { INPUT_CLASS, MODAL_HEADING_CLASS, TEXTAREA_CLASS, PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { distributeToColumns } from '../../utils/masonryColumns';
+import { useDropdownPosition } from '../../hooks/useDropdownPosition';
 
 const inputClass = INPUT_CLASS;
 
@@ -67,6 +70,7 @@ export default function MoodboardPage() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
+  const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
   // ── State ───────────────────────────────────────────────────
   const [items, setItems] = useState<MoodboardItem[]>([]);
@@ -103,6 +107,24 @@ export default function MoodboardPage() {
 
   // Card menu
   const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+  const cardMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const cardMenuPosition = useDropdownPosition({
+    open: !!cardMenuOpen,
+    triggerRef: cardMenuTriggerRef as React.RefObject<HTMLElement | null>,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 140,
+    offset: 4,
+  });
+  const lightboxMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const lightboxMenuPosition = useDropdownPosition({
+    open: lightboxMenuOpen,
+    triggerRef: lightboxMenuTriggerRef as React.RefObject<HTMLElement | null>,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 140,
+    offset: 4,
+  });
 
   useEffect(() => {
     if (!cardMenuOpen) return;
@@ -139,22 +161,61 @@ export default function MoodboardPage() {
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
 
   // Gallery layout: 3, 4, 5, or 6 columns (user preference; responsive cap applies)
-  const [galleryColumns, setGalleryColumns] = useState<3 | 4 | 5 | 6>(4);
+  const [galleryColumns, setGalleryColumns] = useState<1 | 2 | 3 | 4 | 5 | 6>(4);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < 640 : false));
+  const [showMobileCta, setShowMobileCta] = useState(true);
 
   // Responsive column count: cap user preference by viewport
   const [effectiveColumns, setEffectiveColumns] = useState<number>(galleryColumns);
   useEffect(() => {
     const getColumns = (): number => {
       if (typeof window === 'undefined') return galleryColumns;
-      if (window.innerWidth < 640) return 1;
+      if (window.innerWidth < 640) return galleryColumns <= 2 ? galleryColumns : 1;
       if (window.innerWidth < 1024) return 2;
       return Math.min(galleryColumns, 6);
     };
-    const update = () => setEffectiveColumns(getColumns());
+    const update = () => {
+      setIsMobile(window.innerWidth < 640);
+      setEffectiveColumns(getColumns());
+    };
     update();
     window.addEventListener('resize', update);
     return () => window.removeEventListener('resize', update);
   }, [galleryColumns]);
+
+  useEffect(() => {
+    if (!isMobile && mobileFiltersOpen) {
+      setMobileFiltersOpen(false);
+    }
+  }, [isMobile, mobileFiltersOpen]);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setShowMobileCta(true);
+      return;
+    }
+
+    const scrollContainer = document.querySelector('[data-scroll-container]') as HTMLElement | null;
+    if (!scrollContainer) return;
+
+    let lastScrollTop = scrollContainer.scrollTop;
+    const onScroll = () => {
+      const nextScrollTop = scrollContainer.scrollTop;
+      const delta = nextScrollTop - lastScrollTop;
+      if (Math.abs(delta) < 8) return;
+
+      if (delta > 0 && nextScrollTop > 64) {
+        setShowMobileCta(false);
+      } else if (delta < 0) {
+        setShowMobileCta(true);
+      }
+      lastScrollTop = nextScrollTop;
+    };
+
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
+  }, [isMobile]);
 
   // ── Fetch ───────────────────────────────────────────────────
   const fetchItems = useCallback(async () => {
@@ -844,13 +905,38 @@ export default function MoodboardPage() {
       descriptionKey="pages.moodboard.description"
       bare
       actionsSlot={
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-between w-full">
-          <div className="flex flex-wrap items-center gap-2 justify-start max-w-[640px] [flex-wrap:wrap_balance]">
-            {categories.length > 0 ? (
-              <>
+        <div className="w-full">
+          <div className="flex sm:hidden items-center justify-between w-full">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen((prev) => !prev)}
+              className="inline-flex items-center gap-2 h-9 px-4 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+            >
+              <MaterialIcon name="filter_list" size={16} className="shrink-0" />
+              {t('common.filter')}
+            </button>
+            <button
+              onClick={() =>
+                setGalleryColumns((prev) => {
+                  if (isMobile) return prev === 1 ? 2 : 1;
+                  if (prev === 3) return 4;
+                  if (prev === 4) return 5;
+                  if (prev === 5) return 6;
+                  return 3;
+                })
+              }
+              className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+              title={isMobile ? 'Toggle between 1 and 2 columns' : t('moodboard.layoutCycle')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 opacity-50"><path fill="currentColor" d="M3 21v-6h8v6zm10 0V11h8v10zM3 13V3h8v10zm10-4V3h8v6z"/></svg>
+            </button>
+          </div>
+          {mobileFiltersOpen && categories.length > 0 && (
+            <div className="sm:hidden mt-2 bg-page p-0 rounded-none">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setCategoryFilter([])}
-                  className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
+                  className={`text-sm px-4 py-2 rounded-[6px] font-medium transition-all ${
                     categoryFilter.length === 0
                       ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
                       : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
@@ -867,7 +953,7 @@ export default function MoodboardPage() {
                       onClick={() => setCategoryFilter((prev) =>
                         active ? prev.filter((c) => c !== cat.name) : [...prev, cat.name]
                       )}
-                      className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
+                      className={`text-sm px-4 py-2 rounded-[6px] font-medium transition-all ${colorCls} ${
                         active ? '' : 'opacity-40 hover:opacity-70'
                       }`}
                     >
@@ -875,24 +961,59 @@ export default function MoodboardPage() {
                     </button>
                   );
                 })}
-              </>
-            ) : null}
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
-              className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
-              title={t('moodboard.layoutCycle')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 opacity-50"><path fill="currentColor" d="M3 21v-6h8v6zm10 0V11h8v10zM3 13V3h8v10zm10-4V3h8v6z"/></svg>
-            </button>
-            <button
-              onClick={() => setShowUpload(true)}
-              className={`${PRIMARY_BUTTON_CLASS} shrink-0 active:scale-95`}
-            >
-            <MaterialIcon name="add" size={16} className="shrink-0" />
-              {t('moodboard.addItem')}
-            </button>
+              </div>
+            </div>
+          )}
+          <div className="hidden sm:flex gap-2 items-center justify-between w-full">
+            <div className="flex flex-wrap items-center gap-2 justify-start max-w-[640px] [flex-wrap:wrap_balance]">
+              {categories.length > 0 ? (
+                <>
+                  <button
+                    onClick={() => setCategoryFilter([])}
+                    className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
+                      categoryFilter.length === 0
+                        ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                        : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+                    }`}
+                  >
+                    {t('moodboard.filterAll')}
+                  </button>
+                  {categories.map((cat) => {
+                    const active = categoryFilter.includes(cat.name);
+                    const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setCategoryFilter((prev) =>
+                          active ? prev.filter((c) => c !== cat.name) : [...prev, cat.name]
+                        )}
+                        className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
+                          active ? '' : 'opacity-40 hover:opacity-70'
+                        }`}
+                      >
+                        {cat.name}
+                      </button>
+                    );
+                  })}
+                </>
+              ) : null}
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setGalleryColumns((prev) => (prev === 3 ? 4 : prev === 4 ? 5 : prev === 5 ? 6 : 3))}
+                className="flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+                title={t('moodboard.layoutCycle')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" className="w-5 h-5 opacity-50"><path fill="currentColor" d="M3 21v-6h8v6zm10 0V11h8v10zM3 13V3h8v10zm10-4V3h8v6z"/></svg>
+              </button>
+              <button
+                onClick={() => setShowUpload(true)}
+                className={`${PRIMARY_BUTTON_CLASS} shrink-0 active:scale-95`}
+              >
+              <MaterialIcon name="add" size={16} className="shrink-0" />
+                {t('moodboard.addItem')}
+              </button>
+            </div>
           </div>
         </div>
       }
@@ -958,14 +1079,25 @@ export default function MoodboardPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
+                        cardMenuTriggerRef.current = e.currentTarget;
                         setCardMenuOpen(cardMenuOpen === item.id ? null : item.id);
                       }}
                       className={`p-2 rounded transition-colors ${cardMenuOpen === item.id ? 'bg-white/30' : 'hover:bg-white/20'} text-white`}
                     >
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
-                    {cardMenuOpen === item.id && (
-                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+                    {cardMenuOpen === item.id && cardMenuPosition && createPortal(
+                      <div
+                        className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20 overflow-hidden"
+                        style={{
+                          ...(cardMenuPosition.top !== undefined && { top: cardMenuPosition.top }),
+                          ...(cardMenuPosition.bottom !== undefined && { bottom: cardMenuPosition.bottom }),
+                          left: cardMenuPosition.left,
+                          maxHeight: cardMenuPosition.maxHeight,
+                          maxWidth: cardMenuPosition.maxWidth,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
                           onClick={() => { openEdit(item); setCardMenuOpen(null); }}
                           className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
@@ -983,6 +1115,8 @@ export default function MoodboardPage() {
                           </button>
                         )}
                       </div>
+                      ,
+                      document.body
                     )}
                   </div>
                 </div>
@@ -991,6 +1125,19 @@ export default function MoodboardPage() {
               ))}
             </div>
           ))}
+        </div>
+      )}
+
+      {!showUpload && lightboxIndex === null && (
+        <div className={`sm:hidden fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${showMobileCta && !mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-[110%] opacity-0 pointer-events-none'}`}>
+          <button
+            type="button"
+            onClick={() => setShowUpload(true)}
+            className="h-[54px] w-full inline-flex items-center justify-center gap-2 bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium text-button-text rounded-none hover:bg-nokturo-900 dark:hover:bg-white transition-colors"
+          >
+            <MaterialIcon name="add" size={16} className="shrink-0" />
+            {t('moodboard.addItem')}
+          </button>
         </div>
       )}
 
@@ -1467,13 +1614,25 @@ export default function MoodboardPage() {
             <div className="absolute top-4 right-4 z-10" onClick={(e) => e.stopPropagation()}>
               <div className="relative">
                 <button
-                  onClick={() => setLightboxMenuOpen((p) => !p)}
+                  onClick={(e) => {
+                    lightboxMenuTriggerRef.current = e.currentTarget;
+                    setLightboxMenuOpen((p) => !p);
+                  }}
                   className="p-2 text-white/70 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
                 >
                   <MaterialIcon name="more_vert" size={20} className="shrink-0" />
                 </button>
-                {lightboxMenuOpen && (
-                  <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20 overflow-hidden">
+                {lightboxMenuOpen && lightboxMenuPosition && createPortal(
+                  <div
+                    className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20 overflow-hidden"
+                    style={{
+                      ...(lightboxMenuPosition.top !== undefined && { top: lightboxMenuPosition.top }),
+                      ...(lightboxMenuPosition.bottom !== undefined && { bottom: lightboxMenuPosition.bottom }),
+                      left: lightboxMenuPosition.left,
+                      maxHeight: lightboxMenuPosition.maxHeight,
+                      maxWidth: lightboxMenuPosition.maxWidth,
+                    }}
+                  >
                     <button
                       onClick={() => {
                         openEdit(lbItem);
@@ -1498,7 +1657,8 @@ export default function MoodboardPage() {
                         {t('common.delete')}
                       </button>
                     )}
-                  </div>
+                  </div>,
+                  document.body
                 )}
               </div>
             </div>

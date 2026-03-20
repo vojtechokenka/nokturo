@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
+import { useSidebarStore } from '../../stores/sidebarStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { countryCodeToFlag } from '../../lib/countryUtils';
 import { fetchLinkMetadata } from '../../lib/fetchLinkMetadata';
@@ -17,6 +18,7 @@ import { FilterSelect } from '../../components/FilterSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const FETCH_TIMEOUT_MS = 5000;
 
@@ -35,7 +37,9 @@ const TAG_BADGE_CLASSES: Record<string, string> = {
 export default function SuppliersPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const isMobile = useIsMobile();
 
   // ── State ──────────────────────────────────────────────────
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
@@ -59,6 +63,7 @@ export default function SuppliersPage() {
   // Categories (from DB, editable like moodboard)
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
   const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [showMobileCta, setShowMobileCta] = useState(true);
 
   const addToast = useCallback((message: string, type: 'success' | 'error' | 'info' = 'error') => {
     setToasts((prev) => [...prev, { id: crypto.randomUUID(), message, type }]);
@@ -129,6 +134,33 @@ export default function SuppliersPage() {
     const t = setTimeout(() => setLoading(false), 7000);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setShowMobileCta(true);
+      return;
+    }
+    const scrollContainer = document.querySelector('[data-scroll-container]') as HTMLElement | null;
+    if (!scrollContainer) return;
+    let lastScrollTop = scrollContainer.scrollTop;
+    const onScroll = () => {
+      const nextScrollTop = scrollContainer.scrollTop;
+      const delta = nextScrollTop - lastScrollTop;
+      if (Math.abs(delta) < 8) return;
+      if (delta > 0 && nextScrollTop > 64) {
+        setShowMobileCta(false);
+      } else if (delta < 0) {
+        setShowMobileCta(true);
+      }
+      lastScrollTop = nextScrollTop;
+    };
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile && editOpen) setEditOpen(false);
+  }, [isMobile, editOpen]);
 
   const fetchCategories = useCallback(async () => {
     const { data, error } = await supabase
@@ -242,31 +274,33 @@ export default function SuppliersPage() {
       compactContent
       noHorizontalPadding
       actionsSlot={
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
-          {categoryFilter.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setCategoryFilter([])}
-              className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
-            >
-              {t('common.clearFilters')}
-            </button>
-          )}
-          <FilterSelect
-            value={categoryFilter}
-            onChange={setCategoryFilter}
-            titleKey="suppliers.filterTitle"
-            options={[
-              { value: 'all', label: t('suppliers.allCategories') },
-              ...categories.map((cat) => ({
-                value: cat.name,
-                label: t(`suppliers.categories.${cat.name}`) !== `suppliers.categories.${cat.name}` ? t(`suppliers.categories.${cat.name}`) : cat.name,
-              })),
-            ]}
-          />
+        <div className="flex w-full items-center justify-between sm:justify-end gap-2">
+          <div className="flex items-center gap-2">
+            {categoryFilter.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setCategoryFilter([])}
+                className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+              >
+                {t('common.clearFilters')}
+              </button>
+            )}
+            <FilterSelect
+              value={categoryFilter}
+              onChange={setCategoryFilter}
+              titleKey="suppliers.filterTitle"
+              options={[
+                { value: 'all', label: t('suppliers.allCategories') },
+                ...categories.map((cat) => ({
+                  value: cat.name,
+                  label: t(`suppliers.categories.${cat.name}`) !== `suppliers.categories.${cat.name}` ? t(`suppliers.categories.${cat.name}`) : cat.name,
+                })),
+              ]}
+            />
+          </div>
           <button
             onClick={openAdd}
-            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+            className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('suppliers.addSupplier')}
@@ -305,7 +339,7 @@ export default function SuppliersPage() {
         </div>
       ) : (
         <>
-          <div className="sm:hidden space-y-2">
+          <div className="sm:hidden space-y-2 px-4">
             {suppliers.map((supplier) => (
               <button
                 key={supplier.id}
@@ -432,6 +466,18 @@ export default function SuppliersPage() {
         </>
       )}
 
+      {/* ── Floating mobile CTA ──────────────────────────────── */}
+      <div className={`sm:hidden fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${showMobileCta && !mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-[110%] opacity-0 pointer-events-none'}`}>
+        <button
+          type="button"
+          onClick={openAdd}
+          className="h-[54px] w-full inline-flex items-center justify-center gap-2 bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium text-button-text rounded-none hover:bg-nokturo-900 dark:hover:bg-white transition-colors"
+        >
+          <MaterialIcon name="add" size={16} className="shrink-0" />
+          {t('suppliers.addSupplier')}
+        </button>
+      </div>
+
       {/* ── Detail slide-over ────────────────────────────────────── */}
       <SupplierDetailSlideOver
         open={detailOpen}
@@ -459,7 +505,7 @@ export default function SuppliersPage() {
 
       {/* ── Slide-over (add / edit) ───────────────────────── */}
       <SupplierSlideOver
-        open={editOpen}
+        open={!isMobile && editOpen}
         supplier={editingSupplier}
         categories={categories}
         onCategoriesChange={handleCategoriesChange}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageShell } from '../../components/PageShell';
@@ -10,6 +11,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { createNotification } from '../../components/NotificationCenter';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
+import { useDropdownPosition } from '../../hooks/useDropdownPosition';
 
 type Tab = 'active' | 'completed' | 'deleted';
 
@@ -79,11 +81,23 @@ function TaskRowMenu({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    alignRight: true,
+    desiredHeight: 200,
+    offset: 4,
+  });
 
   useEffect(() => {
     if (!open) return;
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) setOpen(false);
     };
     document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
@@ -92,6 +106,7 @@ function TaskRowMenu({
   return (
     <div ref={ref} className="relative shrink-0">
       <button
+        ref={triggerRef}
         type="button"
         onClick={(e) => {
           e.stopPropagation();
@@ -101,10 +116,20 @@ function TaskRowMenu({
       >
         <MaterialIcon name="more_horiz" size={16} className="shrink-0" />
       </button>
-      {open && (
+      {open && position && createPortal(
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="dropdown-menu absolute right-0 top-full mt-1 py-1 px-1 w-max z-20">
+          <div
+            ref={dropdownRef}
+            className="dropdown-menu fixed py-1 px-1 w-max z-20"
+            style={{
+              ...(position.top !== undefined && { top: position.top }),
+              ...(position.bottom !== undefined && { bottom: position.bottom }),
+              left: position.left,
+              maxHeight: position.maxHeight,
+              maxWidth: position.maxWidth,
+            }}
+          >
             <button
               onClick={(e) => { e.stopPropagation(); onEdit(); setOpen(false); }}
               className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
@@ -145,7 +170,8 @@ function TaskRowMenu({
               </button>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

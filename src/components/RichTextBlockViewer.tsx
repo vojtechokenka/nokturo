@@ -66,7 +66,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
 
   if (!blocks?.length) {
     const emptyHeaderWrapper = headerImageSlot ? (
-      <div className="-ml-[3.75rem] w-[calc(100%+3.75rem)]">
+      <div className="-ml-4 w-[calc(100%+2rem)] sm:-ml-[3.75rem] sm:w-[calc(100%+3.75rem)]">
         {headerImageSlot}
       </div>
     ) : null;
@@ -81,7 +81,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   }
 
   const content = (
-    <article className="font-body max-w-[680px]">
+    <article className="font-body max-w-none sm:max-w-[680px]">
       {blocks.map((block, index) => (
         <BlockView key={block.id} block={block} prevBlock={blocks[index - 1]} nextBlock={blocks[index + 1]} headingFont={headingFont} h3Large={h3Large} />
       ))}
@@ -96,15 +96,15 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   );
 
   const headerImageWrapper = headerImageSlot ? (
-    <div className="-ml-[3.75rem] w-[calc(100%+3.75rem)]">
+    <div className="-ml-4 w-[calc(100%+2rem)] sm:-ml-[3.75rem] sm:w-[calc(100%+3.75rem)]">
       {headerImageSlot}
     </div>
   ) : null;
 
   if (showToc && effectiveTocItems.length > 0) {
     return (
-      <div className={`flex gap-[80px] ${className}`}>
-        <div className="min-w-0 flex-1 max-w-[860px]">
+      <div className={`flex flex-col sm:flex-row gap-0 sm:gap-[80px] ${className}`}>
+        <div className="min-w-0 flex-1 max-w-none sm:max-w-[860px]">
           {headerImageWrapper}
           {content}
         </div>
@@ -132,11 +132,12 @@ function BlockView({ block, prevBlock, nextBlock, headingFont = 'headline', h3La
     case 'tag':
       if (!block.text?.trim()) return null;
       const tagMb = nextBlock?.type === 'heading' && block.visible !== false ? 'mb-3' : 'mb-1';
+      const tagMt = prevBlock ? 'mt-10 sm:mt-12' : 'mt-0';
       return (
         <span
           id={block.id}
           data-block-id={block.id}
-          className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 mt-0 ${tagMb}` : 'sr-only mt-0'}`}
+          className={`block scroll-mt-6 ${block.visible !== false ? `font-body text-rta-tag uppercase tracking-wider text-nokturo-900/80 dark:text-white/80 ${tagMt} ${tagMb}` : 'sr-only mt-0'}`}
           aria-hidden={block.visible === false}
         >
           — {block.text}

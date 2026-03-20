@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -12,6 +13,8 @@ import type { NotionSelectOption } from '../../components/NotionSelect';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { useDropdownPosition } from '../../hooks/useDropdownPosition';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
@@ -28,6 +31,7 @@ export default function LabelsPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const isMobile = useIsMobile();
 
   const [labels, setLabels] = useState<Label[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +42,15 @@ export default function LabelsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+  const activeMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const cardMenuPosition = useDropdownPosition({
+    open: !!cardMenuOpen,
+    triggerRef: activeMenuTriggerRef as React.RefObject<HTMLElement | null>,
+    alignRight: true,
+    minWidth: 120,
+    desiredHeight: 140,
+    offset: 4,
+  });
 
   // Close card menu on outside click
   useEffect(() => {
@@ -192,7 +205,7 @@ export default function LabelsPage() {
         <div className="flex justify-end">
           <button
             onClick={openAdd}
-            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+            className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('labels.addLabel')}
@@ -214,14 +227,14 @@ export default function LabelsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {labels.map((lbl) => (
             <div
               key={lbl.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => openEdit(lbl)}
-              onKeyDown={(e) => e.key === 'Enter' && openEdit(lbl)}
+              role={isMobile ? undefined : 'button'}
+              tabIndex={isMobile ? undefined : 0}
+              onClick={isMobile ? undefined : () => openEdit(lbl)}
+              onKeyDown={isMobile ? undefined : (e) => e.key === 'Enter' && openEdit(lbl)}
               className="group relative bg-nokturo-50 dark:bg-nokturo-800 rounded-lg overflow-hidden transition-all cursor-pointer hover:ring-2 hover:ring-nokturo-300 dark:hover:ring-nokturo-600"
             >
               <div className="aspect-[16/9] bg-nokturo-100 relative overflow-hidden">
@@ -241,13 +254,25 @@ export default function LabelsPage() {
                   <div className="relative">
                     <button
                       type="button"
-                      onClick={() => setCardMenuOpen(cardMenuOpen === lbl.id ? null : lbl.id)}
-                      className={`p-1.5 rounded transition-all ${cardMenuOpen === lbl.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
+                      onClick={(e) => {
+                        activeMenuTriggerRef.current = e.currentTarget;
+                        setCardMenuOpen(cardMenuOpen === lbl.id ? null : lbl.id);
+                      }}
+                      className={`hidden sm:block p-1.5 rounded transition-all ${cardMenuOpen === lbl.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
-                    {cardMenuOpen === lbl.id && (
-                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[120px] z-20 overflow-hidden">
+                    {cardMenuOpen === lbl.id && cardMenuPosition && createPortal(
+                      <div
+                        className="dropdown-menu fixed shadow-lg py-1 min-w-[120px] z-20 overflow-hidden"
+                        style={{
+                          ...(cardMenuPosition.top !== undefined && { top: cardMenuPosition.top }),
+                          ...(cardMenuPosition.bottom !== undefined && { bottom: cardMenuPosition.bottom }),
+                          left: cardMenuPosition.left,
+                          maxHeight: cardMenuPosition.maxHeight,
+                          maxWidth: cardMenuPosition.maxWidth,
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => { openEdit(lbl); setCardMenuOpen(null); }}
@@ -265,6 +290,8 @@ export default function LabelsPage() {
                           </button>
                         )}
                       </div>
+                      ,
+                      document.body
                     )}
                   </div>
                 </div>
@@ -312,7 +339,7 @@ export default function LabelsPage() {
       )}
 
       <LabelSlideOver
-        open={slideOverOpen}
+        open={!isMobile && slideOverOpen}
         label={editingLabel}
         typOptions={typOptions}
         onTypOptionsChange={handleTypOptionsChange}

@@ -7,16 +7,11 @@ import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import {
   ProductSlideOver,
-  PRODUCT_CATEGORIES,
-  PRODUCT_STATUSES,
   type ProductWithMaterials,
 } from '../../components/ProductSlideOver';
 import type { NotionSelectOption } from '../../components/NotionSelect';
 import { ProductCard } from '../../components/ProductCard';
-import { FilterGroup } from '../../components/FilterGroup';
-import { SimpleDropdown } from '../../components/SimpleDropdown';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
-import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 
 // ── Page component ────────────────────────────────────────────
 export default function ProductsPage() {
@@ -34,8 +29,8 @@ export default function ProductsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [showDrafts, setShowDrafts] = useState(false);
-  const [sortBy, setSortBy] = useState<'category' | 'dateAdded' | 'priority'>('category');
-  const [sortAsc, setSortAsc] = useState(false);
+  const [sortBy] = useState<'category' | 'dateAdded' | 'priority'>('category');
+  const [sortAsc] = useState(false);
 
   // Slide-over (add product only – edit is on detail page)
   const [slideOverOpen, setSlideOverOpen] = useState(false);
@@ -160,11 +155,6 @@ export default function ProductsPage() {
   );
 
   // ── Handlers ────────────────────────────────────────────────
-  const openAdd = () => {
-    setEditingProduct(null);
-    setSlideOverOpen(true);
-  };
-
   const hasActiveFilters =
     categoryFilter.length > 0 || statusFilter.length > 0;
 
@@ -242,103 +232,29 @@ export default function ProductsPage() {
       noContentPadding
       contentBg="black"
       actionsSlot={
-        <div className="w-full flex flex-col lg:flex-row gap-3 lg:items-center lg:justify-between">
-          <div className="flex gap-1">
-            {(['published', 'drafts'] as const).map((tab) => {
-              const isActive = showDrafts === (tab === 'drafts');
-              return (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setShowDrafts(tab === 'drafts')}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors rounded-[6px] ${
-                    isActive
-                      ? 'bg-nokturo-800 text-white dark:bg-surface dark:text-nokturo-100'
-                      : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
-                  }`}
-                >
-                  {tab === 'published' ? (
-                    <MaterialIcon name="inventory_2" size={20} className="shrink-0 opacity-60" />
-                  ) : (
-                    <MaterialIcon name="edit_note" size={20} className="shrink-0 opacity-60" />
-                  )}
-                  {t(`products.${tab}`)}
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
-            {hasActiveFilters && (
+        <div className="w-full grid grid-cols-2 gap-1">
+          {(['published', 'drafts'] as const).map((tab) => {
+            const isActive = showDrafts === (tab === 'drafts');
+            return (
               <button
+                key={tab}
                 type="button"
-                onClick={clearFilters}
-                className="text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 px-2 py-1 rounded hover:bg-nokturo-100 dark:hover:bg-nokturo-800 transition-colors shrink-0"
+                onClick={() => setShowDrafts(tab === 'drafts')}
+                className={`w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-sm font-medium transition-colors rounded-[6px] ${
+                  isActive
+                    ? 'bg-nokturo-800 text-white dark:bg-surface dark:text-nokturo-100'
+                    : 'text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-700 dark:hover:text-nokturo-300'
+                }`}
               >
-                {t('common.clearFilters')}
+                {tab === 'published' ? (
+                  <MaterialIcon name="inventory_2" size={20} className="shrink-0 opacity-60" />
+                ) : (
+                  <MaterialIcon name="edit_note" size={20} className="shrink-0 opacity-60" />
+                )}
+                {t(`products.${tab}`)}
               </button>
-            )}
-            <FilterGroup
-              titleKey="products.filterTitle"
-              sections={[
-                {
-                  labelKey: 'products.filterByCategory',
-                  value: categoryFilter,
-                  onChange: setCategoryFilter,
-                  options: [
-                    { value: 'all', label: t('products.allCategories') },
-                    ...(categories.length > 0
-                      ? categories.map((cat) => ({
-                          value: cat.name,
-                          label: t(`products.categories.${cat.name}`) !== `products.categories.${cat.name}` ? t(`products.categories.${cat.name}`) : cat.name,
-                        }))
-                      : PRODUCT_CATEGORIES.map((cat) => ({
-                          value: cat,
-                          label: t(`products.categories.${cat}`),
-                        }))),
-                  ],
-                },
-                {
-                  labelKey: 'products.filterByStatus',
-                  value: statusFilter,
-                  onChange: setStatusFilter,
-                  options: [
-                    { value: 'all', label: t('products.allStatuses') },
-                    ...PRODUCT_STATUSES.map((s) => ({
-                      value: s,
-                      label: t(`products.statuses.${s}`),
-                    })),
-                  ],
-                },
-              ]}
-            />
-            <SimpleDropdown
-              value={sortBy}
-              onChange={(value) => setSortBy(value as 'category' | 'dateAdded' | 'priority')}
-              options={[
-                { value: 'category', label: t('products.sortByCategory') },
-                { value: 'dateAdded', label: t('products.sortByDateAdded') },
-                { value: 'priority', label: t('products.sortByPriority') },
-              ]}
-              compact
-              className="min-w-[170px]"
-            />
-            <button
-              type="button"
-              onClick={() => setSortAsc((a) => !a)}
-              title={sortAsc ? t('products.sortDesc') : t('products.sortAsc')}
-              className="flex items-center justify-center size-9 shrink-0 rounded-[6px] bg-nokturo-200/80 dark:bg-white/10 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-300 dark:hover:bg-nokturo-700 transition-colors"
-            >
-              <MaterialIcon name="swap_vert" size={16} className={`transition-transform shrink-0 ${sortAsc ? 'rotate-180' : ''}`} />
-            </button>
-            <button
-              onClick={openAdd}
-              className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
-            >
-              <MaterialIcon name="add" size={16} className="shrink-0" />
-              {t('products.addProduct')}
-            </button>
-          </div>
+            );
+          })}
         </div>
       }
     >
@@ -368,7 +284,7 @@ export default function ProductsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {sortedProducts.map((product) => (
             <ProductCard
               key={product.id}

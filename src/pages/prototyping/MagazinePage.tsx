@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
@@ -9,7 +10,9 @@ import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import type { RichTextBlock } from '../../components/RichTextBlockEditor';
+import { useDropdownPosition } from '../../hooks/useDropdownPosition';
 
 interface MagazineArticle {
   id: string;
@@ -28,12 +31,22 @@ export default function MagazinePage() {
   const user = useAuthStore((s) => s.user);
   const isFounder = user?.role === 'founder';
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const isMobile = useIsMobile();
 
   const [articles, setArticles] = useState<MagazineArticle[]>([]);
   const [loading, setLoading] = useState(true);
   const [showHidden, setShowHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const activeMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const menuPosition = useDropdownPosition({
+    open: !!menuOpen,
+    triggerRef: activeMenuTriggerRef as React.RefObject<HTMLElement | null>,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 180,
+    offset: 4,
+  });
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -84,7 +97,7 @@ export default function MagazinePage() {
   };
 
   const visibleArticles = articles.filter((a) =>
-    showHidden ? a.hidden : !a.hidden,
+    (isMobile ? false : showHidden) ? a.hidden : !a.hidden,
   );
 
   return (
@@ -93,8 +106,8 @@ export default function MagazinePage() {
       descriptionKey="pages.magazine.description"
       bare
       actionsSlot={
-        <div className="sticky top-0 z-10 w-full px-4 sm:px-6 py-4 flex items-center justify-between bg-nokturo-200 dark:bg-surface rounded-[6px]">
-          <div className="flex gap-1">
+        <div className="hidden sm:flex sticky top-0 z-10 w-full px-4 sm:px-6 py-4 items-center justify-between bg-nokturo-200 dark:bg-surface rounded-[6px]">
+          <div className="hidden sm:flex gap-1">
             {(['published', 'drafts'] as const).map((tab) => {
               const isActive = showHidden === (tab === 'drafts');
               return (
@@ -120,7 +133,7 @@ export default function MagazinePage() {
           </div>
           <button
             onClick={() => navigate('/prototyping/magazine/new')}
-            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+            className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('magazine.addNew')}
@@ -185,21 +198,31 @@ export default function MagazinePage() {
                   )}
                   {/* Three-dot menu – top-right on hover */}
                   <div
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity hidden sm:block"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
+                        activeMenuTriggerRef.current = e.currentTarget;
                         setMenuOpen(menuOpen === article.id ? null : article.id);
                       }}
                       className="p-2 text-white hover:text-white/90 rounded-[4px] hover:bg-white/20 transition-colors"
                     >
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
-                    {menuOpen === article.id && (
-                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 w-max min-w-[140px] z-20">
+                    {menuOpen === article.id && menuPosition && createPortal(
+                      <div
+                        className="dropdown-menu fixed shadow-lg py-1 w-max min-w-[140px] z-20"
+                        style={{
+                          ...(menuPosition.top !== undefined && { top: menuPosition.top }),
+                          ...(menuPosition.bottom !== undefined && { bottom: menuPosition.bottom }),
+                          left: menuPosition.left,
+                          maxHeight: menuPosition.maxHeight,
+                          maxWidth: menuPosition.maxWidth,
+                        }}
+                      >
                       <button
                         type="button"
                         onClick={() => {
@@ -242,7 +265,8 @@ export default function MagazinePage() {
                           {t('common.delete')}
                         </button>
                       )}
-                    </div>
+                    </div>,
+                    document.body
                     )}
                   </div>
                 </div>

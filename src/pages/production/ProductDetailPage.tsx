@@ -25,6 +25,8 @@ import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { useDropdownPosition } from '../../hooks/useDropdownPosition';
 
 // ── Parse description (legacy or rich blocks) ────────────────────
 function parseDescriptionBlocks(
@@ -58,6 +60,7 @@ export default function ProductDetailPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const isMobile = useIsMobile();
   useExchangeRates();
   const [product, setProduct] = useState<ProductWithMaterials | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,6 +68,15 @@ export default function ProductDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [pageMenuOpen, setPageMenuOpen] = useState(false);
+  const pageMenuTriggerRef = useRef<HTMLButtonElement>(null);
+  const pageMenuPosition = useDropdownPosition({
+    open: pageMenuOpen,
+    triggerRef: pageMenuTriggerRef,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 180,
+    offset: 4,
+  });
   const [viewingMaterial, setViewingMaterial] = useState<Material | null>(null);
   const [lightbox, setLightbox] = useState<{
     gallery: { url: string; caption?: string }[];
@@ -143,6 +155,12 @@ export default function ProductDetailPage() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    if (isMobile && editOpen) {
+      setEditOpen(false);
+    }
+  }, [isMobile, editOpen]);
 
   const handleCategoriesChange = useCallback(
     async (newOptions: NotionSelectOption[]) => {
@@ -313,8 +331,8 @@ export default function ProductDetailPage() {
   return (
     <PageShell titleKey="pages.products.title" descriptionKey="pages.products.description">
       <div className={sectionTocItems.length > 0 ? 'max-w-[1124px] mx-auto' : 'max-w-[860px] mx-auto'}>
-        <div className={sectionTocItems.length > 0 ? 'flex gap-[80px]' : ''}>
-          <div className={`min-w-0 flex-1 ${sectionTocItems.length > 0 ? 'max-w-[860px]' : ''}`}>
+        <div className={sectionTocItems.length > 0 ? 'flex flex-col sm:flex-row gap-0 sm:gap-[80px]' : ''}>
+          <div className={`min-w-0 flex-1 ${sectionTocItems.length > 0 ? 'max-w-none sm:max-w-[860px]' : ''}`}>
         {/* Back + Actions */}
         <div className="flex items-center justify-between mb-8">
           <button
@@ -324,17 +342,27 @@ export default function ProductDetailPage() {
             <MaterialIcon name="arrow_back" size={16} className="shrink-0" />
             {t('common.back')}
           </button>
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <button
+              ref={pageMenuTriggerRef}
               onClick={() => setPageMenuOpen((p) => !p)}
               className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
             >
               <MaterialIcon name="more_vert" size={20} className="shrink-0" />
             </button>
-            {pageMenuOpen && (
+            {pageMenuOpen && pageMenuPosition && createPortal(
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setPageMenuOpen(false)} />
-                <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20">
+                <div
+                  className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20"
+                  style={{
+                    ...(pageMenuPosition.top !== undefined && { top: pageMenuPosition.top }),
+                    ...(pageMenuPosition.bottom !== undefined && { bottom: pageMenuPosition.bottom }),
+                    left: pageMenuPosition.left,
+                    maxHeight: pageMenuPosition.maxHeight,
+                    maxWidth: pageMenuPosition.maxWidth,
+                  }}
+                >
                   <button
                     onClick={() => { setEditOpen(true); setPageMenuOpen(false); }}
                     className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
@@ -359,7 +387,8 @@ export default function ProductDetailPage() {
                     </button>
                   )}
                 </div>
-              </>
+              </>,
+              document.body
             )}
           </div>
         </div>
@@ -494,7 +523,7 @@ export default function ProductDetailPage() {
                               <button
                                 type="button"
                                 onClick={() => setEditOpen(true)}
-                                className="shrink-0 p-2 flex items-center justify-center self-center text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
+                                className="hidden sm:flex shrink-0 p-2 items-center justify-center self-center text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
                                 title={t('products.materials.replaceMaterial')}
                                 aria-label={t('products.materials.replaceMaterial')}
                               >
@@ -602,7 +631,7 @@ export default function ProductDetailPage() {
                           e.stopPropagation();
                           setEditOpen(true);
                         }}
-                        className="shrink-0 p-2 flex items-center justify-center self-center text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
+                        className="hidden sm:flex shrink-0 p-2 items-center justify-center self-center text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 hover:bg-nokturo-100 dark:hover:bg-nokturo-700 rounded-lg transition-colors"
                         title={t('common.edit')}
                         aria-label={t('common.edit')}
                       >
@@ -888,7 +917,7 @@ export default function ProductDetailPage() {
               <p className="text-sm">{t('products.addFirst')}</p>
               <button
                 onClick={() => setEditOpen(true)}
-                className="mt-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
+                className="hidden sm:inline-block mt-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100"
               >
                 {t('common.edit')} →
               </button>
@@ -905,7 +934,7 @@ export default function ProductDetailPage() {
 
       {/* Edit slide-over */}
       <ProductSlideOver
-        open={editOpen}
+        open={!isMobile && editOpen}
         product={product}
         onClose={() => setEditOpen(false)}
         onSaved={handleSaved}

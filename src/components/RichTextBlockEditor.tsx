@@ -3,12 +3,14 @@
  * Blocks: 3 headings, 2 paragraphs (with link/bold/italic), quote, image, gallery, grid, link, divider
  */
 import { useState, useCallback, useRef, useEffect, forwardRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './icons/MaterialIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
 import { DuplicateIcon } from './icons/DuplicateIcon';
 import type { ToastData } from './Toast';
 import { INPUT_CLASS } from '../lib/inputStyles';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 // ── Block types ─────────────────────────────────────────────────
 export type HeadingLevel = 1 | 2 | 3;
@@ -554,6 +556,15 @@ function AspectRatioSelect({
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    minWidth: 64,
+    desiredHeight: 160,
+    offset: 2,
+  });
   const options: { value: '5:4' | '1:1' | '3:2' | '16:9'; labelKey: string }[] = [
     { value: '5:4', labelKey: 'richText.aspectRatio54' },
     { value: '1:1', labelKey: 'richText.aspectRatio11' },
@@ -562,7 +573,10 @@ function AspectRatioSelect({
   ];
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) setOpen(false);
     };
     if (open) {
       document.addEventListener('mousedown', handleClick);
@@ -573,6 +587,7 @@ function AspectRatioSelect({
   return (
     <div ref={ref} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="h-6 min-w-[4rem] pl-2 pr-6 text-xs rounded-[16px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 flex items-center justify-between cursor-pointer focus:outline-none focus:ring-2 focus:ring-nokturo-500/50 focus:ring-inset"
@@ -580,8 +595,18 @@ function AspectRatioSelect({
         <span>{selected ? t(selected.labelKey) : value}</span>
         <MaterialIcon name="expand_more" size={12} className={`absolute right-1.5 top-1/2 -translate-y-1/2 text-nokturo-500 dark:text-nokturo-400 pointer-events-none transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
-      {open && (
-        <div className="absolute left-0 top-full mt-0.5 z-50 min-w-[4rem] p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden">
+      {open && position && createPortal(
+        <div
+          ref={dropdownRef}
+          className="fixed z-50 min-w-[4rem] p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
+        >
           {options.map((opt) => (
             <button
               key={opt.value}
@@ -599,7 +624,8 @@ function AspectRatioSelect({
               {t(opt.labelKey)}
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -657,10 +683,23 @@ function BlockActionsDropdown({
   const [open, setOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    alignRight: true,
+    minWidth: 120,
+    desiredHeight: 120,
+    offset: 4,
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) {
         setOpen(false);
       }
     };
@@ -682,6 +721,7 @@ function BlockActionsDropdown({
   return (
     <div ref={containerRef} className="relative ml-auto shrink-0">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="h-6 w-6 rounded-[16px] flex items-center justify-center text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 opacity-50 group-hover:opacity-100 transition-opacity"
@@ -689,8 +729,18 @@ function BlockActionsDropdown({
       >
         <MaterialIcon name="more_vert" size={16} className="shrink-0" />
       </button>
-      {open && (
-        <div className="dropdown-menu absolute right-0 top-full mt-1 z-50 shadow-lg min-w-[120px]">
+      {open && position && createPortal(
+        <div
+          ref={dropdownRef}
+          className="dropdown-menu fixed z-50 shadow-lg min-w-[120px]"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
+        >
           <button
             type="button"
             onClick={() => {
@@ -713,7 +763,8 @@ function BlockActionsDropdown({
             <DeleteIcon size={14} className="shrink-0" />
             {t('common.delete')}
           </button>
-        </div>
+        </div>,
+        document.body
       )}
       {showDeleteConfirm && (
         <div

@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { SECONDARY_BUTTON_CLASS } from '../lib/inputStyles';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 // Chevron-down icon (user-provided SVG) – exported for reuse
 export function FilterChevronIcon({ className = '' }: { className?: string }) {
@@ -42,11 +44,20 @@ export function FilterSelect({
 }: FilterSelectProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const position = useDropdownPosition({
+    open,
+    triggerRef,
+    minWidth: 220,
+  });
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      const inTrigger = triggerRef.current?.contains(target);
+      const inDropdown = dropdownRef.current?.contains(target);
+      if (!inTrigger && !inDropdown) {
         setOpen(false);
       }
     };
@@ -66,8 +77,9 @@ export function FilterSelect({
   };
 
   return (
-    <div ref={containerRef} className={`relative ${className}`}>
+    <div className={className}>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((o) => !o)}
         className={`${SECONDARY_BUTTON_CLASS} w-fit focus:outline-none focus:ring-2 focus:ring-nokturo-400 focus:ring-offset-2 focus:ring-offset-nokturo-50 dark:focus:ring-offset-nokturo-900`}
@@ -78,12 +90,22 @@ export function FilterSelect({
         <span>{t('common.filter')}</span>
       </button>
 
-      {open && (
-        <div className="filter-dropdown absolute left-0 top-full mt-1.5 z-50 min-w-[220px] bg-elevated rounded-[8px] overflow-hidden">
+      {open && position && createPortal(
+        <div
+          ref={dropdownRef}
+          className="filter-dropdown fixed z-50 min-w-[220px] bg-elevated rounded-[8px] overflow-hidden"
+          style={{
+            ...(position.top !== undefined && { top: position.top }),
+            ...(position.bottom !== undefined && { bottom: position.bottom }),
+            left: position.left,
+            maxHeight: position.maxHeight,
+            maxWidth: position.maxWidth,
+          }}
+        >
           <div className="px-3 py-2.5 bg-nokturo-200/60 dark:bg-white/10">
             <p className="text-sm font-medium text-nokturo-900 dark:text-white">{t(titleKey)}</p>
           </div>
-          <div className="py-2 max-h-60 overflow-y-auto">
+          <div className="py-2 overflow-y-auto max-h-60" style={{ maxHeight: position.maxHeight }}>
             <div className="space-y-px px-1">
               {filterOptions.map((opt) => {
                 const checked = value.includes(opt.value);
@@ -106,7 +128,8 @@ export function FilterSelect({
               })}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -15,6 +15,7 @@ import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
+import { useIsMobile } from '../../hooks/useIsMobile';
 
 const TAG_BADGE_CLASSES: Record<string, string> = {
   gray: 'bg-nokturo-500 text-white',
@@ -31,6 +32,7 @@ export default function ComponentsPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const isMobile = useIsMobile();
   useExchangeRates();
 
   // ── State ──────────────────────────────────────────────────
@@ -175,7 +177,7 @@ export default function ComponentsPage() {
       titleKey="pages.componentsLibrary.title"
       descriptionKey="pages.componentsLibrary.description"
       actionsSlot={
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-end">
+        <div className="flex w-full flex-col sm:flex-row gap-2 items-start sm:items-center justify-start sm:justify-end">
           {typeFilter.length > 0 && (
             <button
               type="button"
@@ -199,7 +201,7 @@ export default function ComponentsPage() {
           />
           <button
             onClick={openAdd}
-            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+            className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
           >
             <MaterialIcon name="add" size={16} className="shrink-0" />
             {t('components.addComponent')}
@@ -222,7 +224,7 @@ export default function ComponentsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
           {components.map((comp) => (
             <div
               key={comp.id}
@@ -243,7 +245,7 @@ export default function ComponentsPage() {
                 )}
 
                 {/* Hover overlay with actions */}
-                <div className="absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end gap-2 p-2">
+                <div className="hidden sm:flex absolute inset-0 bg-nokturo-900/60 opacity-0 group-hover:opacity-100 transition-opacity items-start justify-end gap-2 p-2">
                   <button
                     onClick={() => openEdit(comp)}
                     className="p-2 rounded bg-white dark:bg-nokturo-700 text-nokturo-900 dark:text-nokturo-100 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 transition-colors"
@@ -315,7 +317,7 @@ export default function ComponentsPage() {
 
       {/* ── Slide-over (add / edit) ───────────────────────── */}
       <ComponentSlideOver
-        open={slideOverOpen}
+        open={!isMobile && slideOverOpen}
         component={editingComponent}
         categories={categories}
         onCategoriesChange={handleCategoriesChange}

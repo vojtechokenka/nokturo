@@ -339,8 +339,8 @@ export default function AccountingPage() {
       contentOverflow="hidden"
       actionsSlot={
         pageTab === 'orders' ? (
-          <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
-            <div className="flex items-center gap-2 shrink-0">
+          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] items-start sm:items-end gap-2">
+            <div className="flex items-center gap-2 shrink-0 sm:self-end sm:justify-self-end">
               <FilterGroup
                 titleKey="accounting.filterTitle"
                 sections={[
@@ -398,10 +398,10 @@ export default function AccountingPage() {
                 <MaterialIcon name="swap_vert" size={16} className={`transition-transform shrink-0 ${sortAsc ? 'rotate-180' : ''}`} />
               </button>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-2 shrink-0 sm:self-end sm:justify-self-end">
               <button
                 onClick={openAdd}
-                className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+                className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
               >
                 <MaterialIcon name="add" size={16} className="shrink-0" />
                 {t('accounting.addOrder')}
@@ -409,7 +409,7 @@ export default function AccountingPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col sm:flex-row gap-2 items-center justify-between">
+          <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] items-start sm:items-end gap-2">
             <div className="flex items-center gap-2 shrink-0">
               <FilterGroup
                 titleKey="subscriptions.filterTitle"
@@ -459,7 +459,7 @@ export default function AccountingPage() {
             <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => { setEditingSub(null); setSubEditOpen(true); }}
-                className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
+                className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
               >
                 <MaterialIcon name="add" size={16} className="shrink-0" />
                 {t('subscriptions.add')}
@@ -560,7 +560,7 @@ export default function AccountingPage() {
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="sm:hidden flex-1 min-h-0 overflow-y-auto px-4 pb-4 space-y-2">
+          <div className="sm:hidden flex-1 min-h-0 overflow-y-auto px-4 pb-20 space-y-2">
             {orders.map((order) => (
               <button
                 key={order.id}
@@ -754,7 +754,7 @@ export default function AccountingPage() {
           </div>
         ) : (
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-            <div className="sm:hidden flex-1 min-h-0 overflow-y-auto px-4 pb-4 space-y-2">
+            <div className="sm:hidden flex-1 min-h-0 overflow-y-auto px-4 pb-20 space-y-2">
               {subscriptions.map((sub) => (
                 <button
                   key={sub.id}
@@ -872,6 +872,16 @@ export default function AccountingPage() {
           } : undefined}
         />
       </>)}
+      </div>
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40">
+        <button
+          type="button"
+          onClick={pageTab === 'orders' ? openAdd : () => { setEditingSub(null); setSubEditOpen(true); }}
+          className="h-[54px] w-full inline-flex items-center justify-center gap-2 bg-nokturo-900 dark:bg-white text-white dark:text-nokturo-900 font-medium text-button-text rounded-none hover:bg-nokturo-900 dark:hover:bg-white transition-colors"
+        >
+          <MaterialIcon name="add" size={16} className="shrink-0" />
+          {pageTab === 'orders' ? t('accounting.addOrder') : t('subscriptions.add')}
+        </button>
       </div>
     </PageShell>
   );

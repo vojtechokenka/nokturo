@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
+import { useSidebarStore } from '../../stores/sidebarStore';
 import { canDeleteAnything } from '../../lib/rbac';
 import { PageShell } from '../../components/PageShell';
 import {
@@ -104,6 +105,7 @@ function renderNoteContent(content: string): React.ReactNode {
 export default function IdeasPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
+  const mobileOpen = useSidebarStore((s) => s.mobileOpen);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
 
   // ── State ───────────────────────────────────────────────────
@@ -113,6 +115,8 @@ export default function IdeasPage() {
   // Categories (Notion-style)
   const [categories, setCategories] = useState<NotionSelectOption[]>([]);
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showMobileCta, setShowMobileCta] = useState(true);
 
   // Quick-capture modal
   const [showModal, setShowModal] = useState(false);
@@ -139,7 +143,17 @@ export default function IdeasPage() {
   useLayoutEffect(() => {
     if (cardMenuOpen && menuButtonRef.current) {
       const rect = menuButtonRef.current.getBoundingClientRect();
-      setMenuPosition({ top: rect.bottom + 4, left: rect.right - 120 });
+      const MENU_WIDTH = 140;
+      const MENU_HEIGHT = 120;
+      const PADDING = 12;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      const left = Math.max(PADDING, Math.min(rect.right - MENU_WIDTH, vw - PADDING - MENU_WIDTH));
+      let top = rect.bottom + 4;
+      if (top + MENU_HEIGHT > vh - PADDING) {
+        top = Math.max(PADDING, rect.top - 4 - MENU_HEIGHT);
+      }
+      setMenuPosition({ top, left });
     } else {
       setMenuPosition(null);
     }
@@ -215,6 +229,34 @@ export default function IdeasPage() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    const isMobile = window.innerWidth < 640;
+    if (!isMobile) {
+      setShowMobileCta(true);
+      return;
+    }
+
+    const scrollContainer = document.querySelector('[data-scroll-container]') as HTMLElement | null;
+    if (!scrollContainer) return;
+
+    let lastScrollTop = scrollContainer.scrollTop;
+    const onScroll = () => {
+      const nextScrollTop = scrollContainer.scrollTop;
+      const delta = nextScrollTop - lastScrollTop;
+      if (Math.abs(delta) < 8) return;
+
+      if (delta > 0 && nextScrollTop > 64) {
+        setShowMobileCta(false);
+      } else if (delta < 0) {
+        setShowMobileCta(true);
+      }
+      lastScrollTop = nextScrollTop;
+    };
+
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true });
+    return () => scrollContainer.removeEventListener('scroll', onScroll);
+  }, []);
 
   const handleCategoriesChange = useCallback(
     async (newOptions: NotionSelectOption[]) => {
@@ -543,49 +585,96 @@ export default function IdeasPage() {
       descriptionKey="pages.ideas.description"
       bare
       actionsSlot={
-        <div className="flex flex-col sm:flex-row gap-2 items-center justify-between w-full">
-          {categories.length > 0 ? (
-            <div className="flex flex-wrap gap-2 justify-start max-w-[640px] [flex-wrap:wrap_balance]">
-              <button
-                onClick={() => setFilterCategories([])}
-                className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
-                  !isFiltering
-                    ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
-                    : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
-                }`}
-              >
-                {t('ideas.filterAll')}
-              </button>
-              {categories.map(cat => {
-                const active = filterCategories.includes(cat.name);
-                const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setFilterCategories(prev =>
-                      active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
-                    )}
-                    className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
-                      active
-                        ? ''
-                        : 'opacity-40 hover:opacity-70'
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
+        <div className="w-full">
+          <div className="sm:hidden flex items-center justify-start">
+            <button
+              type="button"
+              onClick={() => setMobileFiltersOpen((prev) => !prev)}
+              className="inline-flex items-center gap-2 h-9 px-4 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 font-medium rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+            >
+              <MaterialIcon name="filter_list" size={16} className="shrink-0" />
+              {t('common.filter')}
+            </button>
+          </div>
+          {mobileFiltersOpen && categories.length > 0 && (
+            <div className="sm:hidden mt-2 bg-page p-0 rounded-none">
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setFilterCategories([])}
+                  className={`text-sm px-4 py-2 rounded-[6px] font-medium transition-all ${
+                    !isFiltering
+                      ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                      : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+                  }`}
+                >
+                  {t('ideas.filterAll')}
+                </button>
+                {categories.map(cat => {
+                  const active = filterCategories.includes(cat.name);
+                  const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setFilterCategories(prev =>
+                        active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
+                      )}
+                      className={`text-sm px-4 py-2 rounded-[6px] font-medium transition-all ${colorCls} ${
+                        active
+                          ? ''
+                          : 'opacity-40 hover:opacity-70'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <div />
           )}
-          <button
-            onClick={openAdd}
-            className="flex items-center justify-center gap-2 h-9 bg-white text-nokturo-900 font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-50 dark:bg-white dark:text-nokturo-900 dark:hover:bg-nokturo-100 transition-colors shrink-0"
-          >
-            <MaterialIcon name="add" size={16} className="shrink-0" />
-            {t('ideas.quickCapture')}
-          </button>
+          <div className="hidden sm:flex items-center justify-between w-full">
+            {categories.length > 0 ? (
+              <div className="flex flex-wrap gap-2 justify-start max-w-[640px] [flex-wrap:wrap_balance]">
+                <button
+                  onClick={() => setFilterCategories([])}
+                  className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${
+                    !isFiltering
+                      ? 'bg-nokturo-800 text-white dark:bg-white dark:text-nokturo-900'
+                      : 'bg-nokturo-200 text-nokturo-500 dark:bg-nokturo-700 dark:text-nokturo-400 hover:bg-nokturo-300 dark:hover:bg-nokturo-600'
+                  }`}
+                >
+                  {t('ideas.filterAll')}
+                </button>
+                {categories.map(cat => {
+                  const active = filterCategories.includes(cat.name);
+                  const colorCls = TAG_COLORS[cat.color] ?? TAG_COLORS.gray;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setFilterCategories(prev =>
+                        active ? prev.filter(c => c !== cat.name) : [...prev, cat.name]
+                      )}
+                      className={`text-xs px-3 py-1 rounded-[4px] font-medium transition-all ${colorCls} ${
+                        active
+                          ? ''
+                          : 'opacity-40 hover:opacity-70'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div />
+            )}
+            <button
+              onClick={openAdd}
+              className="flex items-center justify-center gap-2 h-9 bg-white text-nokturo-900 font-medium rounded-[6px] px-4 text-sm hover:bg-nokturo-50 dark:bg-white dark:text-nokturo-900 dark:hover:bg-nokturo-100 transition-colors shrink-0"
+            >
+              <MaterialIcon name="add" size={16} className="shrink-0" />
+              {t('ideas.quickCapture')}
+            </button>
+          </div>
         </div>
       }
     >
@@ -775,6 +864,19 @@ export default function IdeasPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {!showModal && (
+        <div className={`sm:hidden fixed bottom-0 left-0 right-0 z-40 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${showMobileCta && !mobileOpen ? 'translate-y-0 opacity-100' : 'translate-y-[110%] opacity-0 pointer-events-none'}`}>
+          <button
+            type="button"
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 h-[54px] w-full bg-white text-nokturo-900 font-medium rounded-none px-4 text-sm hover:bg-white dark:bg-white dark:text-nokturo-900 dark:hover:bg-white transition-colors"
+          >
+            <MaterialIcon name="add" size={16} className="shrink-0" />
+            {t('ideas.quickCapture')}
+          </button>
         </div>
       )}
 

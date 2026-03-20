@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore } from '../../stores/authStore';
@@ -19,11 +20,14 @@ import { PRIMARY_BUTTON_CLASS } from '../../lib/inputStyles';
 import { DeleteIcon } from '../../components/icons/DeleteIcon';
 import { DeleteConfirmModal } from '../../components/DeleteConfirmModal';
 import { DuplicateIcon } from '../../components/icons/DuplicateIcon';
+import { useIsMobile } from '../../hooks/useIsMobile';
+import { useDropdownPosition } from '../../hooks/useDropdownPosition';
 
 export default function MaterialsPage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canDelete = canDeleteAnything(user?.role ?? 'client');
+  const isMobile = useIsMobile();
   useExchangeRates(); // Prefetch rates for CZK conversion
 
   // ── State ──────────────────────────────────────────────────
@@ -49,6 +53,16 @@ export default function MaterialsPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   // Card three-dot menu
   const [cardMenuOpen, setCardMenuOpen] = useState<string | null>(null);
+  const activeMenuTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const cardMenuPosition = useDropdownPosition({
+    open: !!cardMenuOpen,
+    triggerRef: activeMenuTriggerRef as React.RefObject<HTMLElement | null>,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 180,
+    offset: 4,
+  });
+  const [showMobileStats, setShowMobileStats] = useState(false);
 
   // Close card menu on outside click
   useEffect(() => {
@@ -194,8 +208,8 @@ export default function MaterialsPage() {
       descriptionKey="pages.materialLibrary.description"
       bare
       actionsSlot={
-        <div className="w-full flex flex-col sm:flex-row gap-2 items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="w-full flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             <CompositionFilter
               fibers={uniqueFibers}
               selectedFibers={compositionFilters}
@@ -222,19 +236,29 @@ export default function MaterialsPage() {
               </button>
             )}
           </div>
-          <button
-            onClick={openAdd}
-            className={`${PRIMARY_BUTTON_CLASS} shrink-0`}
-          >
-            <MaterialIcon name="add" size={16} className="shrink-0" />
-            {t('materials.addMaterial')}
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowMobileStats((prev) => !prev)}
+              className="sm:hidden flex items-center justify-center size-9 shrink-0 bg-nokturo-100 dark:bg-nokturo-800 text-nokturo-900 dark:text-nokturo-100 rounded-[6px] hover:bg-nokturo-200 dark:hover:bg-nokturo-700 transition-colors"
+              title="Toggle overview"
+            >
+              <MaterialIcon name={showMobileStats ? 'visibility_off' : 'visibility'} size={16} className="shrink-0" />
+            </button>
+            <button
+              onClick={openAdd}
+              className={`${PRIMARY_BUTTON_CLASS} hidden sm:inline-flex shrink-0`}
+            >
+              <MaterialIcon name="add" size={16} className="shrink-0" />
+              {t('materials.addMaterial')}
+            </button>
+          </div>
         </div>
       }
     >
       {/* ── Overview stats (sticky at top) ───────────────────── */}
       <div className="sticky top-0 z-20 bg-page">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-0 pb-6">
+        <div className={`${showMobileStats ? 'grid' : 'hidden'} sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-0 pb-6 px-4 sm:px-0`}>
         <div className="bg-nokturo-200/80 dark:bg-white/5 rounded-[6px] p-4">
           <p className="text-nokturo-500 dark:text-nokturo-400 text-xs uppercase tracking-wider mb-1">
             {t('materials.overview.totalStock')}
@@ -271,7 +295,7 @@ export default function MaterialsPage() {
       </div>
 
       {/* ── Content area ──────────────────────────────────── */}
-      <div className="px-0 pb-4">
+      <div className="px-4 sm:px-0 pb-4">
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <MaterialIcon name="progress_activity" size={24} className="text-nokturo-500 animate-spin shrink-0" />
@@ -325,14 +349,25 @@ export default function MaterialsPage() {
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
+                        activeMenuTriggerRef.current = e.currentTarget;
                         setCardMenuOpen(cardMenuOpen === mat.id ? null : mat.id);
                       }}
-                      className={`p-1.5 rounded transition-all ${cardMenuOpen === mat.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-white' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
+                      className={`hidden sm:block p-1.5 rounded transition-all ${cardMenuOpen === mat.id ? 'opacity-100 bg-white dark:bg-nokturo-700 text-white' : 'opacity-0 group-hover:opacity-100 bg-white/80 dark:bg-nokturo-700/80 text-nokturo-700 dark:text-nokturo-200 hover:bg-white dark:hover:bg-nokturo-700'}`}
                     >
                       <MaterialIcon name="more_vert" size={16} className="shrink-0" />
                     </button>
-                    {cardMenuOpen === mat.id && (
-                      <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20" onClick={(e) => e.stopPropagation()}>
+                    {cardMenuOpen === mat.id && cardMenuPosition && createPortal(
+                      <div
+                        className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20"
+                        style={{
+                          ...(cardMenuPosition.top !== undefined && { top: cardMenuPosition.top }),
+                          ...(cardMenuPosition.bottom !== undefined && { bottom: cardMenuPosition.bottom }),
+                          left: cardMenuPosition.left,
+                          maxHeight: cardMenuPosition.maxHeight,
+                          maxWidth: cardMenuPosition.maxWidth,
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
                           type="button"
                           onClick={() => { openEdit(mat); setCardMenuOpen(null); }}
@@ -360,6 +395,8 @@ export default function MaterialsPage() {
                           </button>
                         )}
                       </div>
+                      ,
+                      document.body
                     )}
                   </div>
                 </div>
@@ -393,7 +430,7 @@ export default function MaterialsPage() {
 
       {/* ── Slide-over (add / edit) ───────────────────────── */}
       <MaterialSlideOver
-        open={slideOverOpen}
+        open={!isMobile && slideOverOpen}
         material={editingMaterial}
         onClose={() => {
           setSlideOverOpen(false);

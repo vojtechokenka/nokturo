@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
@@ -11,6 +12,8 @@ import {
   type NotionSelectOption,
 } from './NotionSelect';
 import { INPUT_CLASS, MODAL_HEADING_CLASS } from '../lib/inputStyles';
+import { useIsMobile } from '../hooks/useIsMobile';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 // ── Types shared with LabelsPage ─────────────────────────
 export interface Label {
@@ -67,6 +70,7 @@ export function LabelSlideOver({
   onDuplicate,
 }: LabelSlideOverProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState<FormData>(emptyForm);
@@ -76,6 +80,15 @@ export function LabelSlideOver({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuPosition = useDropdownPosition({
+    open: menuOpen,
+    triggerRef: menuTriggerRef,
+    alignRight: true,
+    minWidth: 140,
+    desiredHeight: 160,
+    offset: 4,
+  });
   useEffect(() => {
     if (label) {
       setForm({
@@ -207,18 +220,28 @@ export function LabelSlideOver({
             {label ? t('labels.editLabel') : t('labels.addLabel')}
           </h3>
           <div className="flex items-center gap-2">
-            {label && (
+            {label && !isMobile && (
               <div className="relative">
                 <button
+                  ref={menuTriggerRef}
                   onClick={() => setMenuOpen((p) => !p)}
                   className="p-1.5 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700"
                 >
                   <MaterialIcon name="more_vert" size={20} className="shrink-0" />
                 </button>
-                {menuOpen && (
+                {menuOpen && menuPosition && createPortal(
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                    <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 min-w-[140px] z-20">
+                    <div
+                      className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20"
+                      style={{
+                        ...(menuPosition.top !== undefined && { top: menuPosition.top }),
+                        ...(menuPosition.bottom !== undefined && { bottom: menuPosition.bottom }),
+                        left: menuPosition.left,
+                        maxHeight: menuPosition.maxHeight,
+                        maxWidth: menuPosition.maxWidth,
+                      }}
+                    >
                       {onDuplicate && (
                         <button
                           onClick={() => { onDuplicate(label); setMenuOpen(false); }}
@@ -238,7 +261,8 @@ export function LabelSlideOver({
                         </button>
                       )}
                     </div>
-                  </>
+                  </>,
+                  document.body
                 )}
               </div>
             )}

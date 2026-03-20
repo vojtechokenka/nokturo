@@ -1,8 +1,10 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './icons/MaterialIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
 import type { Task, TaskProfile } from './TaskSlideOver';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 interface TaskDetailSlideOverProps {
   open: boolean;
@@ -33,6 +35,14 @@ export function TaskDetailSlideOver({
   const { t, i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const descRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const menuPosition = useDropdownPosition({
+    open: menuOpen,
+    triggerRef: menuTriggerRef,
+    alignRight: true,
+    desiredHeight: 200,
+    offset: 4,
+  });
 
   const syncChecklistLiClasses = useCallback((container: HTMLElement) => {
     container.querySelectorAll('.rta-checklist li').forEach((li) => {
@@ -159,15 +169,25 @@ export function TaskDetailSlideOver({
           <div className="flex items-center gap-1 shrink-0">
             <div className="relative">
               <button
+                ref={menuTriggerRef}
                 onClick={() => setMenuOpen((p) => !p)}
                 className="p-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors"
               >
                 <MaterialIcon name="more_vert" size={20} className="shrink-0" />
               </button>
-              {menuOpen && (
+              {menuOpen && menuPosition && createPortal(
                 <>
                   <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-                  <div className="dropdown-menu absolute right-0 top-full mt-1 shadow-lg py-1 w-max z-20">
+                  <div
+                    className="dropdown-menu fixed shadow-lg py-1 w-max z-20"
+                    style={{
+                      ...(menuPosition.top !== undefined && { top: menuPosition.top }),
+                      ...(menuPosition.bottom !== undefined && { bottom: menuPosition.bottom }),
+                      left: menuPosition.left,
+                      maxHeight: menuPosition.maxHeight,
+                      maxWidth: menuPosition.maxWidth,
+                    }}
+                  >
                     <button
                       onClick={() => { onEdit(task); setMenuOpen(false); }}
                       className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2 whitespace-nowrap"
@@ -202,7 +222,8 @@ export function TaskDetailSlideOver({
                       </button>
                     )}
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
             {!inline && (

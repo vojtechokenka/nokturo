@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { FilterChevronIcon } from './FilterSelect';
+import { useDropdownPosition } from '../hooks/useDropdownPosition';
 
 const triggerBaseClass =
   'w-full h-11 flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-[6px] bg-nokturo-200/60 dark:bg-nokturo-700/60 text-nokturo-900 dark:text-nokturo-100 focus:outline-none focus:ring-2 focus:ring-nokturo-500 transition-colors cursor-pointer text-left pr-10';
@@ -34,6 +36,13 @@ export const SelectField = React.forwardRef<HTMLDivElement, SelectFieldProps>(
   ({ className = '', children, value = '', onChange, disabled, ...props }, ref) => {
     const [open, setOpen] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement>(null);
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const position = useDropdownPosition({
+      open,
+      triggerRef,
+      matchWidth: true,
+    });
 
     const options = useMemo(() => parseOptionsFromChildren(children), [children]);
     const valueStr = value == null ? '' : String(value);
@@ -42,7 +51,10 @@ export const SelectField = React.forwardRef<HTMLDivElement, SelectFieldProps>(
 
     useEffect(() => {
       const handleClick = (e: MouseEvent) => {
-        if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        const target = e.target as Node;
+        const inTrigger = triggerRef.current?.contains(target);
+        const inDropdown = dropdownRef.current?.contains(target);
+        if (!inTrigger && !inDropdown) {
           setOpen(false);
         }
       };
@@ -66,6 +78,7 @@ export const SelectField = React.forwardRef<HTMLDivElement, SelectFieldProps>(
     return (
       <div ref={setRefs} className="relative">
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => !disabled && setOpen((o) => !o)}
           disabled={disabled}
@@ -82,8 +95,19 @@ export const SelectField = React.forwardRef<HTMLDivElement, SelectFieldProps>(
           />
         </button>
 
-        {open && (
-          <div className="absolute left-0 right-0 top-full mt-1 z-[100] bg-white dark:bg-nokturo-800 rounded-[12px] shadow-lg overflow-hidden min-w-0">
+        {open && position && createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[100] bg-white dark:bg-nokturo-800 rounded-[12px] shadow-lg overflow-hidden min-w-0"
+            style={{
+              ...(position.top !== undefined && { top: position.top }),
+              ...(position.bottom !== undefined && { bottom: position.bottom }),
+              left: position.left,
+              width: position.width,
+              maxHeight: position.maxHeight,
+              maxWidth: position.maxWidth,
+            }}
+          >
             <ul role="listbox" className="py-1 max-h-60 overflow-y-auto">
               {options.map((opt, i) => (
                 <li key={opt.value !== '' ? opt.value : `opt-${i}`}>
@@ -103,7 +127,8 @@ export const SelectField = React.forwardRef<HTMLDivElement, SelectFieldProps>(
                 </li>
               ))}
             </ul>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );

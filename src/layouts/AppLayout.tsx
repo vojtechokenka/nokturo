@@ -47,7 +47,7 @@ export function AppLayout() {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <div className="shrink-0 w-full md:shrink md:w-auto flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Page content */}
         <main className="flex-1 flex flex-col overflow-hidden bg-page">
           {/* Sticky top bar */}
@@ -61,13 +61,9 @@ export function AppLayout() {
               >
                 <MaterialIcon name="menu" size={20} className="shrink-0" />
               </button>
-              <svg className="md:hidden h-[24px] w-[24px] -ml-2" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="32" height="32" rx="4" className="fill-nokturo-900 dark:fill-surface" />
-                <path d="M21.9925 9.57141C21.9925 12.8413 19.3136 15.4966 16.0034 15.5057C14.3506 15.5057 12.8517 14.839 11.7659 13.7664C10.6801 12.6939 10.0075 11.2109 10.0075 9.57141C10.0075 11.2109 9.33257 12.8163 8.24677 14.0159C7.16098 15.2131 5.65968 16 4 16C7.31707 16 10.0075 19.1496 10.0075 22.4286C10.0075 19.1564 12.6864 16.5034 15.9966 16.4943C17.6494 16.4943 19.1484 17.161 20.2341 18.2313C21.3199 19.3038 21.9925 20.7868 21.9925 22.4286C21.9925 20.7868 22.6651 19.1837 23.7509 17.9841C24.839 16.7868 26.3403 16 28 16C24.6806 16 21.9925 12.8481 21.9925 9.57141Z" fill="white" />
-              </svg>
               <Link
                 to="/tasks"
-                className="flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
+                className="hidden sm:flex items-center gap-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
               >
                 <MyTasksIcon size={16} className="shrink-0 text-nokturo-500 dark:text-nokturo-400" />
                 {t('tasks.myTasks')}
@@ -85,7 +81,7 @@ export function AppLayout() {
             </div>
           </div>
           {/* Frame – padding + window stay fixed, content scrolls inside window (no padding for Moodboard) */}
-          <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pt-6 pl-6 pr-6 pb-6'}`}>
+          <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pt-0 px-0 pb-0 sm:pt-6 sm:px-6 sm:pb-6'}`}>
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>
