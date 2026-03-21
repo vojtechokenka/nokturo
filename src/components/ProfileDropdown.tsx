@@ -117,10 +117,10 @@ export function ProfileDropdown() {
 
         {open && position && createPortal(
           <>
-            <div className="fixed inset-0 z-10 bg-overlay pointer-events-none" aria-hidden />
+            <div className="fixed inset-0 z-40 bg-overlay pointer-events-none" aria-hidden />
             <div
               ref={dropdownRef}
-              className="profile-dropdown fixed bg-elevated shadow-xl z-20"
+              className="profile-dropdown fixed bg-elevated shadow-xl z-50"
               style={{
                 ...(position.top !== undefined && { top: position.top }),
                 ...(position.bottom !== undefined && { bottom: position.bottom }),
