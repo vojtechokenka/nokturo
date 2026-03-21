@@ -1516,6 +1516,7 @@ export function ProductSlideOver({
                 onUploadImage={handleUploadImage}
                 onToast={addToast}
                 headingFont="body"
+                dropdownZIndex={10000}
               />
             </div>
           </div>

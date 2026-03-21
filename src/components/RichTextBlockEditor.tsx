@@ -549,10 +549,12 @@ function AspectRatioSelect({
   value,
   onChange,
   t,
+  dropdownZIndex,
 }: {
   value: '5:4' | '1:1' | '3:2' | '16:9';
   onChange: (v: '5:4' | '1:1' | '3:2' | '16:9') => void;
   t: (k: string) => string;
+  dropdownZIndex?: number;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -598,13 +600,14 @@ function AspectRatioSelect({
       {open && position && createPortal(
         <div
           ref={dropdownRef}
-          className="fixed z-50 min-w-[4rem] p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden"
+          className="fixed min-w-[4rem] p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg overflow-hidden"
           style={{
             ...(position.top !== undefined && { top: position.top }),
             ...(position.bottom !== undefined && { bottom: position.bottom }),
             left: position.left,
             maxHeight: position.maxHeight,
             maxWidth: position.maxWidth,
+            zIndex: dropdownZIndex ?? 50,
           }}
         >
           {options.map((opt) => (
@@ -673,12 +676,14 @@ function BlockActionsDropdown({
   onRemove,
   onDuplicate,
   t,
+  dropdownZIndex,
 }: {
   block: RichTextBlock;
   index: number;
   onRemove: (id: string) => void;
   onDuplicate: (block: RichTextBlock, afterIndex: number) => void;
   t: (k: string) => string;
+  dropdownZIndex?: number;
 }) {
   const [open, setOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -732,13 +737,14 @@ function BlockActionsDropdown({
       {open && position && createPortal(
         <div
           ref={dropdownRef}
-          className="dropdown-menu fixed z-50 shadow-lg min-w-[120px]"
+          className="dropdown-menu fixed shadow-lg min-w-[120px]"
           style={{
             ...(position.top !== undefined && { top: position.top }),
             ...(position.bottom !== undefined && { bottom: position.bottom }),
             left: position.left,
             maxHeight: position.maxHeight,
             maxWidth: position.maxWidth,
+            zIndex: dropdownZIndex ?? 50,
           }}
         >
           <button
@@ -768,7 +774,8 @@ function BlockActionsDropdown({
       )}
       {showDeleteConfirm && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-overlay backdrop-blur-sm"
+          className="fixed inset-0 flex items-center justify-center bg-overlay backdrop-blur-sm"
+          style={{ zIndex: (dropdownZIndex ?? 50) + 10 }}
           onClick={() => setShowDeleteConfirm(false)}
         >
           <div
@@ -816,6 +823,7 @@ function BlockRenderer({
   onToast,
   headingFont,
   h3Large = false,
+  dropdownZIndex,
 }: {
   block: RichTextBlock;
   index: number;
@@ -827,6 +835,7 @@ function BlockRenderer({
   onToast: (t: ToastData) => void;
   headingFont?: HeadingFontFamily;
   h3Large?: boolean;
+  dropdownZIndex?: number;
 }) {
   const { t } = useTranslation();
   const paraRef = useRef<HTMLDivElement>(null);
@@ -844,6 +853,7 @@ function BlockRenderer({
     const url = prompt(t('richText.enterUrl'));
     if (url) execFormat('createLink', url);
   };
+  const blockActionsProps = { block, index, onRemove, onDuplicate, t, dropdownZIndex };
 
   return (
     <div data-block-id={block.id} className="group flex gap-2 items-start transition-opacity">
@@ -871,7 +881,7 @@ function BlockRenderer({
                   H{lvl}
                 </button>
               ))}
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             {(() => {
               const isHeadline = headingFont !== 'body';
@@ -948,7 +958,7 @@ function BlockRenderer({
                   </button>
                 ))}
               </div>
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <div className={(block.align ?? 'left') === 'center' ? 'text-center' : (block.align ?? 'left') === 'right' ? 'text-right' : 'text-left'}>
               <EditableParagraph
@@ -964,7 +974,7 @@ function BlockRenderer({
         {block.type === 'quote' && (
           <blockquote className="font-headline italic text-rta-quote text-nokturo-700 dark:text-nokturo-300 mb-4 pl-4">
             <div className="flex justify-end mb-1">
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <textarea
               value={block.text}
@@ -993,7 +1003,7 @@ function BlockRenderer({
                   {st === 'bullet' ? t('richText.bulletList') : t('richText.numberedList')}
                 </button>
               ))}
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <div className="space-y-1 pl-2">
               {(block.items?.length ? block.items : ['']).map((item, i) => (
@@ -1068,7 +1078,7 @@ function BlockRenderer({
                       {t(`richText.image${f === 'fill' ? 'Fill' : 'Hug'}`)}
                     </button>
                   ))}
-                  <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+                  <BlockActionsDropdown {...blockActionsProps} />
                 </div>
                 <div className="relative group/img">
                   <img
@@ -1112,7 +1122,7 @@ function BlockRenderer({
             ) : (
               <>
                 <div className="flex justify-end mb-2">
-                  <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+                  <BlockActionsDropdown {...blockActionsProps} />
                 </div>
                 <label className="flex flex-col items-center justify-center w-full h-32 cursor-pointer text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors">
                 <MaterialIcon name="image" size={24} className="text-nokturo-400 dark:text-nokturo-500 mb-1 shrink-0" />
@@ -1160,7 +1170,7 @@ function BlockRenderer({
                   </button>
                 ))}
               </div>
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <div
               className="grid gap-2"
@@ -1252,6 +1262,7 @@ function BlockRenderer({
                 value={block.aspectRatio ?? '1:1'}
                 onChange={(v) => onUpdate(block.id, { aspectRatio: v })}
                 t={t}
+                dropdownZIndex={dropdownZIndex}
               />
               <span className="text-xs text-nokturo-500 dark:text-nokturo-400 leading-6">{t('richText.gap')}:</span>
               <div className="flex items-center gap-0.5">
@@ -1314,7 +1325,7 @@ function BlockRenderer({
                 )}
                 </div>
               </div>
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <div
               className="grid"
@@ -1492,7 +1503,7 @@ function BlockRenderer({
                 <MaterialIcon name="view_column" size={12} className="shrink-0" />
                 {t('richText.addHeaderColumn')}
               </button>
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <div className="flex items-start">
               {/* Add column left */}
@@ -1738,14 +1749,14 @@ function BlockRenderer({
                 placeholder={t('richText.linkUrlPlaceholder')}
                 className={`flex-1 min-w-[180px] ${INPUT_CLASS}`}
               />
-            <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+            <BlockActionsDropdown {...blockActionsProps} />
           </div>
         )}
 
         {block.type === 'divider' && (
           <div className="my-6 py-2">
             <div className="flex justify-end mb-1">
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <hr className="border-0 border-t border-nokturo-300 dark:border-nokturo-600" />
           </div>
@@ -1763,7 +1774,7 @@ function BlockRenderer({
                 />
                 {t('richText.tagVisible')}
               </label>
-              <BlockActionsDropdown block={block} index={index} onRemove={onRemove} onDuplicate={onDuplicate} t={t} />
+              <BlockActionsDropdown {...blockActionsProps} />
             </div>
             <input
               type="text"
@@ -1795,6 +1806,8 @@ export interface RichTextBlockEditorProps {
   headingFont?: HeadingFontFamily;
   /** When true, H3 uses 32px (About Nokturo); otherwise 20px */
   h3Large?: boolean;
+  /** z-index used for block action/ratio dropdown portals */
+  dropdownZIndex?: number;
 }
 
 export function RichTextBlockEditor({
@@ -1804,6 +1817,7 @@ export function RichTextBlockEditor({
   onToast,
   headingFont = 'headline',
   h3Large = false,
+  dropdownZIndex,
 }: RichTextBlockEditorProps) {
   const { t } = useTranslation();
   const [addMenuAtIndex, setAddMenuAtIndex] = useState<number | null>(null);
@@ -1941,6 +1955,7 @@ export function RichTextBlockEditor({
                 onToast={onToast}
                 headingFont={headingFont}
                 h3Large={h3Large}
+                dropdownZIndex={dropdownZIndex}
               />
               <div className="relative flex justify-center py-1">
                 <button

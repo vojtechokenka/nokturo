@@ -79,24 +79,11 @@ export default function ProductDetailPage() {
   });
   const [viewingMaterial, setViewingMaterial] = useState<Material | null>(null);
   const [lightbox, setLightbox] = useState<{
-    gallery: { url: string; caption?: string }[];
+    gallery: { url: string; caption?: string; notes?: string }[];
     index: number;
     productId: string;
     galleryType: 'design' | 'moodboard' | 'labels';
   } | null>(null);
-  const lightboxImgRef = useRef<HTMLDivElement>(null);
-  const lightboxImgElementRef = useRef<HTMLImageElement>(null);
-  const [loupe, setLoupe] = useState<{
-    x: number;
-    y: number;
-    relX: number;
-    relY: number;
-  } | null>(null);
-  const [imgDimensions, setImgDimensions] = useState<{ w: number; h: number } | null>(null);
-  useEffect(() => {
-    setLoupe(null);
-    setImgDimensions(null);
-  }, [lightbox?.index]);
 
   useEffect(() => {
     if (!id) return;
@@ -593,7 +580,7 @@ export default function ProductDetailPage() {
                       }
                       className={
                         hasDesign
-                          ? 'w-full flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0 text-left hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors cursor-zoom-in'
+                          ? 'w-full flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0 text-left hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors'
                           : 'flex items-start gap-4 p-4 bg-nokturo-50 dark:bg-nokturo-800 min-w-0'
                       }
                       style={{ borderRadius: '8px' }}
@@ -668,12 +655,12 @@ export default function ProductDetailPage() {
                         galleryType: 'design',
                       })
                     }
-                      className="w-full text-left block cursor-zoom-in"
+                      className="w-full text-left block"
                     >
                       <img
                         src={img.url}
                         alt={img.caption ?? ''}
-                        className={`w-full aspect-square rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors bg-nokturo-50 dark:bg-nokturo-800 cursor-zoom-in ${
+                        className={`w-full aspect-square rounded-lg hover:bg-nokturo-100 dark:hover:bg-nokturo-700 transition-colors bg-nokturo-50 dark:bg-nokturo-800 ${
                           isSvg ? 'object-contain p-2' : 'object-cover'
                         }`}
                         style={isSvg ? { imageRendering: '-webkit-optimize-contrast' as React.CSSProperties['imageRendering'] } : undefined}
@@ -707,12 +694,12 @@ export default function ProductDetailPage() {
                         galleryType: 'moodboard',
                       })
                     }
-                    className="w-full text-left block cursor-zoom-in"
+                    className="w-full text-left block"
                   >
                     <img
                       src={img.url}
                       alt={img.caption ?? ''}
-                      className="w-full aspect-square object-cover rounded-lg transition-colors bg-nokturo-50 dark:bg-nokturo-800 cursor-zoom-in"
+                      className="w-full aspect-square object-cover rounded-lg transition-colors bg-nokturo-50 dark:bg-nokturo-800"
                     />
                   </button>
                   {img.caption && (
@@ -783,21 +770,7 @@ export default function ProductDetailPage() {
               )}
 
               <div
-                ref={lightboxImgRef}
-                className={`relative flex items-center justify-center min-w-[200px] min-h-[200px] ${loupe ? 'cursor-none' : 'cursor-zoom-in'}`}
-                onMouseMove={(e) => {
-                  const containerEl = lightboxImgRef.current;
-                  if (!containerEl) return;
-                  const rect = containerEl.getBoundingClientRect();
-                  const relX = (e.clientX - rect.left) / rect.width;
-                  const relY = (e.clientY - rect.top) / rect.height;
-                  if (relX >= 0 && relX <= 1 && relY >= 0 && relY <= 1) {
-                    setLoupe({ x: e.clientX, y: e.clientY, relX, relY });
-                  } else {
-                    setLoupe(null);
-                  }
-                }}
-                onMouseLeave={() => setLoupe(null)}
+                className="relative flex items-center justify-center min-w-[200px] min-h-[200px]"
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
@@ -818,49 +791,10 @@ export default function ProductDetailPage() {
                   }
                   return (
                     <img
-                      ref={lightboxImgElementRef}
                       src={url}
                       alt={lightbox.gallery[lightbox.index]?.caption ?? ''}
                       className={imgClass}
-                      onLoad={(e) => {
-                        const img = e.currentTarget;
-                        if (img.naturalWidth && img.naturalHeight) {
-                          setImgDimensions({ w: img.naturalWidth, h: img.naturalHeight });
-                        }
-                      }}
                     />
-                  );
-                })()}
-                {loupe && imgDimensions && (() => {
-                  const url = lightbox.gallery[lightbox.index]?.url ?? '';
-                  const isSvg = /\.svg(\?|$)/i.test(url);
-                  const zoom = isSvg ? 10 : 8;
-                  const size = 250;
-                  const center = size / 2;
-                  const imgW = imgDimensions.w * zoom;
-                  const imgH = imgDimensions.h * zoom;
-                  const imgLeft = center - loupe.relX * imgW;
-                  const imgTop = center - loupe.relY * imgH;
-                  return (
-                    <div
-                      className="fixed w-[250px] h-[250px] pointer-events-none z-[10000] rounded-full border-2 border-white/80 overflow-hidden"
-                      style={{
-                        left: loupe.x - size / 2,
-                        top: loupe.y - size / 2,
-                      }}
-                    >
-                      <img
-                        src={url}
-                        alt=""
-                        className="absolute"
-                        style={{
-                          width: imgW,
-                          height: imgH,
-                          left: imgLeft,
-                          top: imgTop,
-                        }}
-                      />
-                    </div>
                   );
                 })()}
               </div>
@@ -895,12 +829,19 @@ export default function ProductDetailPage() {
                   </p>
                 </div>
               )}
+              {(lightbox.gallery[lightbox.index]?.notes) && (
+                <div className="px-4 pb-2 shrink-0">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap">
+                    {lightbox.gallery[lightbox.index].notes}
+                  </p>
+                </div>
+              )}
               <div className="flex-1 overflow-y-auto min-h-0 flex flex-col px-4 pb-4">
                 <ProductGalleryComments
                   productId={lightbox.productId}
                   galleryType={lightbox.galleryType}
                   imageIndex={lightbox.index}
-                  hasCaptionAbove={!!lightbox.gallery[lightbox.index]?.caption}
+                  hasCaptionAbove={!!(lightbox.gallery[lightbox.index]?.caption || lightbox.gallery[lightbox.index]?.notes)}
                 />
               </div>
             </div>

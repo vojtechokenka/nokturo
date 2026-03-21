@@ -64,7 +64,7 @@ export default function SamplingDetailPage() {
   const [loading, setLoading] = useState(true);
   const [viewingMaterial, setViewingMaterial] = useState<Material | null>(null);
   const [lightbox, setLightbox] = useState<{
-    gallery: { url: string; caption?: string }[];
+    gallery: { url: string; caption?: string; notes?: string }[];
     index: number;
     productId: string;
     galleryType: 'design' | 'moodboard' | 'labels';
@@ -700,12 +700,19 @@ export default function SamplingDetailPage() {
                   </p>
                 </div>
               )}
+              {(lightbox.gallery[lightbox.index]?.notes) && (
+                <div className="px-4 pb-2 shrink-0">
+                  <p className="text-nokturo-500 dark:text-nokturo-400 text-xs leading-relaxed whitespace-pre-wrap">
+                    {lightbox.gallery[lightbox.index].notes}
+                  </p>
+                </div>
+              )}
               <div className="flex-1 overflow-y-auto min-h-0 flex flex-col px-4 pb-4">
                 <ProductGalleryComments
                   productId={lightbox.productId}
                   galleryType={lightbox.galleryType}
                   imageIndex={lightbox.index}
-                  hasCaptionAbove={!!lightbox.gallery[lightbox.index]?.caption}
+                  hasCaptionAbove={!!(lightbox.gallery[lightbox.index]?.caption || lightbox.gallery[lightbox.index]?.notes)}
                 />
               </div>
             </div>
