@@ -39,8 +39,9 @@ function createStaticServer(distPath) {
         res.end(data);
       });
     });
-    server.listen(5173, '127.0.0.1', () => {
-      resolve({ server, url: 'http://127.0.0.1:5173' });
+    server.listen(0, '127.0.0.1', () => {
+      const port = server.address().port;
+      resolve({ server, url: `http://127.0.0.1:${port}` });
     });
     server.on('error', reject);
   });
@@ -164,6 +165,7 @@ ipcMain.handle('set-theme-icon', (_event, theme) => {
 });
 
 let staticServer = null;
+let appUrl = 'http://127.0.0.1:5173';
 
 app.whenReady().then(async () => {
   // Root cause: Chromium proxy negotiation causes fetch to hang on Windows.
@@ -171,14 +173,14 @@ app.whenReady().then(async () => {
   await session.defaultSession.setProxy({ mode: 'direct' });
 
   // Dev: Vite server. Prod: lokální HTTP server (file:// by rozbil localStorage/Supabase auth)
-  const LOAD_URL = 'http://127.0.0.1:5173';
   if (app.isPackaged) {
     const distPath = path.join(__dirname, '..', 'dist');
     console.log('[Nokturo] Serving dist from:', distPath);
-    const { server } = await createStaticServer(distPath);
+    const { server, url } = await createStaticServer(distPath);
     staticServer = server;
+    appUrl = url;
   }
-  createWindow(LOAD_URL);
+  createWindow(appUrl);
 });
 
 app.on('window-all-closed', () => {
@@ -188,6 +190,6 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    createWindow('http://127.0.0.1:5173');
+    createWindow(appUrl);
   }
 });
