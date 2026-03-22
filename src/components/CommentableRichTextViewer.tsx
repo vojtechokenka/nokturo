@@ -968,7 +968,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       {selectionState && popoverPosition && (
         <div
           data-comment-popover
-          className="absolute z-[100] w-80 bg-white dark:bg-nokturo-800 rounded-lg p-3"
+          className="absolute z-[100] w-80 bg-white dark:bg-nokturo-800 rounded-[12px] p-3"
           style={{
             top: popoverPosition.top,
             left: popoverPosition.left,
@@ -1012,7 +1012,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
             <button
               onClick={handleAddComment}
               disabled={!commentInput.trim() || sending}
-              className="w-9 h-9 flex items-center justify-center shrink-0 bg-nokturo-900 text-white rounded hover:bg-nokturo-800 disabled:opacity-50"
+              className="w-11 h-11 flex items-center justify-center shrink-0 bg-nokturo-900 text-white rounded-[6px] hover:bg-nokturo-800 disabled:opacity-50"
             >
               {sending ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SendArrowIcon className="w-4 h-4" />}
             </button>

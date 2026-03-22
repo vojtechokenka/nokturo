@@ -164,11 +164,11 @@ export function MentionDropdown({
 
   return (
     <>
-      {!anchorRef && <span ref={fallbackAnchorRef} className="block h-0 w-full pointer-events-none" aria-hidden />}
+      {!anchorRef && <span ref={fallbackAnchorRef} className="absolute inset-x-0 top-0 h-0 pointer-events-none" aria-hidden />}
       {position && createPortal(
         <div
           ref={containerRef}
-          className="mention-dropdown fixed p-1 bg-white dark:bg-nokturo-700 shadow-lg max-h-36 overflow-y-auto z-50"
+          className="mention-dropdown fixed p-1 bg-white dark:bg-nokturo-700 shadow-lg max-h-36 min-w-[240px] overflow-y-auto z-[10050]"
           style={{
             ...(position.top !== undefined && { top: position.top }),
             ...(position.bottom !== undefined && { bottom: position.bottom }),
@@ -178,6 +178,9 @@ export function MentionDropdown({
             maxWidth: position.maxWidth,
           }}
         >
+          <div className="px-2 py-1 text-[11px] font-medium uppercase tracking-wide text-nokturo-500 dark:text-nokturo-300">
+            People
+          </div>
           {profiles.map((p, i) => {
             const name = profileDisplayName(p);
             return (
@@ -188,7 +191,7 @@ export function MentionDropdown({
                   e.preventDefault();
                   onSelect(p);
                 }}
-                className={`w-full text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                className={`w-full min-w-0 text-left flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
                   i === selectedIdx
                     ? 'bg-nokturo-100 dark:bg-nokturo-600 text-nokturo-900 dark:text-white'
                     : 'text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600/50'
@@ -199,7 +202,7 @@ export function MentionDropdown({
                 ) : (
                   <DefaultAvatar size={24} className="avatar-round overflow-hidden shrink-0 w-6 h-6" />
                 )}
-                <span>@{name}</span>
+                <span className="min-w-0 flex-1 truncate whitespace-nowrap">@{name}</span>
               </button>
             );
           })}

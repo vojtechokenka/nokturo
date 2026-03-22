@@ -425,9 +425,9 @@ export function ProductGalleryComments({
                     </button>
                     {commentMenuOpen === comment.id && menuPosition && createPortal(
                       <>
-                        <div className="fixed inset-0 z-10" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
+                        <div className="fixed inset-0 z-[10000]" onClick={(e) => { e.stopPropagation(); setCommentMenuOpen(null); }} />
                         <div
-                          className="dropdown-menu fixed shadow-lg py-1 min-w-[100px] z-20 overflow-hidden"
+                          className="dropdown-menu fixed shadow-lg py-1 min-w-[100px] z-[10001] overflow-hidden"
                           style={{
                             ...(menuPosition.top !== undefined && { top: menuPosition.top }),
                             ...(menuPosition.bottom !== undefined && { bottom: menuPosition.bottom }),
