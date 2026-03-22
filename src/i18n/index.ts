@@ -28,5 +28,16 @@ i18n
     },
   });
 
+if (typeof document !== 'undefined') {
+  const syncDocumentLanguage = (lng: string) => {
+    if (lng === 'en' || lng === 'cs') {
+      document.documentElement.lang = lng;
+    }
+  };
+
+  syncDocumentLanguage(i18n.resolvedLanguage || i18n.language || 'en');
+  i18n.on('languageChanged', syncDocumentLanguage);
+}
+
 export { LANGUAGE_KEY };
 export default i18n;

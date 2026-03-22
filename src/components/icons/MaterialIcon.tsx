@@ -31,6 +31,7 @@ export function MaterialIcon({ name, className = '', size = 24, style }: Materia
     <span
       className={`material-symbols-sharp ${className}`}
       style={{ fontSize: size, ...style }}
+      translate="no"
     >
       {name}
     </span>

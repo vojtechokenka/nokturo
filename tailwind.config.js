@@ -104,7 +104,7 @@ export default {
           fg: '#94FFCD',
         },
         red: {
-          DEFAULT: '#6A0B0B',
+          DEFAULT: '#DC2626',
           fg: '#FFA3A3',
         },
         orange: {

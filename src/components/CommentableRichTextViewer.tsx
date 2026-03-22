@@ -597,16 +597,13 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
     const canRight = spaceRight >= popoverWidth + gap + padding;
     const canLeft = spaceLeft >= popoverWidth + gap + padding;
 
-    const candidates: { dir: 'below' | 'above' | 'right' | 'left'; space: number }[] = [];
-    if (canBelow) candidates.push({ dir: 'below', space: spaceBelow });
-    if (canAbove) candidates.push({ dir: 'above', space: spaceAbove });
-    if (canRight) candidates.push({ dir: 'right', space: spaceRight });
-    if (canLeft) candidates.push({ dir: 'left', space: spaceLeft });
-
-    // Pick direction with most space; fallback to below if none fit
-    const best = candidates.length > 0
-      ? candidates.reduce((a, b) => (a.space > b.space ? a : b))
-      : { dir: 'below' as const, space: 0 };
+    // Prefer showing above the highlight when possible, then fallback below, then sides.
+    const bestDir: 'below' | 'above' | 'right' | 'left' =
+      canAbove ? 'above'
+        : canBelow ? 'below'
+          : canRight ? 'right'
+            : canLeft ? 'left'
+              : 'below';
 
     let top: number | undefined;
     let bottom: number | undefined;
@@ -621,7 +618,7 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
       Math.min(window.innerHeight - popoverMinHeight - padding, centerY - popoverMinHeight / 2)
     );
 
-    switch (best.dir) {
+    switch (bestDir) {
       case 'below':
         top = anchorRect.bottom + gap;
         left = hCenter;

@@ -81,7 +81,7 @@ export function AppLayout() {
             </div>
           </div>
           {/* Frame – padding + window stay fixed, content scrolls inside window (no padding for Moodboard) */}
-          <div className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pt-0 px-0 pb-0 sm:pt-6 sm:px-6 sm:pb-6'}`}>
+          <div translate="no" className={`flex-1 min-h-0 overflow-hidden flex flex-col ${isBareLayout ? '' : 'pt-0 px-0 pb-0 sm:pt-6 sm:px-6 sm:pb-6'}`}>
             <ErrorBoundary>
               <Outlet />
             </ErrorBoundary>
