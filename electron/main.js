@@ -22,6 +22,8 @@ if (!app) {
 
 const MIME = { '.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.woff2': 'font/woff2' };
 
+const STATIC_PORT = 17458;
+
 function createStaticServer(distPath) {
   return new Promise((resolve, reject) => {
     const server = http.createServer((req, res) => {
@@ -39,9 +41,8 @@ function createStaticServer(distPath) {
         res.end(data);
       });
     });
-    server.listen(0, '127.0.0.1', () => {
-      const port = server.address().port;
-      resolve({ server, url: `http://127.0.0.1:${port}` });
+    server.listen(STATIC_PORT, '127.0.0.1', () => {
+      resolve({ server, url: `http://127.0.0.1:${STATIC_PORT}` });
     });
     server.on('error', reject);
   });
