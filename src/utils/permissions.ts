@@ -9,6 +9,7 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   '/settings/users': ['founder'],
   '/brand/strategy': ['founder', 'engineer', 'viewer', 'client', 'host'],
   '/brand/identity': ['founder', 'engineer', 'viewer', 'client', 'host'],
+  '/brand/compliance': ['founder', 'engineer', 'viewer', 'client', 'host'],
   '/prototyping/moodboard': ['founder', 'engineer', 'viewer', 'host'],
   '/prototyping/ideas': ['founder', 'engineer', 'viewer'],
   '/production/materials': ['founder', 'engineer', 'viewer'],

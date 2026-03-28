@@ -1,13 +1,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useBlocker } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
 import { hasFeaturePermission } from '../../utils/permissions';
 import { PageShell } from '../../components/PageShell';
 import { PageHeaderImage } from '../../components/PageHeaderImage';
-import { RichTextBlockEditor, type RichTextBlock } from '../../components/RichTextBlockEditor';
-import { RichTextBlockViewer, getDefaultTocItems } from '../../components/RichTextBlockViewer';
-import { PageStructurePanel } from '../../components/PageStructurePanel';
+import { PageElementEditor } from '../../components/PageElementEditor';
+import { PageElementViewer } from '../../components/PageElementViewer';
 import { ToastContainer, type ToastData } from '../../components/Toast';
 import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { EditIcon } from '../../components/icons/EditIcon';
@@ -15,24 +15,19 @@ import { SaveIcon } from '../../components/icons/SaveIcon';
 import { useIsMobile } from '../../hooks/useIsMobile';
 import { usePersistedEditMode } from '../../hooks/usePersistedEditMode';
 import { useImageLuminance } from '../../hooks/useImageLuminance';
+import { parseDocContent } from '../../utils/contentMigration';
+import type { PageElement } from '../../types/pageElement';
 
 const DEFAULT_TITLE = 'Strategie značky';
 
 interface DocContent {
-  blocks: RichTextBlock[];
+  elements: PageElement[];
   headerImage?: string | null;
 }
 
 function parseContent(raw: unknown): DocContent {
-  if (Array.isArray(raw)) return { blocks: raw, headerImage: null };
-  if (raw && typeof raw === 'object' && 'blocks' in raw) {
-    const obj = raw as Record<string, unknown>;
-    return {
-      blocks: Array.isArray(obj.blocks) ? obj.blocks as RichTextBlock[] : [],
-      headerImage: typeof obj.headerImage === 'string' ? obj.headerImage : null,
-    };
-  }
-  return { blocks: [], headerImage: null };
+  const parsed = parseDocContent(raw);
+  return { elements: parsed.elements, headerImage: parsed.headerImage };
 }
 
 export default function StrategyPage() {
@@ -42,7 +37,7 @@ export default function StrategyPage() {
   const isMobile = useIsMobile();
   const canUseEditMode = canEditBrand && !isMobile;
   const [docId, setDocId] = useState<string | null>(null);
-  const [blocks, setBlocks] = useState<RichTextBlock[]>([]);
+  const [elements, setElements] = useState<PageElement[]>([]);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -61,8 +56,8 @@ export default function StrategyPage() {
     ? 'bg-nokturo-900/85 text-white hover:bg-nokturo-900'
     : 'bg-white/85 text-nokturo-900 hover:bg-white';
 
-  const blocksRef = useRef(blocks);
-  blocksRef.current = blocks;
+  const elementsRef = useRef(elements);
+  elementsRef.current = elements;
   const docIdRef = useRef(docId);
   docIdRef.current = docId;
 
@@ -77,11 +72,11 @@ export default function StrategyPage() {
     if (!error && data) {
       setDocId(data.id);
       const parsed = parseContent(data.content);
-      setBlocks(parsed.blocks);
+      setElements(parsed.elements);
       setHeaderImage(parsed.headerImage ?? null);
     } else {
       setDocId(null);
-      setBlocks([]);
+      setElements([]);
       setHeaderImage(null);
     }
     setLoading(false);
@@ -91,14 +86,9 @@ export default function StrategyPage() {
     fetchContent();
   }, [fetchContent]);
 
-  useEffect(() => {
-    if (!canEditBrand && mode === 'edit') setMode('view');
-    if (isMobile && mode === 'edit') setMode('view');
-  }, [canEditBrand, isMobile, mode]);
-
   const handleSave = useCallback(async () => {
     setSaving(true);
-    const content: DocContent = { blocks, headerImage };
+    const content: DocContent = { elements, headerImage };
 
     if (docId) {
       const { error } = await supabase
@@ -108,9 +98,11 @@ export default function StrategyPage() {
       setSaving(false);
       if (error) {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
+        return false;
       } else {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
         exitEditMode();
+        return true;
       }
     } else {
       const { data, error } = await supabase
@@ -121,17 +113,37 @@ export default function StrategyPage() {
       setSaving(false);
       if (error) {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
+        return false;
       } else if (data) {
         setDocId(data.id);
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
         exitEditMode();
+        return true;
       }
+      return false;
     }
-  }, [docId, blocks, headerImage, t, exitEditMode]);
+  }, [docId, elements, headerImage, t, exitEditMode]);
+
+  const blocker = useBlocker(useCallback(() => mode === 'edit', [mode]));
+
+  useEffect(() => {
+    if (blocker.state !== 'blocked' || saving) return;
+    let cancelled = false;
+    const persistThenProceed = async () => {
+      const saved = await handleSave();
+      if (cancelled) return;
+      if (saved) blocker.proceed();
+      else blocker.reset();
+    };
+    void persistThenProceed();
+    return () => {
+      cancelled = true;
+    };
+  }, [blocker, handleSave, saving]);
 
   const handleHeaderImageChange = useCallback(async (url: string | null) => {
     setHeaderImage(url);
-    const content: DocContent = { blocks: blocksRef.current, headerImage: url };
+    const content: DocContent = { elements: elementsRef.current, headerImage: url };
     const id = docIdRef.current;
 
     if (id) {
@@ -192,7 +204,7 @@ export default function StrategyPage() {
       ) : (
         <>
           {(mode === 'edit' || headerImage) && (
-          <div className={`relative group ${mode === 'edit' || !headerImage ? 'min-w-0 w-full max-w-[860px] mx-auto mb-4 lg:pr-[288px]' : '-ml-4 -mt-6 w-[calc(100%+2rem)] mb-6 sm:-ml-9 sm:w-[calc(100%+4.5rem)] sm:box-border'}`}>
+          <div className={`relative group ${mode === 'edit' || !headerImage ? 'min-w-0 w-full max-w-[860px] mx-auto mb-4' : '-ml-4 -mt-6 w-[calc(100%+2rem)] mb-6 sm:-ml-9 sm:w-[calc(100%+4.5rem)] sm:box-border'}`}>
             <PageHeaderImage
               imageUrl={headerImage}
               onUpload={handleUploadImage}
@@ -213,58 +225,52 @@ export default function StrategyPage() {
           )}
           <div className={mode === 'view' ? 'max-w-[1124px] mx-auto' : 'relative'}>
             {mode === 'view' ? (
-              <RichTextBlockViewer
-                blocks={blocks}
-                tocTitle={t('pages.strategy.title')}
-                defaultTocItems={getDefaultTocItems(t)}
-                headingFont="headline"
-                h3Large
-                tocFooterSlot={canEditBrand && !headerImage && !isMobile ? (
-                  <button
-                    type="button"
-                    onClick={() => setMode('edit')}
-                    className="w-full flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm"
-                  >
-                    <EditIcon size={16} />
-                    {t('common.edit')}
-                  </button>
-                ) : undefined}
-              />
+              <>
+                <PageElementViewer
+                  elements={elements}
+                  tocTitle={t('pages.strategy.title')}
+                  headingFont="headline"
+                  tocFooterSlot={canEditBrand && !headerImage && !isMobile ? (
+                    <button
+                      type="button"
+                      onClick={() => setMode('edit')}
+                      className="w-full flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm"
+                    >
+                      <EditIcon size={16} />
+                      {t('common.edit')}
+                    </button>
+                  ) : undefined}
+                />
+                {canEditBrand && !isMobile && elements.length === 0 && (
+                  <div className="flex justify-center mt-2">
+                    <button
+                      type="button"
+                      onClick={() => setMode('edit')}
+                      className="flex items-center justify-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 shadow-sm"
+                    >
+                      <EditIcon size={16} />
+                      {t('common.edit')}
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <>
-              <div className="min-w-0 lg:pr-[288px] max-w-[860px] mx-auto">
-                <RichTextBlockEditor
-                  value={blocks}
-                  onChange={setBlocks}
+              <div className="min-w-0 max-w-[860px] mx-auto">
+                <PageElementEditor
+                  elements={elements}
+                  onChange={setElements}
                   onUploadImage={handleUploadImage}
                   onToast={addToast}
                   headingFont="headline"
-                  h3Large
                 />
               </div>
-              <PageStructurePanel
-                blocks={blocks}
-                onChange={setBlocks}
-                footerSlot={
-                  <button
-                    type="button"
-                    onClick={handleSave}
-                    disabled={saving}
-                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 disabled:opacity-60 shadow-sm"
-                  >
-                    {saving ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SaveIcon size={16} />}
-                    {t('common.save')}
-                  </button>
-                }
-                className="hidden lg:flex"
-              />
-              {/* Mobile: floating Save button (panel hidden) */}
-              <div className="fixed bottom-6 right-6 left-6 z-40 lg:hidden">
+              <div className="fixed bottom-9 right-9 z-40">
                 <button
                   type="button"
                   onClick={handleSave}
                   disabled={saving}
-                  className="w-full max-w-[240px] mx-auto flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-nokturo-800 dark:bg-white/10 text-white rounded-[6px] hover:bg-nokturo-900 dark:hover:bg-white/20 disabled:opacity-60 shadow-sm"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium bg-white text-nokturo-900 rounded-[6px] hover:bg-white/90 disabled:opacity-60 shadow-sm"
                 >
                   {saving ? <MaterialIcon name="progress_activity" size={16} className="animate-spin shrink-0" /> : <SaveIcon size={16} />}
                   {t('common.save')}

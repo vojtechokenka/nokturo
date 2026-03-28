@@ -31,6 +31,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { key: 'strategy', path: '/brand/strategy', icon: <AboutNokturoIcon size={20} className="shrink-0" />, labelKey: 'nav.strategy', rbacModule: 'brand.strategy' },
       { key: 'identity', path: '/brand/identity', icon: <IdentityIcon size={20} className="shrink-0" />, labelKey: 'nav.identity', rbacModule: 'brand.identity' },
+      { key: 'compliance', path: '/brand/compliance', icon: <ComplianceIcon size={20} className="shrink-0" />, labelKey: 'nav.compliance', rbacModule: 'brand.compliance' },
     ],
   },
   {
@@ -79,6 +80,7 @@ import { ComponentsIcon } from './icons/ComponentsIcon';
 import { MaterialsIcon } from './icons/MaterialsIcon';
 import { AboutNokturoIcon } from './icons/AboutNokturoIcon';
 import { IdentityIcon } from './icons/IdentityIcon';
+import { ComplianceIcon } from './icons/ComplianceIcon';
 import { MagazineIcon } from './icons/MagazineIcon';
 import { MenuIcon } from './icons/MenuIcon';
 

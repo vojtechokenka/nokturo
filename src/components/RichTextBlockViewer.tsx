@@ -103,7 +103,7 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
 
   if (showToc && effectiveTocItems.length > 0) {
     return (
-      <div className={`flex flex-col sm:flex-row gap-0 sm:gap-[80px] ${className}`}>
+      <div className={`flex flex-col sm:flex-row items-start gap-0 sm:gap-[80px] ${className}`}>
         <div className="min-w-0 flex-1 max-w-none sm:max-w-[860px]">
           {headerImageWrapper}
           {content}

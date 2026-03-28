@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useBlocker } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../../stores/authStore';
@@ -18,7 +17,7 @@ import { useImageLuminance } from '../../hooks/useImageLuminance';
 import { parseDocContent } from '../../utils/contentMigration';
 import type { PageElement } from '../../types/pageElement';
 
-const DOC_ID = '00000000-0000-0000-0000-000000000002';
+const DOC_ID = '00000000-0000-0000-0000-000000000003';
 
 interface DocContent {
   elements: PageElement[];
@@ -30,7 +29,7 @@ function parseContent(raw: unknown): DocContent {
   return { elements: parsed.elements, headerImage: parsed.headerImage };
 }
 
-export default function IdentityPage() {
+export default function CompliancePage() {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const canEditBrand = user?.role ? hasFeaturePermission('canEditBrand', user.role) : false;
@@ -46,7 +45,7 @@ export default function IdentityPage() {
     [],
   );
   const { mode, setMode, exitEditMode } = usePersistedEditMode({
-    storageKey: 'brand-identity-mode',
+    storageKey: 'brand-compliance-mode',
     canEdit: canUseEditMode,
     getScrollElement,
   });
@@ -61,7 +60,7 @@ export default function IdentityPage() {
   const fetchContent = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
-      .from('brand_identity_content')
+      .from('brand_compliance')
       .select('content')
       .eq('id', DOC_ID)
       .maybeSingle();
@@ -81,11 +80,16 @@ export default function IdentityPage() {
     fetchContent();
   }, [fetchContent]);
 
+  useEffect(() => {
+    if (!canEditBrand && mode === 'edit') setMode('view');
+    if (isMobile && mode === 'edit') setMode('view');
+  }, [canEditBrand, isMobile, mode, setMode]);
+
   const handleSave = useCallback(async () => {
     setSaving(true);
     const content: DocContent = { elements, headerImage };
     const { error } = await supabase
-      .from('brand_identity_content')
+      .from('brand_compliance')
       .upsert(
         {
           id: DOC_ID,
@@ -98,30 +102,11 @@ export default function IdentityPage() {
     setSaving(false);
     if (error) {
       setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
-      return false;
     } else {
       setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
       exitEditMode();
-      return true;
     }
   }, [elements, headerImage, t, exitEditMode]);
-
-  const blocker = useBlocker(useCallback(() => mode === 'edit', [mode]));
-
-  useEffect(() => {
-    if (blocker.state !== 'blocked' || saving) return;
-    let cancelled = false;
-    const persistThenProceed = async () => {
-      const saved = await handleSave();
-      if (cancelled) return;
-      if (saved) blocker.proceed();
-      else blocker.reset();
-    };
-    void persistThenProceed();
-    return () => {
-      cancelled = true;
-    };
-  }, [blocker, handleSave, saving]);
 
   const addToast = useCallback((toast: ToastData) => {
     setToasts((prev) => [...prev, { ...toast, id: toast.id || crypto.randomUUID() }]);
@@ -131,7 +116,7 @@ export default function IdentityPage() {
     setHeaderImage(url);
     const content: DocContent = { elements: elementsRef.current, headerImage: url };
     const { error } = await supabase
-      .from('brand_identity_content')
+      .from('brand_compliance')
       .upsert(
         {
           id: DOC_ID,
@@ -149,7 +134,7 @@ export default function IdentityPage() {
   const handleUploadImage = useCallback(async (file: File): Promise<string> => {
     const ext = file.name.split('.').pop() || 'png';
     const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const filePath = `brand-identity/${fileName}`;
+    const filePath = `brand-compliance/${fileName}`;
 
     const arrayBuffer = await file.arrayBuffer();
     const contentType = file.type || 'image/png';
@@ -166,8 +151,8 @@ export default function IdentityPage() {
 
   return (
     <PageShell
-      titleKey="pages.identity.title"
-      descriptionKey="pages.identity.description"
+      titleKey="pages.compliance.title"
+      descriptionKey="pages.compliance.description"
       actionsSlot={undefined}
     >
       <ToastContainer toasts={toasts} onClose={removeToast} position="left" />
@@ -202,7 +187,7 @@ export default function IdentityPage() {
             <>
               <PageElementViewer
                 elements={elements}
-                tocTitle={t('pages.identity.title')}
+                tocTitle={t('pages.compliance.title')}
                 headingFont="body"
                 tocFooterSlot={canEditBrand && !headerImage && !isMobile ? (
                   <button

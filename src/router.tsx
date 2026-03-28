@@ -19,6 +19,7 @@ import StyleGuidePage from './pages/settings/StyleGuideV2Page';
 // Brand
 import StrategyPage from './pages/brand/StrategyPage';
 import IdentityPage from './pages/brand/IdentityPage';
+import CompliancePage from './pages/brand/CompliancePage';
 
 // Prototyping
 import MoodboardPage from './pages/prototyping/MoodboardPage';
@@ -70,6 +71,7 @@ const routes = [
           // Brand
           { path: 'brand/strategy', element: <StrategyPage /> },
           { path: 'brand/identity', element: <IdentityPage /> },
+          { path: 'brand/compliance', element: <CompliancePage /> },
 
           // Prototyping
           { path: 'prototyping/moodboard', element: <MoodboardPage /> },

@@ -6,8 +6,8 @@ import { useState, useCallback, useRef, useEffect, forwardRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { MaterialIcon } from './icons/MaterialIcon';
+import { NokturoIcon } from './icons/NokturoIcon';
 import { DeleteIcon } from './icons/DeleteIcon';
-import { DuplicateIcon } from './icons/DuplicateIcon';
 import type { ToastData } from './Toast';
 import { INPUT_CLASS } from '../lib/inputStyles';
 import { useDropdownPosition } from '../hooks/useDropdownPosition';
@@ -55,6 +55,41 @@ export type RichTextBlock =
 
 function generateId() {
   return `block_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function stripHtml(html: string): string {
+  return (html || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .trim();
+}
+
+function blockToText(block: RichTextBlock): string {
+  switch (block.type) {
+    case 'heading':
+      return block.text ?? '';
+    case 'paragraph':
+      return stripHtml(block.content ?? '');
+    case 'quote':
+      return block.text ?? '';
+    case 'list':
+      return (block.items ?? []).map((item) => stripHtml(item)).join('\n').trim();
+    case 'link':
+      return (block.text || block.url || '').trim();
+    case 'tag':
+      return block.text ?? '';
+    default:
+      return '';
+  }
+}
+
+function textToHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/\n/g, '<br>');
 }
 
 function duplicateBlockData(block: RichTextBlock): RichTextBlock {
@@ -376,51 +411,6 @@ function GridCell({
   );
 }
 
-// ── Inline formatting bar (for paragraph) ────────────────────────
-function FormattingBar({
-  onBold,
-  onItalic,
-  onLink,
-  isBold,
-  isItalic,
-}: {
-  onBold: () => void;
-  onItalic: () => void;
-  onLink: () => void;
-  isBold: boolean;
-  isItalic: boolean;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-center gap-0.5 p-0.5 text-nokturo-700 dark:text-nokturo-300">
-      <button
-        type="button"
-        onClick={onBold}
-        className={`h-6 w-6 rounded-[16px] flex items-center justify-center hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isBold ? 'bg-nokturo-200 dark:bg-nokturo-600' : 'opacity-80 hover:opacity-100'}`}
-        title={t('richText.bold')}
-      >
-        <MaterialIcon name="format_bold" size={14} className="shrink-0" />
-      </button>
-      <button
-        type="button"
-        onClick={onItalic}
-        className={`h-6 w-6 rounded-[16px] flex items-center justify-center hover:bg-nokturo-200 dark:hover:bg-nokturo-600 ${isItalic ? 'bg-nokturo-200 dark:bg-nokturo-600' : 'opacity-80 hover:opacity-100'}`}
-        title={t('richText.italic')}
-      >
-        <MaterialIcon name="format_italic" size={14} className="shrink-0" />
-      </button>
-      <button
-        type="button"
-        onClick={onLink}
-        className="h-6 w-6 rounded-[16px] flex items-center justify-center opacity-80 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600"
-        title={t('richText.link')}
-      >
-        <MaterialIcon name="link" size={14} className="shrink-0" />
-      </button>
-    </div>
-  );
-}
-
 // ── Block menu icons (custom SVGs) ───────────────────────────────
 const AddBlockIcons = {
   heading: <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24"><path fill="currentColor" d="M7 20V7H2V4h13v3h-5v13zm9 0v-8h-3V9h9v3h-3v8z"/></svg>,
@@ -436,110 +426,141 @@ const AddBlockIcons = {
   divider: <MaterialIcon name="remove" size={16} className="shrink-0" />,
 };
 
-// ── Block menu (add block) ──────────────────────────────────────
-function AddBlockMenu({
-  onAdd,
-  onClose,
+function ToolbarIconButton({
+  icon,
+  title,
+  active = false,
+  onClick,
 }: {
-  onAdd: (block: RichTextBlock) => void;
-  onClose: () => void;
+  icon: React.ReactNode;
+  title: string;
+  active?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`h-8 w-8 rounded-[10px] flex items-center justify-center transition-colors ${
+        active
+          ? 'bg-nokturo-900 text-white dark:bg-white dark:text-nokturo-900'
+          : 'text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-200/70 dark:hover:bg-nokturo-700/70'
+      }`}
+      title={title}
+    >
+      {icon}
+    </button>
+  );
+}
+
+// ── Floating bottom toolbar ──────────────────────────────────────
+function FloatingToolbar({
+  onBold,
+  onItalic,
+  onH1,
+  onH2,
+  onH3,
+  onParagraph,
+  onQuote,
+  onBulletList,
+  onNumberedList,
+  onTag,
+  onImage,
+  onGallery,
+  onImageGrid,
+  onGrid,
+  onLink,
+  onDivider,
+  onSizeSmall,
+  onSizeNormal,
+  onSizeLarge,
+  onAlignLeft,
+  onAlignCenter,
+  onAlignRight,
+  isBold,
+  isItalic,
+  activeType,
+  activeHeadingLevel,
+  activeListStyle,
+  activeParagraphSize,
+  activeParagraphAlign,
+}: {
+  onBold: () => void;
+  onItalic: () => void;
+  onH1: () => void;
+  onH2: () => void;
+  onH3: () => void;
+  onParagraph: () => void;
+  onQuote: () => void;
+  onBulletList: () => void;
+  onNumberedList: () => void;
+  onTag: () => void;
+  onImage: () => void;
+  onGallery: () => void;
+  onImageGrid: () => void;
+  onGrid: () => void;
+  onLink: () => void;
+  onDivider: () => void;
+  onSizeSmall: () => void;
+  onSizeNormal: () => void;
+  onSizeLarge: () => void;
+  onAlignLeft: () => void;
+  onAlignCenter: () => void;
+  onAlignRight: () => void;
+  isBold: boolean;
+  isItalic: boolean;
+  activeType: RichTextBlock['type'] | null;
+  activeHeadingLevel?: HeadingLevel | null;
+  activeListStyle?: 'bullet' | 'numbered' | null;
+  activeParagraphSize?: ParagraphSize;
+  activeParagraphAlign?: ParagraphAlign;
 }) {
   const { t } = useTranslation();
-  const options: { icon: React.ReactNode; labelKey: string; block: RichTextBlock }[] = [
-    {
-      icon: AddBlockIcons.heading,
-      labelKey: 'richText.heading',
-      block: { id: generateId(), type: 'heading', level: 1, text: '' },
-    },
-    {
-      icon: AddBlockIcons.paragraph,
-      labelKey: 'richText.paragraph',
-      block: { id: generateId(), type: 'paragraph', size: 'normal', content: '' },
-    },
-    {
-      icon: AddBlockIcons.tag,
-      labelKey: 'richText.tag',
-      block: { id: generateId(), type: 'tag', text: '', visible: true },
-    },
-    {
-      icon: AddBlockIcons.quote,
-      labelKey: 'richText.quote',
-      block: { id: generateId(), type: 'quote', text: '' },
-    },
-    {
-      icon: AddBlockIcons.bulletList,
-      labelKey: 'richText.bulletList',
-      block: { id: generateId(), type: 'list', style: 'bullet', items: [''] },
-    },
-    {
-      icon: AddBlockIcons.image,
-      labelKey: 'richText.image',
-      block: { id: generateId(), type: 'image', url: '', fit: 'fill' },
-    },
-    {
-      icon: AddBlockIcons.gallery,
-      labelKey: 'richText.gallery',
-      block: {
-        id: generateId(),
-        type: 'gallery',
-        columns: 3,
-        images: [],
-      },
-    },
-    {
-      icon: AddBlockIcons.imageGrid,
-      labelKey: 'richText.imageGrid',
-      block: {
-        id: generateId(),
-        type: 'imageGrid',
-        columns: 3,
-        gapRow: 8,
-        gapCol: 8,
-        aspectRatio: '1:1',
-        images: [],
-      },
-    },
-    {
-      icon: AddBlockIcons.grid,
-      labelKey: 'richText.grid',
-      block: {
-        id: generateId(),
-        type: 'grid',
-        columns: 1,
-        rows: 1,
-        headerRowCount: 0,
-        headerColumnCount: 0,
-        cells: [{ type: 'text' as const, content: '' }],
-      },
-    },
-    {
-      icon: AddBlockIcons.link,
-      labelKey: 'richText.link',
-      block: { id: generateId(), type: 'link', url: '', text: '' },
-    },
-    {
-      icon: AddBlockIcons.divider,
-      labelKey: 'richText.divider',
-      block: { id: generateId(), type: 'divider' },
-    },
-  ];
-
   return (
-    <div className="mt-1 w-52 p-1 rounded-[16px] bg-white/95 dark:bg-nokturo-800/95 backdrop-blur-sm shadow-lg">
-      {options.map((opt) => (
-        <button
-          key={opt.block.type}
-          type="button"
-          onClick={() => {
-            onAdd(opt.block);
-            onClose();
-          }}
-          className="flex items-center gap-3 w-full p-1 text-left text-sm text-nokturo-700 dark:text-nokturo-300 hover:bg-nokturo-50 dark:hover:bg-nokturo-700 rounded transition-colors"
-        >
-          <span className="text-nokturo-500 dark:text-nokturo-400">{opt.icon}</span>
-          {t(opt.labelKey)}
-        </button>
-      ))}
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[65] px-2 py-1.5 rounded-2xl bg-nokturo-200/90 dark:bg-nokturo-700/90 shadow-xl backdrop-blur-sm">
+      <div className="flex items-center gap-1 flex-wrap justify-center">
+        <span className="px-1 text-nokturo-700 dark:text-nokturo-200">
+          <NokturoIcon size={8} />
+        </span>
+        <div className="w-px h-5 bg-nokturo-400/30 dark:bg-nokturo-400/20 mx-0.5" />
+
+        <ToolbarIconButton icon={<MaterialIcon name="format_bold" size={16} className="shrink-0" />} title={t('richText.bold')} active={isBold} onClick={onBold} />
+        <ToolbarIconButton icon={<MaterialIcon name="format_italic" size={16} className="shrink-0" />} title={t('richText.italic')} active={isItalic} onClick={onItalic} />
+        <ToolbarIconButton icon={AddBlockIcons.link} title={t('richText.link')} onClick={onLink} />
+        <div className="w-px h-5 bg-nokturo-400/30 dark:bg-nokturo-400/20 mx-0.5" />
+
+        <ToolbarIconButton icon={<span className="text-[11px] font-semibold">H1</span>} title="H1" active={activeType === 'heading' && activeHeadingLevel === 1} onClick={onH1} />
+        <ToolbarIconButton icon={<span className="text-[11px] font-semibold">H2</span>} title="H2" active={activeType === 'heading' && activeHeadingLevel === 2} onClick={onH2} />
+        <ToolbarIconButton icon={<span className="text-[11px] font-semibold">H3</span>} title="H3" active={activeType === 'heading' && activeHeadingLevel === 3} onClick={onH3} />
+        <ToolbarIconButton icon={AddBlockIcons.paragraph} title={t('richText.paragraph')} active={activeType === 'paragraph'} onClick={onParagraph} />
+        <ToolbarIconButton icon={AddBlockIcons.quote} title={t('richText.quote')} active={activeType === 'quote'} onClick={onQuote} />
+        <div className="w-px h-5 bg-nokturo-400/30 dark:bg-nokturo-400/20 mx-0.5" />
+
+        <ToolbarIconButton icon={<MaterialIcon name="format_list_bulleted" size={16} className="shrink-0" />} title={t('richText.bulletList')} active={activeType === 'list' && activeListStyle === 'bullet'} onClick={onBulletList} />
+        <ToolbarIconButton icon={<MaterialIcon name="format_list_numbered" size={16} className="shrink-0" />} title={t('richText.numberedList')} active={activeType === 'list' && activeListStyle === 'numbered'} onClick={onNumberedList} />
+        <div className="w-px h-5 bg-nokturo-400/30 dark:bg-nokturo-400/20 mx-0.5" />
+
+        <ToolbarIconButton icon={AddBlockIcons.tag} title={t('richText.tag')} active={activeType === 'tag'} onClick={onTag} />
+
+        {activeType === 'paragraph' && (
+          <>
+            <div className="w-px h-5 bg-nokturo-400/30 dark:bg-nokturo-400/20 mx-0.5" />
+            <ToolbarIconButton icon={<span className="text-[11px] font-semibold">S</span>} title="Small paragraph" active={activeParagraphSize === 'small'} onClick={onSizeSmall} />
+            <ToolbarIconButton icon={<span className="text-[11px] font-semibold">M</span>} title="Normal paragraph" active={activeParagraphSize === 'normal'} onClick={onSizeNormal} />
+            <ToolbarIconButton icon={<span className="text-[11px] font-semibold">L</span>} title="Large paragraph" active={activeParagraphSize === 'large'} onClick={onSizeLarge} />
+            <ToolbarIconButton icon={<MaterialIcon name="format_align_left" size={16} className="shrink-0" />} title={t('richText.alignLeft')} active={(activeParagraphAlign ?? 'left') === 'left'} onClick={onAlignLeft} />
+            <ToolbarIconButton icon={<MaterialIcon name="format_align_center" size={16} className="shrink-0" />} title={t('richText.alignCenter')} active={activeParagraphAlign === 'center'} onClick={onAlignCenter} />
+            <ToolbarIconButton icon={<MaterialIcon name="format_align_right" size={16} className="shrink-0" />} title={t('richText.alignRight')} active={activeParagraphAlign === 'right'} onClick={onAlignRight} />
+          </>
+        )}
+
+        <div className="w-px h-5 bg-nokturo-400/30 dark:bg-nokturo-400/20 mx-0.5" />
+        <ToolbarIconButton icon={AddBlockIcons.image} title={t('richText.image')} onClick={onImage} />
+        <ToolbarIconButton icon={AddBlockIcons.gallery} title={t('richText.gallery')} onClick={onGallery} />
+        <ToolbarIconButton icon={AddBlockIcons.imageGrid} title={t('richText.imageGrid')} onClick={onImageGrid} />
+        <ToolbarIconButton icon={AddBlockIcons.grid} title={t('richText.grid')} onClick={onGrid} />
+        <ToolbarIconButton icon={AddBlockIcons.divider} title={t('richText.divider')} onClick={onDivider} />
+      </div>
     </div>
   );
 }
@@ -670,14 +691,7 @@ function AutoResizeHeadingTextarea({
 }
 
 // ── Block actions dropdown (Delete / Duplicate) ───────────────────
-function BlockActionsDropdown({
-  block,
-  index,
-  onRemove,
-  onDuplicate,
-  t,
-  dropdownZIndex,
-}: {
+function BlockActionsDropdown(props: {
   block: RichTextBlock;
   index: number;
   onRemove: (id: string) => void;
@@ -685,130 +699,8 @@ function BlockActionsDropdown({
   t: (k: string) => string;
   dropdownZIndex?: number;
 }) {
-  const [open, setOpen] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const position = useDropdownPosition({
-    open,
-    triggerRef,
-    alignRight: true,
-    minWidth: 120,
-    desiredHeight: 120,
-    offset: 4,
-  });
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      const target = e.target as Node;
-      const inTrigger = triggerRef.current?.contains(target);
-      const inDropdown = dropdownRef.current?.contains(target);
-      if (!inTrigger && !inDropdown) {
-        setOpen(false);
-      }
-    };
-    if (open) {
-      document.addEventListener('mousedown', handleClick);
-      return () => document.removeEventListener('mousedown', handleClick);
-    }
-  }, [open]);
-
-  useEffect(() => {
-    if (!showDeleteConfirm) return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setShowDeleteConfirm(false);
-    };
-    document.addEventListener('keydown', handleEsc);
-    return () => document.removeEventListener('keydown', handleEsc);
-  }, [showDeleteConfirm]);
-
-  return (
-    <div ref={containerRef} className="relative ml-auto shrink-0">
-      <button
-        ref={triggerRef}
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="h-6 w-6 rounded-[16px] flex items-center justify-center text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-700 dark:hover:text-nokturo-300 opacity-50 group-hover:opacity-100 transition-opacity"
-        title={t('richText.blockActions')}
-      >
-        <MaterialIcon name="more_vert" size={16} className="shrink-0" />
-      </button>
-      {open && position && createPortal(
-        <div
-          ref={dropdownRef}
-          className="dropdown-menu fixed shadow-lg min-w-[120px]"
-          style={{
-            ...(position.top !== undefined && { top: position.top }),
-            ...(position.bottom !== undefined && { bottom: position.bottom }),
-            left: position.left,
-            maxHeight: position.maxHeight,
-            maxWidth: position.maxWidth,
-            zIndex: dropdownZIndex ?? 50,
-          }}
-        >
-          <button
-            type="button"
-            onClick={() => {
-              onDuplicate(block, index + 1);
-              setOpen(false);
-            }}
-            className="w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-nokturo-50 dark:hover:bg-nokturo-600 flex items-center gap-2"
-          >
-            <DuplicateIcon size={14} className="shrink-0" />
-            {t('common.duplicate')}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setOpen(false);
-              setShowDeleteConfirm(true);
-            }}
-            className="dropdown-menu-item-destructive w-full px-3 py-2 text-left text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg flex items-center gap-2"
-          >
-            <DeleteIcon size={14} className="shrink-0" />
-            {t('common.delete')}
-          </button>
-        </div>,
-        document.body
-      )}
-      {showDeleteConfirm && (
-        <div
-          className="fixed inset-0 flex items-center justify-center bg-overlay backdrop-blur-sm"
-          style={{ zIndex: (dropdownZIndex ?? 50) + 10 }}
-          onClick={() => setShowDeleteConfirm(false)}
-        >
-          <div
-            className="bg-white dark:bg-nokturo-800 rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl text-nokturo-900 dark:text-nokturo-100"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="text-nokturo-600 dark:text-nokturo-400 text-sm mb-4">
-              {t('richText.deleteBlockConfirm')}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-sm text-nokturo-600 dark:text-nokturo-400 hover:text-nokturo-800 dark:hover:text-nokturo-200 transition-colors"
-              >
-                {t('common.cancel')}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  onRemove(block.id);
-                  setShowDeleteConfirm(false);
-                }}
-                className="dropdown-menu-item-destructive px-4 py-2 text-sm text-nokturo-700 dark:text-nokturo-200 hover:bg-red hover:text-red-fg rounded-lg transition-colors"
-              >
-                {t('common.delete')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  void props;
+  return null;
 }
 
 // ── Single block renderer ────────────────────────────────────────
@@ -824,6 +716,7 @@ function BlockRenderer({
   headingFont,
   h3Large = false,
   dropdownZIndex,
+  onFocusBlock,
 }: {
   block: RichTextBlock;
   index: number;
@@ -836,53 +729,26 @@ function BlockRenderer({
   headingFont?: HeadingFontFamily;
   h3Large?: boolean;
   dropdownZIndex?: number;
+  onFocusBlock?: (id: string) => void;
 }) {
   const { t } = useTranslation();
   const paraRef = useRef<HTMLDivElement>(null);
   const [gridHoveredRow, setGridHoveredRow] = useState<number | null>(null);
   const [gridHoveredCol, setGridHoveredCol] = useState<number | null>(null);
-  const [gridFocusedCell, setGridFocusedCell] = useState<number | null>(null);
+  const [, setGridFocusedCell] = useState<number | null>(null);
   const [focusListItemIndex, setFocusListItemIndex] = useState<number | null>(null);
-
-  const execFormat = (cmd: string, value?: string) => {
-    document.execCommand(cmd, false, value);
-    paraRef.current?.focus();
-  };
-
-  const handleLink = () => {
-    const url = prompt(t('richText.enterUrl'));
-    if (url) execFormat('createLink', url);
-  };
   const blockActionsProps = { block, index, onRemove, onDuplicate, t, dropdownZIndex };
 
   return (
-    <div data-block-id={block.id} className="group flex gap-2 items-start transition-opacity">
+    <div
+      data-block-id={block.id}
+      className="group flex gap-2 items-start transition-opacity"
+      onFocusCapture={() => onFocusBlock?.(block.id)}
+      onMouseDownCapture={() => onFocusBlock?.(block.id)}
+    >
       <div className="flex-1 min-w-0">
         {block.type === 'heading' && (
           <div className="mb-4">
-            <div className="flex items-center gap-1 mb-2">
-              {([1, 2, 3] as const).map((lvl) => (
-                <button
-                  key={lvl}
-                  type="button"
-                  onClick={() => {
-                    if (block.level === lvl) {
-                      onUpdate(block.id, { type: 'paragraph', size: 'normal', content: block.text });
-                    } else {
-                      onUpdate(block.id, { level: lvl });
-                    }
-                  }}
-                  className={`h-6 px-2 rounded-[16px] text-[12px] font-medium flex items-center ${
-                    block.level === lvl
-                      ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                  }`}
-                >
-                  H{lvl}
-                </button>
-              ))}
-              <BlockActionsDropdown {...blockActionsProps} />
-            </div>
             {(() => {
               const isHeadline = headingFont !== 'body';
               const hf = isHeadline ? 'font-headline' : 'font-body';
@@ -917,49 +783,6 @@ function BlockRenderer({
 
         {block.type === 'paragraph' && (
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              <FormattingBar
-              onBold={() => execFormat('bold')}
-              onItalic={() => execFormat('italic')}
-              onLink={handleLink}
-              isBold={document.queryCommandState?.('bold') ?? false}
-              isItalic={document.queryCommandState?.('italic') ?? false}
-              />
-              <div className="flex gap-1">
-                {(['small', 'normal', 'large'] as const).map((sz) => (
-                  <button
-                    key={sz}
-                    type="button"
-                    onClick={() => onUpdate(block.id, { size: sz })}
-                    className={`h-6 px-2 rounded-[16px] text-xs font-medium flex items-center ${
-                      block.size === sz
-                        ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                    }`}
-                  >
-                    {sz === 'small' ? 'S' : sz === 'normal' ? 'M' : 'L'}
-                  </button>
-                ))}
-              </div>
-              <div className="flex gap-1">
-                {(['left', 'center', 'right'] as const).map((al) => (
-                  <button
-                    key={al}
-                    type="button"
-                    onClick={() => onUpdate(block.id, { align: al })}
-                    className={`h-6 px-1.5 rounded-[16px] flex items-center justify-center ${
-                      (block.align ?? 'left') === al
-                        ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                        : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                    }`}
-                    title={t(`richText.align${al === 'left' ? 'Left' : al === 'center' ? 'Center' : 'Right'}`)}
-                  >
-                    {al === 'left' ? <MaterialIcon name="format_align_left" size={14} className="shrink-0" /> : al === 'center' ? <MaterialIcon name="format_align_center" size={14} className="shrink-0" /> : <MaterialIcon name="format_align_right" size={14} className="shrink-0" />}
-                  </button>
-                ))}
-              </div>
-              <BlockActionsDropdown {...blockActionsProps} />
-            </div>
             <div className={(block.align ?? 'left') === 'center' ? 'text-center' : (block.align ?? 'left') === 'right' ? 'text-right' : 'text-left'}>
               <EditableParagraph
                 ref={paraRef}
@@ -973,9 +796,6 @@ function BlockRenderer({
 
         {block.type === 'quote' && (
           <blockquote className="font-headline italic text-rta-quote text-nokturo-700 dark:text-nokturo-300 mb-4 pl-4">
-            <div className="flex justify-end mb-1">
-              <BlockActionsDropdown {...blockActionsProps} />
-            </div>
             <textarea
               value={block.text}
               onChange={(e) => onUpdate(block.id, { text: e.target.value })}
@@ -988,23 +808,6 @@ function BlockRenderer({
 
         {block.type === 'list' && (
           <div className="mb-4">
-            <div className="flex items-center gap-2 mb-2">
-              {(['bullet', 'numbered'] as const).map((st) => (
-                <button
-                  key={st}
-                  type="button"
-                  onClick={() => onUpdate(block.id, { style: st })}
-                  className={`px-2 py-1 rounded text-sm ${
-                    block.style === st
-                      ? 'bg-nokturo-200 dark:bg-nokturo-600 text-nokturo-900 dark:text-nokturo-100'
-                      : 'bg-nokturo-100 dark:bg-nokturo-700 text-nokturo-500 dark:text-nokturo-500 opacity-85 hover:opacity-100 hover:bg-nokturo-200 dark:hover:bg-nokturo-600'
-                  }`}
-                >
-                  {st === 'bullet' ? t('richText.bulletList') : t('richText.numberedList')}
-                </button>
-              ))}
-              <BlockActionsDropdown {...blockActionsProps} />
-            </div>
             <div className="space-y-1 pl-2">
               {(block.items?.length ? block.items : ['']).map((item, i) => (
                 <div key={i} className="flex items-start gap-2 group/list-item">
@@ -1467,18 +1270,6 @@ function BlockRenderer({
           <div className="mb-4">
             {/* Header toggles — always visible */}
             <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-              {gridFocusedCell !== null && (
-                <>
-                  <FormattingBar
-                    onBold={() => execFormat('bold')}
-                    onItalic={() => execFormat('italic')}
-                    onLink={handleLink}
-                    isBold={document.queryCommandState?.('bold') ?? false}
-                    isItalic={document.queryCommandState?.('italic') ?? false}
-                  />
-                  <div className="h-4 w-px bg-nokturo-200 dark:bg-nokturo-600" />
-                </>
-              )}
               <button
                 type="button"
                 onClick={headerRowCount === 0 ? addHeaderRow : removeHeaderRow}
@@ -1820,7 +1611,10 @@ export function RichTextBlockEditor({
   dropdownZIndex,
 }: RichTextBlockEditorProps) {
   const { t } = useTranslation();
-  const [addMenuAtIndex, setAddMenuAtIndex] = useState<number | null>(null);
+  const editorRootRef = useRef<HTMLDivElement>(null);
+  const [focusedBlockId, setFocusedBlockId] = useState<string | null>(null);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
   const blocks = value?.length ? value : [];
   const lastDuplicatedBlockIdRef = useRef<string | null>(null);
 
@@ -1865,16 +1659,92 @@ export function RichTextBlockEditor({
     [addBlock],
   );
 
-  const handleAddBlock = (idx: number) => {
-    setAddMenuAtIndex((prev) => (prev === idx ? null : idx));
-  };
+  const focusBlockInput = useCallback((id: string) => {
+    window.setTimeout(() => {
+      const root = editorRootRef.current;
+      if (!root) return;
+      const blockEl = root.querySelector(`[data-block-id="${id}"]`) as HTMLElement | null;
+      if (!blockEl) return;
+      const target = blockEl.querySelector('[contenteditable="true"], textarea, input') as HTMLElement | null;
+      target?.focus();
+    }, 0);
+  }, []);
 
-  const handleAddFromMenu = (block: RichTextBlock) => {
-    if (addMenuAtIndex !== null) {
-      addBlock(block, addMenuAtIndex);
-      setAddMenuAtIndex(null);
+  const focusedIndex = focusedBlockId ? blocks.findIndex((b) => b.id === focusedBlockId) : -1;
+  const focusedBlock = focusedIndex >= 0 ? blocks[focusedIndex] : null;
+  const activeType = focusedBlock?.type ?? null;
+  const activeHeadingLevel = focusedBlock?.type === 'heading' ? focusedBlock.level : null;
+  const activeListStyle = focusedBlock?.type === 'list' ? focusedBlock.style : null;
+  const activeParagraphSize = focusedBlock?.type === 'paragraph' ? focusedBlock.size : 'normal';
+  const activeParagraphAlign = focusedBlock?.type === 'paragraph' ? (focusedBlock.align ?? 'left') : 'left';
+
+  const createInsertedBlock = useCallback((kind: 'image' | 'gallery' | 'imageGrid' | 'grid' | 'link' | 'divider' | 'tag') => {
+    if (kind === 'image') return { id: generateId(), type: 'image', url: '', fit: 'fill' } as RichTextBlock;
+    if (kind === 'gallery') return { id: generateId(), type: 'gallery', columns: 3, images: [] } as RichTextBlock;
+    if (kind === 'imageGrid') return { id: generateId(), type: 'imageGrid', columns: 3, gapRow: 8, gapCol: 8, aspectRatio: '1:1', images: [] } as RichTextBlock;
+    if (kind === 'grid') return { id: generateId(), type: 'grid', columns: 1, rows: 1, headerRowCount: 0, headerColumnCount: 0, cells: [{ type: 'text', content: '' }] } as RichTextBlock;
+    if (kind === 'link') return { id: generateId(), type: 'link', url: '', text: '' } as RichTextBlock;
+    if (kind === 'tag') return { id: generateId(), type: 'tag', text: '', visible: true } as RichTextBlock;
+    return { id: generateId(), type: 'divider' } as RichTextBlock;
+  }, []);
+
+  const insertAfterFocused = useCallback((block: RichTextBlock) => {
+    const idx = focusedIndex >= 0 ? focusedIndex + 1 : blocks.length;
+    addBlock(block, idx);
+    setFocusedBlockId(block.id);
+    focusBlockInput(block.id);
+  }, [focusedIndex, blocks.length, addBlock, focusBlockInput]);
+
+  const convertFocusedBlock = useCallback((targetType: 'heading1' | 'heading2' | 'heading3' | 'paragraph' | 'quote' | 'bullet' | 'numbered' | 'tag') => {
+    if (!focusedBlock) return;
+    const text = blockToText(focusedBlock);
+    if (targetType === 'heading1') {
+      updateBlock(focusedBlock.id, { type: 'heading', level: 1, text });
+      return;
     }
-  };
+    if (targetType === 'heading2') {
+      updateBlock(focusedBlock.id, { type: 'heading', level: 2, text });
+      return;
+    }
+    if (targetType === 'heading3') {
+      updateBlock(focusedBlock.id, { type: 'heading', level: 3, text });
+      return;
+    }
+    if (targetType === 'paragraph') {
+      const html = focusedBlock.type === 'paragraph' ? focusedBlock.content : textToHtml(text);
+      updateBlock(focusedBlock.id, { type: 'paragraph', size: 'normal', content: html, align: 'left' });
+      return;
+    }
+    if (targetType === 'quote') {
+      updateBlock(focusedBlock.id, { type: 'quote', text });
+      return;
+    }
+    if (targetType === 'tag') {
+      updateBlock(focusedBlock.id, { type: 'tag', text, visible: true });
+      return;
+    }
+    const lines = (text || '').split('\n').map((line) => line.trim()).filter(Boolean);
+    updateBlock(focusedBlock.id, {
+      type: 'list',
+      style: targetType === 'numbered' ? 'numbered' : 'bullet',
+      items: lines.length ? lines : [''],
+    });
+  }, [focusedBlock, updateBlock]);
+
+  const runInlineCommand = useCallback((cmd: string, value?: string) => {
+    document.execCommand(cmd, false, value);
+  }, []);
+
+  const refreshFormattingState = useCallback(() => {
+    const activeEl = document.activeElement;
+    if (!activeEl || !editorRootRef.current?.contains(activeEl)) {
+      setIsBold(false);
+      setIsItalic(false);
+      return;
+    }
+    setIsBold(document.queryCommandState?.('bold') ?? false);
+    setIsItalic(document.queryCommandState?.('italic') ?? false);
+  }, []);
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -1907,9 +1777,60 @@ export function RichTextBlockEditor({
         e.preventDefault();
         e.stopPropagation();
         duplicateBlock(block, index + 1, true);
+        return;
+      }
+
+      if (e.key === 'Enter' && !e.shiftKey && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const blockEl = target.closest('[data-block-id]');
+        const blockId = blockEl?.getAttribute('data-block-id');
+        if (!blockId) return;
+        const block = blocks.find((b) => b.id === blockId);
+        if (!block || !['heading', 'paragraph', 'quote'].includes(block.type)) return;
+        const index = blocks.findIndex((b) => b.id === blockId);
+        if (index === -1) return;
+
+        let atEnd = false;
+        if (target instanceof HTMLTextAreaElement) {
+          atEnd = target.selectionStart === target.value.length && target.selectionEnd === target.value.length;
+        } else if (target instanceof HTMLElement && target.isContentEditable) {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0 && sel.isCollapsed) {
+            const range = sel.getRangeAt(0).cloneRange();
+            range.selectNodeContents(target);
+            range.setEnd(sel.anchorNode as Node, sel.anchorOffset);
+            atEnd = range.toString().length === target.innerText.length;
+          }
+        }
+        if (!atEnd) return;
+
+        e.preventDefault();
+        const newBlock: RichTextBlock = { id: generateId(), type: 'paragraph', size: 'normal', content: '' };
+        addBlock(newBlock, index + 1);
+        setFocusedBlockId(newBlock.id);
+        focusBlockInput(newBlock.id);
+        return;
+      }
+
+      if (e.key === 'Backspace' && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const blockEl = target.closest('[data-block-id]');
+        const blockId = blockEl?.getAttribute('data-block-id');
+        if (!blockId) return;
+        const block = blocks.find((b) => b.id === blockId);
+        if (!block || block.type !== 'paragraph') return;
+        if (!isBlockEmpty(block)) return;
+
+        const index = blocks.findIndex((b) => b.id === blockId);
+        if (index <= 0) return;
+        e.preventDefault();
+        removeBlock(blockId);
+        const prev = blocks[index - 1];
+        if (prev) {
+          setFocusedBlockId(prev.id);
+          focusBlockInput(prev.id);
+        }
       }
     },
-    [blocks, removeBlock, duplicateBlock],
+    [blocks, removeBlock, duplicateBlock, addBlock, focusBlockInput],
   );
 
   useEffect(() => {
@@ -1917,68 +1838,89 @@ export function RichTextBlockEditor({
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [handleKeyDown]);
 
+  useEffect(() => {
+    document.addEventListener('selectionchange', refreshFormattingState);
+    return () => document.removeEventListener('selectionchange', refreshFormattingState);
+  }, [refreshFormattingState]);
+
+  useEffect(() => {
+    if (!focusedBlockId && blocks.length > 0) {
+      setFocusedBlockId(blocks[0].id);
+    }
+  }, [blocks, focusedBlockId]);
+
   return (
-    <div className="space-y-0" data-rich-text-editor>
-      {blocks.length === 0 ? (
-        <div className="relative flex flex-col items-center py-12">
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => handleAddBlock(0)}
-              className="flex items-center gap-2 px-4 py-2 text-nokturo-500 dark:text-nokturo-400 hover:text-nokturo-900 dark:hover:text-nokturo-100 transition-colors"
-            >
-              <MaterialIcon name="add" size={18} className="shrink-0" />
-              {t('richText.addBlock')}
-            </button>
-            {addMenuAtIndex === 0 && (
-              <div className="absolute left-0 top-full mt-1 z-50">
-                <AddBlockMenu
-                  onAdd={handleAddFromMenu}
-                  onClose={() => setAddMenuAtIndex(null)}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-0">
-          {blocks.map((block, index) => (
-            <div key={block.id}>
-              <BlockRenderer
-                block={block}
-                index={index}
-                total={blocks.length}
-                onUpdate={updateBlock}
-                onRemove={removeBlock}
-                onDuplicate={duplicateBlock}
-                onUploadImage={onUploadImage}
-                onToast={onToast}
-                headingFont={headingFont}
-                h3Large={h3Large}
-                dropdownZIndex={dropdownZIndex}
-              />
-              <div className="relative flex justify-center py-1">
-                <button
-                  type="button"
-                  onClick={() => handleAddBlock(index + 1)}
-                  className="flex items-center gap-1 px-2 py-0.5 text-xs text-nokturo-400 dark:text-nokturo-500 hover:text-nokturo-600 dark:hover:text-nokturo-300 transition-colors"
-                >
-                  <MaterialIcon name="add" size={12} className="shrink-0" />
-                  {t('richText.addBlock')}
-                </button>
-                {addMenuAtIndex === index + 1 && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50">
-                    <AddBlockMenu
-                      onAdd={handleAddFromMenu}
-                      onClose={() => setAddMenuAtIndex(null)}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="space-y-0 pb-20" data-rich-text-editor ref={editorRootRef}>
+      <div className="space-y-0">
+        {blocks.map((block, index) => (
+          <BlockRenderer
+            key={block.id}
+            block={block}
+            index={index}
+            total={blocks.length}
+            onUpdate={updateBlock}
+            onRemove={removeBlock}
+            onDuplicate={duplicateBlock}
+            onUploadImage={onUploadImage}
+            onToast={onToast}
+            headingFont={headingFont}
+            h3Large={h3Large}
+            dropdownZIndex={dropdownZIndex}
+            onFocusBlock={setFocusedBlockId}
+          />
+        ))}
+      </div>
+      <FloatingToolbar
+        onBold={() => runInlineCommand('bold')}
+        onItalic={() => runInlineCommand('italic')}
+        onH1={() => convertFocusedBlock('heading1')}
+        onH2={() => convertFocusedBlock('heading2')}
+        onH3={() => convertFocusedBlock('heading3')}
+        onParagraph={() => convertFocusedBlock('paragraph')}
+        onQuote={() => convertFocusedBlock('quote')}
+        onBulletList={() => convertFocusedBlock('bullet')}
+        onNumberedList={() => convertFocusedBlock('numbered')}
+        onTag={() => convertFocusedBlock('tag')}
+        onImage={() => insertAfterFocused(createInsertedBlock('image'))}
+        onGallery={() => insertAfterFocused(createInsertedBlock('gallery'))}
+        onImageGrid={() => insertAfterFocused(createInsertedBlock('imageGrid'))}
+        onGrid={() => insertAfterFocused(createInsertedBlock('grid'))}
+        onLink={() => {
+          const selection = window.getSelection();
+          if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+            const url = prompt(t('richText.enterUrl'));
+            if (url) runInlineCommand('createLink', url);
+            return;
+          }
+          insertAfterFocused(createInsertedBlock('link'));
+        }}
+        onDivider={() => insertAfterFocused(createInsertedBlock('divider'))}
+        onSizeSmall={() => {
+          if (focusedBlock?.type === 'paragraph') updateBlock(focusedBlock.id, { size: 'small' });
+        }}
+        onSizeNormal={() => {
+          if (focusedBlock?.type === 'paragraph') updateBlock(focusedBlock.id, { size: 'normal' });
+        }}
+        onSizeLarge={() => {
+          if (focusedBlock?.type === 'paragraph') updateBlock(focusedBlock.id, { size: 'large' });
+        }}
+        onAlignLeft={() => {
+          if (focusedBlock?.type === 'paragraph') updateBlock(focusedBlock.id, { align: 'left' });
+        }}
+        onAlignCenter={() => {
+          if (focusedBlock?.type === 'paragraph') updateBlock(focusedBlock.id, { align: 'center' });
+        }}
+        onAlignRight={() => {
+          if (focusedBlock?.type === 'paragraph') updateBlock(focusedBlock.id, { align: 'right' });
+        }}
+        isBold={isBold}
+        isItalic={isItalic}
+        activeType={activeType}
+        activeHeadingLevel={activeHeadingLevel}
+        activeListStyle={activeListStyle}
+        activeParagraphSize={activeParagraphSize}
+        activeParagraphAlign={activeParagraphAlign}
+      />
     </div>
   );
 }

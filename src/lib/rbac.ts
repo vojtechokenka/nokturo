@@ -14,6 +14,7 @@ export interface Permission {
 export type Module =
   | 'brand.strategy'
   | 'brand.identity'
+  | 'brand.compliance'
   | 'prototyping.moodboard'
   | 'prototyping.ideas'
   | 'prototyping.magazine'
@@ -38,6 +39,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   founder: {
     'brand.strategy':          { read: true, write: true, comment: true, delete: true },
     'brand.identity':          { read: true, write: true, comment: true, delete: true },
+    'brand.compliance':        { read: true, write: true, comment: true, delete: true },
     'prototyping.moodboard':   { read: true, write: true, comment: true, delete: true },
     'prototyping.ideas':       { read: true, write: true, comment: true, delete: true },
     'prototyping.magazine':    { read: true, write: true, comment: true, delete: true },
@@ -56,6 +58,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   engineer: {
     'brand.strategy':          { read: true,  write: false, comment: true,  delete: false },
     'brand.identity':          { read: true,  write: false, comment: true,  delete: false },
+    'brand.compliance':        { read: true,  write: false, comment: true,  delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: true,  delete: false },
     'prototyping.ideas':       { read: true,  write: false, comment: true,  delete: false },
     'prototyping.magazine':    { read: true,  write: false, comment: true,  delete: false },
@@ -74,6 +77,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   viewer: {
     'brand.strategy':          { read: true,  write: false, comment: false, delete: false },
     'brand.identity':          { read: true,  write: false, comment: false, delete: false },
+    'brand.compliance':        { read: true,  write: false, comment: false, delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: false, delete: false },
     'prototyping.ideas':       { read: true,  write: false, comment: false, delete: false },
     'prototyping.magazine':    { read: true,  write: false, comment: false, delete: false },
@@ -92,6 +96,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   client: {
     'brand.strategy':          { read: true,  write: false, comment: true,  delete: false },
     'brand.identity':          { read: true,  write: false, comment: true,  delete: false },
+    'brand.compliance':        { read: true,  write: false, comment: true,  delete: false },
     'prototyping.moodboard':   { read: false, write: false, comment: false, delete: false },
     'prototyping.ideas':       { read: false, write: false, comment: false, delete: false },
     'prototyping.magazine':    { read: false, write: false, comment: false, delete: false },
@@ -110,6 +115,7 @@ const permissionMatrix: Record<Role, Record<Module, Permission>> = {
   host: {
     'brand.strategy':          { read: true,  write: false, comment: false, delete: false },
     'brand.identity':          { read: true,  write: false, comment: false, delete: false },
+    'brand.compliance':        { read: true,  write: false, comment: false, delete: false },
     'prototyping.moodboard':   { read: true,  write: false, comment: false, delete: false },
     'prototyping.ideas':       { read: false, write: false, comment: false, delete: false },
     'prototyping.magazine':    { read: false, write: false, comment: false, delete: false },

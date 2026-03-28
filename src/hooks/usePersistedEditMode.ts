@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type EditMode = 'view' | 'edit';
 
@@ -8,10 +8,10 @@ interface UsePersistedEditModeOptions {
   getScrollElement?: () => HTMLElement | null;
 }
 
-function readMode(storageKey: string, canEdit: boolean): EditMode {
+function readMode(storageKey: string): EditMode {
   if (typeof window === 'undefined') return 'view';
   const stored = window.sessionStorage.getItem(storageKey);
-  if (stored === 'edit' && canEdit) return 'edit';
+  if (stored === 'edit') return 'edit';
   return 'view';
 }
 
@@ -21,8 +21,7 @@ export function usePersistedEditMode({
   getScrollElement,
 }: UsePersistedEditModeOptions) {
   const scrollKey = useMemo(() => `${storageKey}:scrollTop`, [storageKey]);
-  const shouldRestoreScrollRef = useRef(false);
-  const [mode, setMode] = useState<EditMode>(() => readMode(storageKey, canEdit));
+  const [mode, setMode] = useState<EditMode>(() => readMode(storageKey));
 
   const getCurrentScrollElement = useCallback(() => {
     if (getScrollElement) return getScrollElement();
@@ -56,11 +55,9 @@ export function usePersistedEditMode({
   }, [getCurrentScrollElement, scrollKey]);
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     if (mode === 'edit') {
       window.sessionStorage.setItem(storageKey, 'edit');
-      shouldRestoreScrollRef.current = true;
-    } else {
-      window.sessionStorage.setItem(storageKey, 'view');
     }
   }, [mode, storageKey]);
 
@@ -71,10 +68,12 @@ export function usePersistedEditMode({
   }, [canEdit, mode]);
 
   useEffect(() => {
-    if (mode !== 'edit' || !shouldRestoreScrollRef.current) return;
-    shouldRestoreScrollRef.current = false;
+    if (typeof window === 'undefined') return;
+    if (!canEdit || mode !== 'view') return;
+    if (window.sessionStorage.getItem(storageKey) !== 'edit') return;
+    setMode('edit');
     restoreScrollPosition();
-  }, [mode, restoreScrollPosition]);
+  }, [canEdit, mode, restoreScrollPosition, storageKey]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;

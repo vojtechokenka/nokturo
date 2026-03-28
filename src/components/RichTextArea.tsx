@@ -8,6 +8,7 @@ interface RichTextAreaProps {
   onUploadImage?: (file: File) => Promise<string>;
   placeholder?: string;
   minHeight?: number;
+  headingFont?: 'headline' | 'body';
 }
 
 function ToolbarButton({
@@ -54,6 +55,27 @@ function getActiveBlock(editor: HTMLElement | null): string | null {
     node = node.parentNode;
   }
   return null;
+}
+
+function getActiveParagraphSize(editor: HTMLElement | null): 'small' | 'normal' | 'large' {
+  if (!editor) return 'normal';
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return 'normal';
+
+  let node: Node | null = sel.anchorNode;
+  if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+  while (node && node !== editor) {
+    const el = node as Element;
+    if (el.tagName === 'P') {
+      if (el.classList.contains('rte-p-small')) return 'small';
+      if (el.classList.contains('rte-p-large')) return 'large';
+      return 'normal';
+    }
+    node = node.parentNode;
+  }
+
+  return 'normal';
 }
 
 /** Returns the text content of a checklist <span>, stripping zero-width spaces */
@@ -158,6 +180,7 @@ export function RichTextArea({
   onUploadImage,
   placeholder,
   minHeight = 120,
+  headingFont = 'headline',
 }: RichTextAreaProps) {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -529,6 +552,39 @@ export function RichTextArea({
     emitChange();
   }, [restoreSelection, saveSelection, emitChange]);
 
+  const setParagraphSize = useCallback(
+    (size: 'small' | 'normal' | 'large') => {
+      restoreSelection();
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+
+      document.execCommand('formatBlock', false, 'p');
+
+      let node: Node | null = sel.anchorNode;
+      if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+      while (node && node !== editorRef.current) {
+        const el = node as Element;
+        if (el.tagName === 'P') {
+          el.classList.remove('rte-p', 'rte-p-small', 'rte-p-large');
+          el.classList.add('rte-p');
+          if (size === 'small') el.classList.add('rte-p-small');
+          if (size === 'large') el.classList.add('rte-p-large');
+          break;
+        }
+        node = node.parentNode;
+      }
+
+      // #region agent log
+      fetch('http://127.0.0.1:7294/ingest/08fa6a8b-45ce-40be-a5e8-30edb7e537b1',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'430c78'},body:JSON.stringify({sessionId:'430c78',location:'RichTextArea.tsx:setParagraphSize',message:'setParagraphSize post-fix',data:{size,foundP: !!node},timestamp:Date.now(),runId:'post-fix',hypothesisId:'H-A'})}).catch(()=>{});
+      // #endregion
+
+      saveSelection();
+      emitChange();
+    },
+    [restoreSelection, saveSelection, emitChange],
+  );
+
   const insertLink = useCallback(
     (url: string, text: string) => {
       restoreSelection();
@@ -641,11 +697,41 @@ export function RichTextArea({
 
   const isEmpty = !value || value === '<br>' || value === '<div><br></div>';
   const activeBlock = getActiveBlock(editorRef.current);
+  const isHeading = activeBlock === 'H1' || activeBlock === 'H2' || activeBlock === 'H3';
+  const activeParagraphSize = isHeading ? null : getActiveParagraphSize(editorRef.current);
 
   return (
     <div className="rich-text-area rounded-xl bg-nokturo-200/60 dark:bg-nokturo-700/60 overflow-hidden">
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-nokturo-300/40 dark:border-nokturo-600/40 relative flex-wrap">
+        {(['small', 'normal', 'large'] as const).map((size) => (
+          <ToolbarButton
+            key={size}
+            active={activeParagraphSize === size}
+            onClick={() => setParagraphSize(size)}
+            title={`Paragraph ${size}`}
+          >
+            <span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">
+              {size === 'small' ? 'S' : size === 'normal' ? 'M' : 'L'}
+            </span>
+          </ToolbarButton>
+        ))}
+
+        <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
+
+        {([1, 2, 3] as const).map((level) => (
+          <ToolbarButton
+            key={level}
+            active={activeBlock === `H${level}`}
+            onClick={() => toggleHeading(level)}
+            title={`Heading ${level}`}
+          >
+            <span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">H{level}</span>
+          </ToolbarButton>
+        ))}
+
+        <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
+
         <ToolbarButton
           active={document.queryCommandState('bold')}
           onClick={() => runCommand('bold')}
@@ -684,19 +770,6 @@ export function RichTextArea({
         >
           <MaterialIcon name="checklist" size={14} className="shrink-0" />
         </ToolbarButton>
-
-        <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
-
-        {([1, 2, 3] as const).map((level) => (
-          <ToolbarButton
-            key={level}
-            active={activeBlock === `H${level}`}
-            onClick={() => toggleHeading(level)}
-            title={`Heading ${level}`}
-          >
-            <span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">H{level}</span>
-          </ToolbarButton>
-        ))}
 
         <div className="w-px h-4 bg-nokturo-300/40 dark:bg-nokturo-600/40 mx-1" />
 
@@ -771,7 +844,7 @@ export function RichTextArea({
           onKeyDown={handleKeyDown}
           onClick={handleEditorClick}
           onPaste={handlePaste}
-          className="rta-editor px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none overflow-y-auto [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:mt-3 [&_h1]:mb-1 [&_h2]:text-base [&_h2]:font-semibold [&_h2]:mt-2.5 [&_h2]:mb-1 [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:mt-2 [&_h3]:mb-1 [&_ul:not(.rta-checklist)]:list-disc [&_ul:not(.rta-checklist)]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline"
+          className={`rta-editor px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none overflow-y-auto [&_h1]:text-[clamp(2.25rem,4vw,3.5rem)] [&_h1]:leading-[1.05] [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[clamp(1.625rem,3vw,2.375rem)] [&_h2]:leading-[1.1] [&_h2]:mt-8 [&_h2]:mb-[0.85rem] [&_h3]:text-[clamp(1.3rem,2.3vw,1.85rem)] [&_h3]:leading-[1.2] [&_h3]:mt-[1.6rem] [&_h3]:mb-[0.7rem] ${headingFont === 'headline' ? '[&_h1]:font-headline [&_h2]:font-headline [&_h3]:font-headline' : '[&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold'} [&_ul:not(.rta-checklist)]:list-disc [&_ul:not(.rta-checklist)]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline`}
           style={{ minHeight }}
         />
       </div>

@@ -7,6 +7,7 @@
     "brand": "Zna\u010dka",
     "strategy": "About Nokturo",
     "identity": "Identita značky",
+    "compliance": "Compliance",
     "prototyping": "Prototypování",
     "moodboard": "Moodboard",
     "ideas": "N\u00e1pady",
@@ -118,6 +119,10 @@
     "identity": {
       "title": "Identita zna\u010dky",
       "description": "Spr\u00e1va log, barevn\u00fdch palet, typografie a brandov\u00fdch sm\u011brnic."
+    },
+    "compliance": {
+      "title": "Compliance",
+      "description": "Spr\u00e1va compliance dokumentace a regulatorn\u00edch po\u017eadavk\u016f."
     },
     "moodboard": {
       "title": "Moodboard",
@@ -850,6 +855,7 @@
     "chooseBlock": "Vyberte typ bloku",
     "heading": "Nadpis",
     "paragraph": "Odstavec",
+    "textBlock": "Textový blok",
     "tag": "Tag",
     "tagPlaceholder": "Popisek kotvy pro obsah...",
     "tagVisible": "Viditelný",
