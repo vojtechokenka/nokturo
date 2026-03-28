@@ -13,6 +13,8 @@ import { MaterialIcon } from '../../components/icons/MaterialIcon';
 import { EditIcon } from '../../components/icons/EditIcon';
 import { SaveIcon } from '../../components/icons/SaveIcon';
 import { useIsMobile } from '../../hooks/useIsMobile';
+import { usePersistedEditMode } from '../../hooks/usePersistedEditMode';
+import { useImageLuminance } from '../../hooks/useImageLuminance';
 
 const DEFAULT_TITLE = 'Strategie značky';
 
@@ -38,13 +40,26 @@ export default function StrategyPage() {
   const user = useAuthStore((s) => s.user);
   const canEditBrand = user?.role ? hasFeaturePermission('canEditBrand', user.role) : false;
   const isMobile = useIsMobile();
+  const canUseEditMode = canEditBrand && !isMobile;
   const [docId, setDocId] = useState<string | null>(null);
   const [blocks, setBlocks] = useState<RichTextBlock[]>([]);
   const [headerImage, setHeaderImage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
-  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const getScrollElement = useCallback(
+    () => document.querySelector('[data-scroll-container]') as HTMLElement | null,
+    [],
+  );
+  const { mode, setMode, exitEditMode } = usePersistedEditMode({
+    storageKey: 'brand-strategy-mode',
+    canEdit: canUseEditMode,
+    getScrollElement,
+  });
+  const headerEditLuminance = useImageLuminance(headerImage);
+  const headerEditButtonClass = headerEditLuminance === 'light'
+    ? 'bg-nokturo-900/85 text-white hover:bg-nokturo-900'
+    : 'bg-white/85 text-nokturo-900 hover:bg-white';
 
   const blocksRef = useRef(blocks);
   blocksRef.current = blocks;
@@ -95,7 +110,7 @@ export default function StrategyPage() {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'error', message: error.message }]);
       } else {
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
-        setMode('view');
+        exitEditMode();
       }
     } else {
       const { data, error } = await supabase
@@ -109,10 +124,10 @@ export default function StrategyPage() {
       } else if (data) {
         setDocId(data.id);
         setToasts((prev) => [...prev, { id: crypto.randomUUID(), type: 'success', message: t('common.saved') }]);
-        setMode('view');
+        exitEditMode();
       }
     }
-  }, [docId, blocks, headerImage, t]);
+  }, [docId, blocks, headerImage, t, exitEditMode]);
 
   const handleHeaderImageChange = useCallback(async (url: string | null) => {
     setHeaderImage(url);
@@ -188,7 +203,7 @@ export default function StrategyPage() {
               <button
                 type="button"
                 onClick={() => setMode('edit')}
-                className="absolute top-3 right-3 flex items-center gap-2 h-9 px-4 text-sm font-medium bg-nokturo-800/90 dark:bg-white/10 text-white rounded-[6px] hover:bg-white/10 dark:hover:bg-white/20 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                className={`absolute top-3 right-3 flex items-center gap-2 h-9 px-4 text-sm font-medium rounded-[6px] shadow-sm opacity-0 group-hover:opacity-100 transition-opacity ${headerEditButtonClass}`}
               >
                 <EditIcon size={16} />
                 {t('common.edit')}
