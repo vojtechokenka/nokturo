@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Balance line breaks for all heading levels */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
 /* Material Symbols Sharp (fill) – icon font */
 .material-symbols-sharp {
   font-family: 'Material Symbols Sharp' !important;
@@ -592,20 +602,50 @@ body {
 .rte-content h1 {
   font-size: clamp(2.25rem, 4vw, 3.5rem);
   line-height: 1.05;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+  margin-top: 40px;
+  margin-bottom: 24px;
 }
 .rte-content h2 {
   font-size: clamp(1.625rem, 3vw, 2.375rem);
   line-height: 1.1;
-  margin-top: 2rem;
-  margin-bottom: 0.85rem;
+  margin-top: 40px;
+  margin-bottom: 20px;
 }
 .rte-content h3 {
   font-size: clamp(1.3rem, 2.3vw, 1.85rem);
   line-height: 1.2;
-  margin-top: 1.6rem;
-  margin-bottom: 0.7rem;
+  margin-top: 36px;
+  margin-bottom: 16px;
+}
+.rte-content.rte-content-heading-medium h1,
+.rte-content.rte-content-heading-medium h2,
+.rte-content.rte-content-heading-medium h3 {
+  font-weight: 500;
+}
+@media (min-width: 640px) {
+  .rte-content:not(.rte-content-headline) h1 {
+    font-size: 40px;
+  }
+  .rte-content:not(.rte-content-headline) h2 {
+    font-size: 32px;
+  }
+  .rte-content:not(.rte-content-headline) h3 {
+    font-size: 24px;
+  }
+  .rte-content.rte-content-headline h1,
+  .rte-content.rte-content-headline h2,
+  .rte-content.rte-content-headline h3 {
+    font-weight: 300;
+  }
+  .rte-content.rte-content-headline h1 {
+    font-size: 52px;
+  }
+  .rte-content.rte-content-headline h2 {
+    font-size: 40px;
+  }
+  .rte-content.rte-content-headline h3 {
+    font-size: 36px;
+  }
 }
 .rte-content p,
 .rte-content ul,
@@ -633,14 +673,17 @@ body {
 .rte-p {
   font-size: 1rem;
   line-height: 1.75;
+  color: rgba(255, 255, 255, 0.8);
 }
 .rte-p-large {
   font-size: 1.125rem;
   line-height: 1.8;
+  color: #FFFFFF;
 }
 .rte-p-small {
   font-size: 0.9rem;
   line-height: 1.7;
+  color: rgba(255, 255, 255, 0.6);
 }
 .rte-align-left {
   text-align: left;
@@ -665,18 +708,28 @@ body {
   border: none;
   height: 1px;
   background: #D9D9D9;
-  margin: 1.5rem 0;
+  margin: 0;
 }
 .dark .rte-divider {
   background: #525252;
 }
 
 .rte-tag {
-  margin: 2rem 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 60px 0 36px;
+  padding: 0.35rem 0.7rem;
+  border-radius: 9999px;
+  background: #E6E6E6;
   font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  opacity: 0.8;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: 0;
+  opacity: 0.6;
+}
+.dark .rte-tag {
+  background: #333333;
 }
 .rte-tag-hidden {
   position: absolute;

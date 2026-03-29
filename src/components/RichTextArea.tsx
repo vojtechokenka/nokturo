@@ -9,6 +9,7 @@ interface RichTextAreaProps {
   placeholder?: string;
   minHeight?: number;
   headingFont?: 'headline' | 'body';
+  headingWeight?: 'medium';
 }
 
 function ToolbarButton({
@@ -181,6 +182,7 @@ export function RichTextArea({
   placeholder,
   minHeight = 120,
   headingFont = 'headline',
+  headingWeight,
 }: RichTextAreaProps) {
   const { t } = useTranslation();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -844,7 +846,7 @@ export function RichTextArea({
           onKeyDown={handleKeyDown}
           onClick={handleEditorClick}
           onPaste={handlePaste}
-          className={`rta-editor px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none overflow-y-auto [&_h1]:text-[clamp(2.25rem,4vw,3.5rem)] [&_h1]:leading-[1.05] [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[clamp(1.625rem,3vw,2.375rem)] [&_h2]:leading-[1.1] [&_h2]:mt-8 [&_h2]:mb-[0.85rem] [&_h3]:text-[clamp(1.3rem,2.3vw,1.85rem)] [&_h3]:leading-[1.2] [&_h3]:mt-[1.6rem] [&_h3]:mb-[0.7rem] ${headingFont === 'headline' ? '[&_h1]:font-headline [&_h2]:font-headline [&_h3]:font-headline' : '[&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold'} [&_ul:not(.rta-checklist)]:list-disc [&_ul:not(.rta-checklist)]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline`}
+          className={`rta-editor px-3 py-2.5 text-sm text-nokturo-900 dark:text-nokturo-100 focus:outline-none overflow-y-auto [&_h1]:text-[clamp(2.25rem,4vw,3.5rem)] [&_h1]:leading-[1.05] [&_h1]:mt-8 [&_h1]:mb-4 [&_h2]:text-[clamp(1.625rem,3vw,2.375rem)] [&_h2]:leading-[1.1] [&_h2]:mt-8 [&_h2]:mb-[0.85rem] [&_h3]:text-[clamp(1.3rem,2.3vw,1.85rem)] [&_h3]:leading-[1.2] [&_h3]:mt-[1.6rem] [&_h3]:mb-[0.7rem] ${headingFont === 'headline' ? '[&_h1]:font-headline [&_h2]:font-headline [&_h3]:font-headline' : headingWeight === 'medium' ? '[&_h1]:font-medium [&_h2]:font-medium [&_h3]:font-medium' : '[&_h1]:font-semibold [&_h2]:font-semibold [&_h3]:font-semibold'} [&_ul:not(.rta-checklist)]:list-disc [&_ul:not(.rta-checklist)]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-0.5 [&_a]:text-blue-600 [&_a]:dark:text-blue-400 [&_a]:underline`}
           style={{ minHeight }}
         />
       </div>

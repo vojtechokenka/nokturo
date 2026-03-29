@@ -321,7 +321,7 @@ export default function SamplingDetailPage() {
                                 key={pm.id ?? idx}
                                 type="button"
                                 onClick={() => mat && setViewingMaterial(mat as Material)}
-                                className="w-full flex items-start gap-4 p-4 bg-white/5 dark:bg-nokturo-700/50 rounded-lg min-w-0 text-left hover:bg-white/10 dark:hover:bg-nokturo-600 transition-colors cursor-pointer"
+                                className="w-full flex items-center gap-4 p-4 bg-white/5 dark:bg-nokturo-700/50 rounded-lg min-w-0 text-left hover:bg-white/10 dark:hover:bg-nokturo-600 transition-colors cursor-pointer"
                               >
                                 <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden bg-nokturo-100 dark:bg-nokturo-600 flex items-center justify-center">
                                   {mat?.image_url ? (

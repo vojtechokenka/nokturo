@@ -204,6 +204,7 @@ export default function IdentityPage() {
                 elements={elements}
                 tocTitle={t('pages.identity.title')}
                 headingFont="body"
+                headingWeight="medium"
                 tocFooterSlot={canEditBrand && !headerImage && !isMobile ? (
                   <button
                     type="button"
@@ -237,6 +238,7 @@ export default function IdentityPage() {
                   onUploadImage={handleUploadImage}
                   onToast={addToast}
                   headingFont="body"
+                  headingWeight="medium"
                 />
               </div>
               <div className="fixed bottom-9 right-9 z-40">

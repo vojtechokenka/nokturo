@@ -13,6 +13,7 @@ interface PageElementEditorProps {
   onUploadImage?: (file: File) => Promise<string>;
   onToast?: (toast: ToastData) => void;
   headingFont?: 'headline' | 'body';
+  headingWeight?: 'medium';
 }
 
 function generateId(prefix: string): string {
@@ -107,6 +108,7 @@ export function PageElementEditor({
   onUploadImage,
   onToast,
   headingFont = 'headline',
+  headingWeight,
 }: PageElementEditorProps) {
   const { t } = useTranslation();
 
@@ -201,6 +203,7 @@ export function PageElementEditor({
                 placeholder={t('richText.placeholder')}
                 minHeight={160}
                 headingFont={headingFont}
+                headingWeight={headingWeight}
               />
             </div>
           )}
@@ -592,7 +595,7 @@ export function PageElementEditor({
           )}
 
           {element.type === 'divider' && (
-            <div className="py-3">
+            <div className="py-10">
               <hr className="rte-divider" />
             </div>
           )}

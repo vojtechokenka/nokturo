@@ -13,6 +13,8 @@ interface PageElementViewerProps {
   tocFooterSlot?: React.ReactNode;
   headerImageSlot?: React.ReactNode;
   headingFont?: HeadingFontFamily;
+  /** When set with `headingFont="body"`, H1–H3 use font-weight 500 (Brand Manual). */
+  headingWeight?: 'medium';
 }
 
 function extractTocItems(elements: PageElement[]): TocItem[] {
@@ -23,16 +25,22 @@ function extractTocItems(elements: PageElement[]): TocItem[] {
     .map((el) => ({ id: el.id, text: el.title.trim(), level: 2 as const }));
 }
 
-function ElementView({ element, headingFont }: { element: PageElement; headingFont: HeadingFontFamily }) {
+function ElementView({
+  element,
+  headingFont,
+  headingWeight,
+}: {
+  element: PageElement;
+  headingFont: HeadingFontFamily;
+  headingWeight?: 'medium';
+}) {
   switch (element.type) {
     case 'text':
       return (
         <section id={element.id} className="scroll-mt-6 mb-6">
-          {(element.titleVisible ?? true) && element.title.trim() ? (
-            <div className="rte-tag mb-2">- {element.title.trim()}</div>
-          ) : null}
+          {(element.titleVisible ?? true) && element.title.trim() ? <div className="rte-tag">{element.title.trim()}</div> : null}
           <div
-            className={`rte-content ${headingFont === 'headline' ? 'font-headline [&_p]:font-body [&_blockquote]:font-headline' : 'font-body [&_p]:font-body [&_blockquote]:font-body'} text-nokturo-900 dark:text-nokturo-100 [&_a]:text-nokturo-800 dark:[&_a]:text-nokturo-200`}
+            className={`rte-content ${headingFont === 'headline' ? 'rte-content-headline font-headline [&_p]:font-body [&_blockquote]:font-headline' : `font-body [&_p]:font-body [&_blockquote]:font-body${headingWeight === 'medium' ? ' rte-content-heading-medium' : ''}`} text-nokturo-900 dark:text-nokturo-100 [&_a]:text-nokturo-800 dark:[&_a]:text-nokturo-200 [&_figcaption]:font-body`}
             dangerouslySetInnerHTML={{ __html: element.html }}
           />
         </section>
@@ -124,7 +132,7 @@ function ElementView({ element, headingFont }: { element: PageElement; headingFo
       );
     case 'divider':
       return (
-        <div className="my-8">
+        <div className="my-10">
           <hr className="rte-divider" />
         </div>
       );
@@ -154,6 +162,7 @@ export function PageElementViewer({
   tocFooterSlot,
   headerImageSlot,
   headingFont = 'headline',
+  headingWeight,
 }: PageElementViewerProps) {
   const { t } = useTranslation();
   const tocItems = extractTocItems(elements);
@@ -177,7 +186,7 @@ export function PageElementViewer({
   const content = (
     <article className="font-body max-w-none sm:max-w-[680px]">
       {elements.map((element) => (
-        <ElementView key={element.id} element={element} headingFont={headingFont} />
+        <ElementView key={element.id} element={element} headingFont={headingFont} headingWeight={headingWeight} />
       ))}
     </article>
   );
