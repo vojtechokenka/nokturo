@@ -169,6 +169,17 @@ export function isBlockEmpty(block: RichTextBlock): boolean {
   }
 }
 
+/** Last block before `index` that still occupies layout in block viewers (skips empty blocks and sr-only tags). */
+export function lastSignificantBlock(blocks: RichTextBlock[], index: number): RichTextBlock | undefined {
+  for (let i = index - 1; i >= 0; i--) {
+    const b = blocks[i];
+    if (b.type === 'tag' && b.visible === false) continue;
+    if (b.type === 'divider') return b;
+    if (!isBlockEmpty(b)) return b;
+  }
+  return undefined;
+}
+
 export function getAspectClass(ratio: '5:4' | '1:1' | '3:2' | '16:9' | undefined): string {
   const r = ratio ?? '1:1';
   return r === '1:1' ? 'aspect-square' : r === '5:4' ? 'aspect-[5/4]' : r === '3:2' ? 'aspect-[3/2]' : 'aspect-video';

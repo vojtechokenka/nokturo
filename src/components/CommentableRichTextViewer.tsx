@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuthStore, getUserIdForDb } from '../stores/authStore';
 import { hasPermission, canDeleteAnything } from '../lib/rbac';
 import type { RichTextBlock } from './RichTextBlockEditor';
-import { getAspectClass } from './RichTextBlockEditor';
+import { getAspectClass, lastSignificantBlock } from './RichTextBlockEditor';
 import { extractTags, type HeadingFontFamily } from './RichTextBlockViewer';
 import type { TocItem } from './TableOfContents';
 import { TableOfContents } from './TableOfContents';
@@ -126,6 +126,8 @@ function highlightPendingSelection(text: string, selectedText: string, blockId: 
 // ── Block with comment support ─────────────────────────────────
 function CommentableBlockView({
   block,
+  blocks,
+  blockIndex,
   prevBlock,
   nextBlock,
   blockComments,
@@ -133,6 +135,8 @@ function CommentableBlockView({
   headingFont = 'headline',
 }: {
   block: RichTextBlock;
+  blocks: RichTextBlock[];
+  blockIndex: number;
   prevBlock?: RichTextBlock;
   nextBlock?: RichTextBlock;
   comments: TextComment[];
@@ -168,7 +172,15 @@ function CommentableBlockView({
 
   if (block.type === 'heading' && block.text?.trim()) {
     const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
-    const headingMt = prevBlock?.type === 'tag' && prevBlock.visible !== false ? 'mt-0' : block.level === 1 ? 'mt-16' : block.level === 2 ? '' : 'mt-8';
+    const lastSig = lastSignificantBlock(blocks, blockIndex);
+    const tightTop = lastSig === undefined || (lastSig.type === 'tag' && lastSig.visible !== false);
+    const headingMt = tightTop
+      ? 'mt-0'
+      : block.level === 1
+        ? 'mt-16'
+        : block.level === 2
+          ? ''
+          : 'mt-8';
     const headingClass = {
       1: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-4 scroll-mt-6 leading-[1.1]`,
       2: `${hFont} ${hSizeClass} font-normal text-nokturo-900 dark:text-nokturo-100 ${headingMt} mb-4 scroll-mt-6 leading-[1.2]`,
@@ -183,7 +195,9 @@ function CommentableBlockView({
     if (block.level === 2) {
       return (
         <>
-          <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
+          {lastSig !== undefined ? (
+            <div className="mt-10 border-t border-nokturo-300 dark:border-nokturo-600 mb-6" aria-hidden />
+          ) : null}
           <Tag id={block.id} className={headingClass} data-block-id={block.id}>
             {display}
           </Tag>
@@ -931,6 +945,8 @@ export function CommentableRichTextViewer({ blocks, productId, shortDescription,
           <CommentableBlockView
             key={block.id}
             block={block}
+            blocks={blocks}
+            blockIndex={index}
             prevBlock={blocks[index - 1]}
             nextBlock={blocks[index + 1]}
             comments={comments}

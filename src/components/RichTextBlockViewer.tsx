@@ -5,7 +5,7 @@
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import type { RichTextBlock } from './RichTextBlockEditor';
-import { getAspectClass } from './RichTextBlockEditor';
+import { getAspectClass, lastSignificantBlock } from './RichTextBlockEditor';
 import { TableOfContents, type TocItem } from './TableOfContents';
 
 /** Výchozí TOC – Způsob zakončení švů, Hardware – používá se na Brand Identity a Strategy */
@@ -83,7 +83,16 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   const content = (
     <article className="font-body max-w-none sm:max-w-[680px]">
       {blocks.map((block, index) => (
-        <BlockView key={block.id} block={block} prevBlock={blocks[index - 1]} nextBlock={blocks[index + 1]} headingFont={headingFont} h3Large={h3Large} />
+        <BlockView
+          key={block.id}
+          block={block}
+          blocks={blocks}
+          blockIndex={index}
+          prevBlock={blocks[index - 1]}
+          nextBlock={blocks[index + 1]}
+          headingFont={headingFont}
+          h3Large={h3Large}
+        />
       ))}
       {useDefaultToc &&
         defaultTocItems!.map((item, idx) => (
@@ -127,7 +136,23 @@ export function RichTextBlockViewer({ blocks, className = '', showToc = true, to
   );
 }
 
-function BlockView({ block, prevBlock, nextBlock, headingFont = 'headline', h3Large = false }: { block: RichTextBlock; prevBlock?: RichTextBlock; nextBlock?: RichTextBlock; headingFont?: HeadingFontFamily; h3Large?: boolean }) {
+function BlockView({
+  block,
+  blocks,
+  blockIndex,
+  prevBlock,
+  nextBlock,
+  headingFont = 'headline',
+  h3Large = false,
+}: {
+  block: RichTextBlock;
+  blocks: RichTextBlock[];
+  blockIndex: number;
+  prevBlock?: RichTextBlock;
+  nextBlock?: RichTextBlock;
+  headingFont?: HeadingFontFamily;
+  h3Large?: boolean;
+}) {
   switch (block.type) {
     case 'tag':
       if (!block.text?.trim()) return null;
@@ -161,7 +186,15 @@ function BlockView({ block, prevBlock, nextBlock, headingFont = 'headline', h3La
             : isHeadline
               ? 'text-rta-h3'
               : 'text-rta-std-h3';
-      const headingMt = prevBlock?.type === 'tag' && prevBlock.visible !== false ? 'mt-0' : block.level === 1 ? 'mt-8' : block.level === 2 ? 'mt-12' : 'mt-8';
+      const lastSig = lastSignificantBlock(blocks, blockIndex);
+      const headingMt =
+        lastSig === undefined || (lastSig.type === 'tag' && lastSig.visible !== false)
+          ? 'mt-0'
+          : block.level === 1
+            ? 'mt-8'
+            : block.level === 2
+              ? 'mt-12'
+              : 'mt-8';
       const colorClass = 'text-nokturo-900 dark:text-nokturo-100';
       const headingClass = {
         1: `${hFont} ${hSizeClass} font-normal ${colorClass} ${headingMt} mb-4 scroll-mt-6`,

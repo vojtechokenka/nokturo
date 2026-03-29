@@ -617,6 +617,11 @@ body {
   margin-top: 36px;
   margin-bottom: 16px;
 }
+.rte-content > h1:first-child,
+.rte-content > h2:first-child,
+.rte-content > h3:first-child {
+  margin-top: 0;
+}
 .rte-content.rte-content-heading-medium h1,
 .rte-content.rte-content-heading-medium h2,
 .rte-content.rte-content-heading-medium h3 {
