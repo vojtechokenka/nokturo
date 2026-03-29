@@ -1088,7 +1088,8 @@ export default function MoodboardPage() {
                     </button>
                     {cardMenuOpen === item.id && cardMenuPosition && createPortal(
                       <div
-                        className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20 overflow-hidden"
+                        data-card-menu
+                        className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-[100] overflow-hidden"
                         style={{
                           ...(cardMenuPosition.top !== undefined && { top: cardMenuPosition.top }),
                           ...(cardMenuPosition.bottom !== undefined && { bottom: cardMenuPosition.bottom }),
@@ -1624,7 +1625,7 @@ export default function MoodboardPage() {
                 </button>
                 {lightboxMenuOpen && lightboxMenuPosition && createPortal(
                   <div
-                    className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-20 overflow-hidden"
+                    className="dropdown-menu fixed shadow-lg py-1 min-w-[140px] z-[100] overflow-hidden"
                     style={{
                       ...(lightboxMenuPosition.top !== undefined && { top: lightboxMenuPosition.top }),
                       ...(lightboxMenuPosition.bottom !== undefined && { bottom: lightboxMenuPosition.bottom }),
